@@ -634,12 +634,16 @@ function drawChangeViewButton() {
 }
 
 function drawChangeIcon(cx, cy, iconColor) {
+  push();
+  translate(cx, cy);
   noFill();
   stroke(iconColor);
-  strokeWeight(1.8);
-  arc(cx, cy, 15, 15, -PI * 0.18, PI * 1.08);
-  line(cx + 7, cy - 5, cx + 10, cy - 9);
-  line(cx + 7, cy - 5, cx + 3, cy - 8);
+  strokeWeight(1.9);
+  strokeCap(ROUND);
+  arc(0, 0, 16, 16, -PI * 0.15, PI * 1.18);
+  line(6.8, -5.2, 10.4, -8.2);
+  line(6.8, -5.2, 2.6, -7.4);
+  pop();
 }
 
 function drawLegendButton() {
@@ -789,7 +793,16 @@ function drawCircularView(visible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
-  const radius = Math.min(380, Math.max(120, Math.min(visualW() - 280, height - TIMELINE_H - 70) / 2));
+  const cardMaxW = constrain(visualW() * 0.17, 104, 126);
+  const baseRadius = Math.min(380, Math.max(120, Math.min(visualW() - 280, height - TIMELINE_H - 70) / 2));
+  const topLimit = 42;
+  const bottomLimit = height - TIMELINE_H - 10;
+  const fitRadius = Math.min(
+    visualW() / 2 - cardMaxW - 16,
+    cy - topLimit - cardMaxW - 8,
+    bottomLimit - cy - cardMaxW - 8
+  );
+  const radius = Math.max(108, Math.min(baseRadius, fitRadius));
   const tags = tagsForCircular();
   const tagPositions = new Map();
 
@@ -827,7 +840,7 @@ function drawCircularView(visible) {
     if (slot >= 38) break;
     const segments = Math.min(constrain(item.weight, 1, 3), 38 - slot);
     const angle = -HALF_PI + (slot + (segments - 1) / 2) * TWO_PI / 38;
-    const cardW = constrain(measureText(item.product.name, 18) + 28, 100, 150);
+    const cardW = constrain(measureText(item.product.name, 18) + 28, 96, cardMaxW);
     const cardH = Math.max(38, (TWO_PI * radius / 38) * segments * 0.92);
     const cardCx = cx + cos(angle) * (radius + cardW / 2 + 6);
     const cardCy = cy + sin(angle) * (radius + cardW / 2 + 6);
@@ -898,7 +911,12 @@ function drawProductCard(product, cx, cy, w, h, rotation) {
   textStyle(BOLD);
   textSize(fitTextSize(product.name, w - 18, 22, 12));
   textAlign(CENTER, CENTER);
+  drawingContext.save();
+  drawingContext.beginPath();
+  drawingContext.rect(-w / 2 + 7, -h / 2 + 5, w - 14, h - 10);
+  drawingContext.clip();
   text(product.name, -w / 2 + 9, -h / 2, w - 18, h);
+  drawingContext.restore();
   textStyle(NORMAL);
   pop();
 }
