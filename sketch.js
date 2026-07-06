@@ -793,16 +793,7 @@ function drawCircularView(visible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
-  const cardMaxW = constrain(visualW() * 0.17, 104, 126);
-  const baseRadius = Math.min(380, Math.max(120, Math.min(visualW() - 280, height - TIMELINE_H - 70) / 2));
-  const topLimit = 42;
-  const bottomLimit = height - TIMELINE_H - 10;
-  const fitRadius = Math.min(
-    visualW() / 2 - cardMaxW - 16,
-    cy - topLimit - cardMaxW - 8,
-    bottomLimit - cy - cardMaxW - 8
-  );
-  const radius = Math.max(108, Math.min(baseRadius, fitRadius));
+  const radius = Math.min(380, Math.max(120, Math.min(visualW() - 280, height - TIMELINE_H - 70) / 2));
   const tags = tagsForCircular();
   const tagPositions = new Map();
 
@@ -840,7 +831,7 @@ function drawCircularView(visible) {
     if (slot >= 38) break;
     const segments = Math.min(constrain(item.weight, 1, 3), 38 - slot);
     const angle = -HALF_PI + (slot + (segments - 1) / 2) * TWO_PI / 38;
-    const cardW = constrain(measureText(item.product.name, 18) + 28, 96, cardMaxW);
+    const cardW = constrain(measureText(item.product.name, 18) + 28, 100, 150);
     const cardH = Math.max(38, (TWO_PI * radius / 38) * segments * 0.92);
     const cardCx = cx + cos(angle) * (radius + cardW / 2 + 6);
     const cardCy = cy + sin(angle) * (radius + cardW / 2 + 6);
@@ -909,16 +900,63 @@ function drawProductCard(product, cx, cy, w, h, rotation) {
   noStroke();
   textFont(fontes.afacad);
   textStyle(BOLD);
-  textSize(fitTextSize(product.name, w - 18, 22, 12));
-  textAlign(CENTER, CENTER);
-  drawingContext.save();
-  drawingContext.beginPath();
-  drawingContext.rect(-w / 2 + 7, -h / 2 + 5, w - 14, h - 10);
-  drawingContext.clip();
-  text(product.name, -w / 2 + 9, -h / 2, w - 18, h);
-  drawingContext.restore();
+  drawProductCardLabel(product.name, w - 18, h - 8);
   textStyle(NORMAL);
   pop();
+}
+
+function drawProductCardLabel(label, maxW, maxH) {
+  const cleanLabel = cleanText(label);
+  const layout = fitProductCardLabel(cleanLabel, maxW, maxH);
+  textSize(layout.size);
+  textAlign(CENTER, CENTER);
+  const lineH = layout.size * 0.94;
+  const startY = -((layout.lines.length - 1) * lineH) / 2;
+  for (let i = 0; i < layout.lines.length; i++) {
+    text(layout.lines[i], 0, startY + i * lineH);
+  }
+}
+
+function fitProductCardLabel(label, maxW, maxH) {
+  for (let size = 22; size >= 12; size--) {
+    textSize(size);
+    const lines = wrapProductCardLabel(label, maxW);
+    const lineH = size * 0.94;
+    if (lines.length * lineH <= maxH + 1 && lines.every((line) => textWidth(line) <= maxW + 0.5)) {
+      return { lines, size };
+    }
+  }
+  textSize(12);
+  const maxLines = Math.max(1, Math.floor(maxH / (12 * 0.94)));
+  const lines = wrapProductCardLabel(label, maxW).slice(0, maxLines);
+  if (lines.length && textWidth(lines[lines.length - 1]) > maxW) {
+    lines[lines.length - 1] = fitLineWithEllipsis(lines[lines.length - 1], maxW);
+  }
+  return { lines, size: 12 };
+}
+
+function wrapProductCardLabel(label, maxW) {
+  const words = label.split(/\s+/).filter(Boolean);
+  if (!words.length) return [""];
+  const lines = [];
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (!current || textWidth(candidate) <= maxW) {
+      current = candidate;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function fitLineWithEllipsis(line, maxW) {
+  let result = line;
+  while (result.length > 1 && textWidth(`${result}...`) > maxW) result = result.slice(0, -1);
+  return `${result}...`;
 }
 
 function drawBubbleView(productsVisible) {
