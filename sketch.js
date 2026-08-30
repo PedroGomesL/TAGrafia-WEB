@@ -12,6 +12,18 @@ const LAYOUT_PAINEL_PRODUTO_W = 405;
 const LAYOUT_VISUAL_W_MIN = 320;
 const LAYOUT_PAINEL_PRODUTO_W_MIN = 300;
 
+// Filter panel layout
+const FILTER_HEADER_H = 56;
+const FILTER_CARD_H = 100;
+const FILTER_BODY_Y = FILTER_HEADER_H + FILTER_CARD_H * 2; // 256
+const FILTER_CAT_OFFSET = 38;
+const FILTER_SEARCH_OFFSET = 41;
+const FILTER_CLEAR_OFFSET = 41;
+const FILTER_LIST_OFFSET = 44;
+const FILTER_BAR_X = 27;
+const FILTER_BAR_W = 201;
+const FILTER_TAG_ROW_H = 36;
+
 const YEAR_MIN = 1880;
 const YEAR_MAX = 2010;
 const TIMELINE_H = 74;
@@ -100,6 +112,16 @@ let selectedProduct = null;
 let selectedImageIndex = 0;
 let savedProductKeys = new Set();
 let activeDimension = "tipo_obra";
+
+// Per-frame cache for expensive computations
+let _cacheFrame = -1;
+let _cachedSelectedTags = null;
+let _cachedVisibleProducts = null;
+let _cachedVisibleProductsNoYear = null;
+let _cachedTagCounts = null;
+let _cachedBubbleGroups = null;
+let _bubbleCacheKey = "";
+
 let activeCategoryByDimension = { material: -2, tecnicas: -1, estetico: -1, tipo_obra: -1 };
 let categorySelectorOpen = false;
 let tagSearch = "";
@@ -172,6 +194,11 @@ function setup() {
 
 function draw() {
   hitAreas = [];
+  _cacheFrame = frameCount;
+  _cachedSelectedTags = null;
+  _cachedVisibleProducts = null;
+  _cachedVisibleProductsNoYear = null;
+  _cachedTagCounts = null;
   background(240);
   drawCurrentVisualization();
   drawVisualizationSummary();
@@ -414,30 +441,39 @@ function categoryForTag(dimension, label) {
 }
 
 function visibleProducts(ignoreYear = false) {
-  const selected = Array.from(selectedTagKeys).map((key) => tagsByKey.get(key)).filter(Boolean);
+  if (!ignoreYear && _cachedVisibleProducts) return _cachedVisibleProducts;
+  if (ignoreYear && _cachedVisibleProductsNoYear) return _cachedVisibleProductsNoYear;
+
+  const selected = selectedTags();
   const selectedType = selected.filter((tag) => tag.dimension === "tipo_obra");
   const selectedGeneral = selected.filter((tag) => tag.dimension !== "tipo_obra");
 
-  return products.filter((product) => {
+  const result = products.filter((product) => {
     if (!ignoreYear && (product.year < yearStart || product.year > yearEnd)) return false;
     if (selectedType.length && !selectedType.some((tag) => product.tagKeys.has(tag.key))) return false;
     if (selectedGeneral.length && !selectedGeneral.some((tag) => product.tagKeys.has(tag.key))) return false;
     return true;
   });
+
+  if (ignoreYear) _cachedVisibleProductsNoYear = result;
+  else _cachedVisibleProducts = result;
+  return result;
 }
 
 function productsForCircularBase() {
+  const selected = selectedTags();
+  const selectedType = selected.filter((tag) => tag.dimension === "tipo_obra");
   return products.filter((product) => {
     if (product.year < yearStart || product.year > yearEnd) return false;
-    const selected = selectedTags();
-    const selectedType = selected.filter((tag) => tag.dimension === "tipo_obra");
     if (selectedType.length && !selectedType.some((tag) => product.tagKeys.has(tag.key))) return false;
     return true;
   });
 }
 
 function selectedTags() {
-  return Array.from(selectedTagKeys).map((key) => tagsByKey.get(key)).filter(Boolean);
+  if (_cachedSelectedTags) return _cachedSelectedTags;
+  _cachedSelectedTags = Array.from(selectedTagKeys).map((key) => tagsByKey.get(key)).filter(Boolean);
+  return _cachedSelectedTags;
 }
 
 function tagsForCircular() {
@@ -516,10 +552,6 @@ function visualX() {
 }
 
 function productPanelX() {
-  return LAYOUT_FILTRO_W + visualW();
-}
-
-function rightVisualX() {
   return LAYOUT_FILTRO_W + visualW();
 }
 
@@ -708,7 +740,7 @@ function drawThemeButton() {
 
 function drawDetailsLegendPanel() {
   if (!detailsPanelOpen) return;
-  const px = constrain(viewButtonX() + viewButtonW() - 220, visualX() + 12, rightVisualX() - 232);
+  const px = constrain(viewButtonX() + viewButtonW() - 220, visualX() + 12, productPanelX() - 232);
   const py = constrain(menuIconY() + 20, 12, height - 220);
   noStroke();
   fill(34, 34, 34, 248);
@@ -739,7 +771,7 @@ function drawDetailsLegendPanel() {
 
 function drawExportPanel() {
   if (!exportPanelOpen) return;
-  const px = constrain(exportButtonX() - 180, visualX() + 12, rightVisualX() - 282);
+  const px = constrain(exportButtonX() - 180, visualX() + 12, productPanelX() - 282);
   const py = constrain(menuIconY() + 20, 12, height - 230);
   noStroke();
   fill(34, 34, 34, 248);
@@ -771,7 +803,7 @@ function drawExportOption(label, x, y) {
 
 function menuW() { return 142; }
 function menuH() { return 82; }
-function menuX() { return rightVisualX() - menuW() - 12; }
+function menuX() { return productPanelX() - menuW() - 12; }
 function menuY() { return 12; }
 function menuIconY() { return menuY() + 63; }
 function viewButtonX() { return menuX() + 10; }
@@ -964,7 +996,12 @@ function drawBubbleView(productsVisible) {
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
   const outerR = Math.max(140, Math.min(visualW(), height - TIMELINE_H) * 0.42);
-  const groups = buildBubbleGroups(productsVisible, cx, cy, outerR);
+  const bubbleKey = `${productsVisible.map((p) => p.key).join(",")}|${cx}|${cy}|${outerR}`;
+  if (bubbleKey !== _bubbleCacheKey || !_cachedBubbleGroups) {
+    _cachedBubbleGroups = buildBubbleGroups(productsVisible, cx, cy, outerR);
+    _bubbleCacheKey = bubbleKey;
+  }
+  const groups = _cachedBubbleGroups;
 
   if (!selectedProduct && groups.length && groups[0].products.length) selectProduct(groups[0].products[0]);
 
@@ -1339,18 +1376,17 @@ function drawFilterHeader() {
   stroke("#000000");
   strokeWeight(2);
   fill(COLORS.yellow);
-  rect(0, 0, 255, 56);
+  rect(0, 0, LAYOUT_FILTRO_W, FILTER_HEADER_H);
   fill("#000000");
   noStroke();
   textFont(fontes.newAmsterdam);
   textSize(40);
   textAlign(CENTER, CENTER);
-  text("FILTROS", 127.5, 27);
+  text("FILTROS", LAYOUT_FILTRO_W / 2, FILTER_HEADER_H / 2);
 }
 
 function drawFilterCards() {
-  const cardW = 127.5;
-  const cardH = 100;
+  const cardW = LAYOUT_FILTRO_W / 2;
   const footerH = 26;
   const cards = [
     ["material", "Material", icones.material],
@@ -1363,56 +1399,53 @@ function drawFilterCards() {
     const col = i % 2;
     const row = Math.floor(i / 2);
     const x = col * cardW;
-    const y = 56 + row * cardH;
+    const y = FILTER_HEADER_H + row * FILTER_CARD_H;
     const active = activeDimension === dim;
     stroke("#000000");
     strokeWeight(2);
     fill(active ? COLORS.yellow : "#FFFFFF");
-    rect(x, y, cardW, cardH - footerH);
-    drawImageCentered(icon, x + cardW / 2, y + (cardH - footerH) / 2, 70, 58);
+    rect(x, y, cardW, FILTER_CARD_H - footerH);
+    drawImageCentered(icon, x + cardW / 2, y + (FILTER_CARD_H - footerH) / 2, 70, 58);
     fill(active ? DIMENSIONS[dim].color : "#000000");
-    rect(x, y + cardH - footerH, cardW, footerH);
+    rect(x, y + FILTER_CARD_H - footerH, cardW, footerH);
     fill(active && dim === "tipo_obra" ? "#000000" : "#FFFFFF");
     noStroke();
     textFont(fontes.robotoCondensed);
     textSize(fitTextSize(label, cardW - 24, 18, 10));
     textAlign(CENTER, CENTER);
-    text(label, x + cardW / 2, y + cardH - footerH / 2);
+    text(label, x + cardW / 2, y + FILTER_CARD_H - footerH / 2);
   }
 }
 
 function drawFilterBody() {
-  const bodyY = 256;
   noStroke();
   fill(panelBackground());
-  rect(0, bodyY, 255, height - bodyY);
+  rect(0, FILTER_BODY_Y, LAYOUT_FILTRO_W, height - FILTER_BODY_Y);
 
-  const catY = bodyY + 38;
-  const searchY = catY + 41;
-  const clearY = searchY + 41;
-  const listY = clearY + 44;
-  const barX = 27;
-  const barW = 201;
+  const catY = FILTER_BODY_Y + FILTER_CAT_OFFSET;
+  const searchY = catY + FILTER_SEARCH_OFFSET;
+  const clearY = searchY + FILTER_CLEAR_OFFSET;
+  const listY = clearY + FILTER_LIST_OFFSET;
 
   noStroke();
   fill("#FFFFFF");
-  rect(barX, catY, barW, 31, 15.5);
+  rect(FILTER_BAR_X, catY, FILTER_BAR_W, 31, 15.5);
   fill("#000000");
   textFont(fontes.newAmsterdam);
   const categoryLabel = currentCategoryLabel();
-  textSize(fitTextSize(categoryLabel, barW - 22, 22, 12));
+  textSize(fitTextSize(categoryLabel, FILTER_BAR_W - 22, 22, 12));
   textAlign(CENTER, CENTER);
-  text(categoryLabel, barX + barW / 2, catY + 15);
+  text(categoryLabel, FILTER_BAR_X + FILTER_BAR_W / 2, catY + 15);
 
   fill("#FFFFFF");
-  rect(barX, searchY, barW, 31, 15.5);
+  rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 31, 15.5);
   textFont(fontes.robotoCondensed);
   textSize(14);
   textAlign(LEFT, CENTER);
   fill(tagSearch.length ? "#000000" : color(90));
-  text(tagSearch.length ? tagSearch : "Pesquisar", barX + 13, searchY + 15);
+  text(tagSearch.length ? tagSearch : "Pesquisar", FILTER_BAR_X + 13, searchY + 15);
   if (tagSearchActive && frameCount % 60 < 30) {
-    const cx = barX + 13 + textWidth(tagSearch);
+    const cx = FILTER_BAR_X + 13 + textWidth(tagSearch);
     stroke("#000000");
     strokeWeight(1);
     line(cx + 2, searchY + 8, cx + 2, searchY + 23);
@@ -1420,15 +1453,15 @@ function drawFilterBody() {
 
   fill(selectedTagKeys.size ? "#D9D9D9" : color(190));
   noStroke();
-  rect(barX, clearY, barW, 28, 14);
-  drawImageCentered(icones.clear, barX + barW / 2, clearY + 14, 22, 22);
+  rect(FILTER_BAR_X, clearY, FILTER_BAR_W, 28, 14);
+  drawImageCentered(icones.clear, FILTER_BAR_X + FILTER_BAR_W / 2, clearY + 14, 22, 22);
 
   if (categorySelectorOpen && activeDimension !== "tipo_obra") drawCategorySelector(listY, height - 10);
   else drawTagList(listY, height - 10);
 }
 
 function filterListY() {
-  return 256 + 38 + 41 + 41 + 44;
+  return FILTER_BODY_Y + FILTER_CAT_OFFSET + FILTER_SEARCH_OFFSET + FILTER_CLEAR_OFFSET + FILTER_LIST_OFFSET;
 }
 
 function currentCategoryLabel() {
@@ -1482,19 +1515,28 @@ function drawCategorySelector(listY, listBottom) {
 
 function drawTagList(listY, listBottom) {
   const tags = tagsToDisplay();
-  const rowH = 36;
-  const maxScroll = Math.max(0, tags.length * rowH - (listBottom - listY));
+  const maxScroll = Math.max(0, tags.length * FILTER_TAG_ROW_H - (listBottom - listY));
   tagScroll = constrain(tagScroll, 0, maxScroll);
+
+  // Clip to prevent tags from bleeding outside the list area
+  drawingContext.save();
+  drawingContext.beginPath();
+  drawingContext.rect(0, listY, LAYOUT_FILTRO_W, listBottom - listY);
+  drawingContext.clip();
+
   for (let i = 0; i < tags.length; i++) {
-    const y = listY - tagScroll + i * rowH;
-    if (y + rowH < listY || y > listBottom) continue;
+    const y = listY - tagScroll + i * FILTER_TAG_ROW_H;
+    if (y + FILTER_TAG_ROW_H < listY || y > listBottom) continue;
     if (i % 2 === 1) {
       noStroke();
       fill(lightMode ? color(0, 0, 0, 12) : color(255, 255, 255, 9));
-      rect(0, y, 255, rowH);
+      rect(0, y, LAYOUT_FILTRO_W, FILTER_TAG_ROW_H);
     }
-    drawFilterTag(tags[i], y, rowH);
+    drawFilterTag(tags[i], y, FILTER_TAG_ROW_H);
   }
+
+  drawingContext.restore();
+
   if (maxScroll > 0) {
     const trackX = 8;
     const trackH = listBottom - listY;
@@ -1555,9 +1597,31 @@ function categoryAllowsTag(tag) {
 }
 
 function countProductsWithTagInCurrentType(tag) {
-  const typeTags = selectedTags().filter((item) => item.dimension === "tipo_obra");
-  if (!typeTags.length) return tag.count;
-  return products.filter((product) => product.tagKeys.has(tag.key) && typeTags.some((typeTag) => product.tagKeys.has(typeTag.key))).length;
+  if (_cachedTagCounts) {
+    const cached = _cachedTagCounts.get(tag.key);
+    if (cached !== undefined) return cached;
+  }
+
+  if (!_cachedTagCounts) {
+    _cachedTagCounts = new Map();
+    const typeTags = selectedTags().filter((item) => item.dimension === "tipo_obra");
+    if (!typeTags.length) {
+      // No type filter — all tags use their raw count
+      for (const [key, t] of tagsByKey) _cachedTagCounts.set(key, t.count);
+    } else {
+      // Pre-compute counts for all tags at once
+      const counters = new Map();
+      for (const product of products) {
+        if (!typeTags.some((typeTag) => product.tagKeys.has(typeTag.key))) continue;
+        for (const key of product.tagKeys) {
+          counters.set(key, (counters.get(key) || 0) + 1);
+        }
+      }
+      for (const [key] of tagsByKey) _cachedTagCounts.set(key, counters.get(key) || 0);
+    }
+  }
+
+  return _cachedTagCounts.get(tag.key) || 0;
 }
 
 function drawProductPanel() {
@@ -1684,6 +1748,13 @@ function drawProductDetails(x, y, w, barH, scale) {
   const visibleH = height - y;
   let contentH = detailsContentHeight(w, barH, scale);
   detailScroll = constrain(detailScroll, 0, Math.max(0, contentH - visibleH));
+
+  // Clip to prevent scrolled content from overflowing into the image/tabs above
+  drawingContext.save();
+  drawingContext.beginPath();
+  drawingContext.rect(x, y, w, visibleH);
+  drawingContext.clip();
+
   push();
   translate(0, -detailScroll);
   let cursor = y;
@@ -1691,6 +1762,9 @@ function drawProductDetails(x, y, w, barH, scale) {
   cursor = drawDetailSection(x, cursor, w, barH, "tecnicas", "TECNICAS DE CONSTRUCAO", techniqueOpen, selectedProduct ? (selectedProduct.origin === "brasileiro" ? selectedProduct.economicContext : selectedProduct.composition) : "", scale);
   drawDetailSection(x, cursor, w, barH, "estetico", "ESTETICO", aestheticOpen, selectedProduct ? selectedProduct.composition : "", scale);
   pop();
+
+  drawingContext.restore();
+
   drawPanelScroll(x + w - 6, y + 6, visibleH - 12, detailScroll, Math.max(0, contentH - visibleH));
 }
 
@@ -1831,6 +1905,13 @@ function drawSavedProducts(x, y, w, scale) {
   const rows = Math.ceil(items.length / 3);
   const totalH = rows * cardH + Math.max(0, rows - 1) * gapY;
   savedScroll = constrain(savedScroll, 0, Math.max(0, totalH - (height - gridY)));
+
+  // Clip to prevent saved product cards from overflowing
+  drawingContext.save();
+  drawingContext.beginPath();
+  drawingContext.rect(x, gridY, w, height - gridY);
+  drawingContext.clip();
+
   for (let i = 0; i < items.length; i++) {
     const col = i % 3;
     const row = Math.floor(i / 3);
@@ -1839,6 +1920,9 @@ function drawSavedProducts(x, y, w, scale) {
     if (cy + cardH < gridY || cy > height) continue;
     drawSavedCard(items[i], cx, cy, cardW, cardH, scale);
   }
+
+  drawingContext.restore();
+
   drawPanelScroll(x + w - 6, gridY + 4, height - gridY - 8, savedScroll, Math.max(0, totalH - (height - gridY)));
 }
 
@@ -1955,7 +2039,7 @@ function mouseReleased() {
 
 function mouseWheel(event) {
   if (productPanelWheel(event)) return false;
-  if (activeView === VISAO_MAPA_MUNDI && mouseX >= visualX() && mouseX <= rightVisualX() && mouseY < height - TIMELINE_H) {
+  if (activeView === VISAO_MAPA_MUNDI && mouseX >= visualX() && mouseX <= productPanelX() && mouseY < height - TIMELINE_H) {
     const previousZoom = mapState.zoom;
     mapState.zoom = constrain(mapState.zoom * (event.delta > 0 ? 0.88 : 1.14), 1, 7);
     if (Math.abs(previousZoom - mapState.zoom) > 0.001) {
@@ -1969,7 +2053,9 @@ function mouseWheel(event) {
     return false;
   }
   if (mouseX >= 0 && mouseX <= LAYOUT_FILTRO_W && mouseY >= filterListY()) {
-    tagScroll = Math.max(0, tagScroll + event.delta * 0.45);
+    const tags = tagsToDisplay();
+    const maxScroll = Math.max(0, tags.length * FILTER_TAG_ROW_H - (height - 10 - filterListY()));
+    tagScroll = constrain(tagScroll + event.delta * 0.45, 0, maxScroll);
     return false;
   }
 }
@@ -1998,33 +2084,34 @@ function filterMousePressed(mx, my) {
     tagSearchActive = false;
     return false;
   }
+  const cardW = LAYOUT_FILTRO_W / 2;
   const cards = [
-    ["material", 0, 56],
-    ["tecnicas", 127.5, 56],
-    ["estetico", 0, 156],
-    ["tipo_obra", 127.5, 156],
+    ["material", 0, FILTER_HEADER_H],
+    ["tecnicas", cardW, FILTER_HEADER_H],
+    ["estetico", 0, FILTER_HEADER_H + FILTER_CARD_H],
+    ["tipo_obra", cardW, FILTER_HEADER_H + FILTER_CARD_H],
   ];
   for (const [dim, x, y] of cards) {
-    if (insideRect(mx, my, x, y, 127.5, 100)) {
+    if (insideRect(mx, my, x, y, cardW, FILTER_CARD_H)) {
       activeDimension = dim;
       tagScroll = 0;
       categorySelectorOpen = false;
       return true;
     }
   }
-  const catY = 256 + 38;
-  const searchY = 256 + 38 + 41;
-  const clearY = searchY + 41;
-  if (activeDimension !== "tipo_obra" && insideRect(mx, my, 27, catY, 201, 31)) {
+  const catY = FILTER_BODY_Y + FILTER_CAT_OFFSET;
+  const searchY = catY + FILTER_SEARCH_OFFSET;
+  const clearY = searchY + FILTER_CLEAR_OFFSET;
+  if (activeDimension !== "tipo_obra" && insideRect(mx, my, FILTER_BAR_X, catY, FILTER_BAR_W, 31)) {
     categorySelectorOpen = !categorySelectorOpen;
     tagSearchActive = false;
     return true;
   }
-  if (insideRect(mx, my, 27, searchY, 201, 31)) {
+  if (insideRect(mx, my, FILTER_BAR_X, searchY, FILTER_BAR_W, 31)) {
     tagSearchActive = true;
     return true;
   }
-  if (insideRect(mx, my, 27, clearY, 201, 28)) {
+  if (insideRect(mx, my, FILTER_BAR_X, clearY, FILTER_BAR_W, 28)) {
     selectedTagKeys.clear();
     focusedCircularTagKey = "";
     tagSearch = "";
@@ -2049,7 +2136,7 @@ function filterMousePressed(mx, my) {
   }
   if (my >= listY) {
     const tags = tagsToDisplay();
-    const index = Math.floor((my - listY + tagScroll) / 36);
+    const index = Math.floor((my - listY + tagScroll) / FILTER_TAG_ROW_H);
     if (index >= 0 && index < tags.length) {
       const tag = tags[index];
       if (selectedTagKeys.has(tag.key)) selectedTagKeys.delete(tag.key);
@@ -2159,11 +2246,19 @@ function savedProductsMousePressed(mx, my, x, contentY, w, scale) {
 
 function productPanelWheel(event) {
   const x = productPanelX();
+  const w = productPanelW();
   const scale = layoutScale();
   const contentY = Math.round(337 * scale) + Math.round(80 * scale) + Math.round(55 * scale) + 2;
-  if (mouseX < x || mouseX > x + productPanelW() || mouseY < contentY) return false;
-  if (productDetailsActive) detailScroll = Math.max(0, detailScroll + event.delta * 0.45);
-  else savedScroll = Math.max(0, savedScroll + event.delta * 0.45);
+  if (mouseX < x || mouseX > x + w || mouseY < contentY) return false;
+  if (productDetailsActive) {
+    const barH = Math.round(44 * scale);
+    const visibleH = height - contentY;
+    const contentH = detailsContentHeight(w, barH, scale);
+    const maxScroll = Math.max(0, contentH - visibleH);
+    detailScroll = constrain(detailScroll + event.delta * 0.45, 0, maxScroll);
+  } else {
+    savedScroll = Math.max(0, savedScroll + event.delta * 0.45);
+  }
   return true;
 }
 
@@ -2183,7 +2278,7 @@ function visualMousePressed(mx, my) {
     return true;
   }
   if (exportPanelOpen && exportPanelMousePressed(mx, my)) return true;
-  if (mx < visualX() || mx > rightVisualX() || my < 0 || my > height) return false;
+  if (mx < visualX() || mx > productPanelX() || my < 0 || my > height) return false;
   const yearHit = clickedYearHandle(mx, my);
   if (yearHit) {
     draggedYearHandle = yearHit;
@@ -2215,7 +2310,7 @@ function visualMousePressed(mx, my) {
 }
 
 function exportPanelMousePressed(mx, my) {
-  const px = constrain(exportButtonX() - 180, visualX() + 12, rightVisualX() - 282);
+  const px = constrain(exportButtonX() - 180, visualX() + 12, productPanelX() - 282);
   const py = constrain(menuIconY() + 20, 12, height - 230);
   if (insideRect(mx, my, px + 18, py + 58, 86, 28)) {
     saveCanvas("tagrafia-visualizacao", "jpg");
