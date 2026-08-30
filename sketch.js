@@ -597,11 +597,18 @@ function panelTextColor() {
 }
 
 function drawCurrentVisualization() {
+  drawingContext.save();
+  drawingContext.beginPath();
+  drawingContext.rect(visualX(), 0, visualW(), visualH());
+  drawingContext.clip();
+
   const productsVisible = visibleProducts();
   if (activeView === VISAO_BOLHAS) drawBubbleView(productsShownInCircular());
   else if (activeView === VISAO_LINHA_TEMPO) drawTimelineView(productsShownInCircular());
   else if (activeView === VISAO_MAPA_MUNDI) drawMapView(productsVisible);
   else drawCircularView(productsVisible);
+
+  drawingContext.restore();
 }
 
 function drawVisualizationBackground() {
@@ -825,7 +832,7 @@ function drawCircularView(visible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
-  const radius = Math.min(380, Math.max(120, Math.min(visualW() - 280, height - TIMELINE_H - 70) / 2));
+  const radius = Math.min(380, Math.max(30, Math.min(visualW() - 320, height - TIMELINE_H - 380) / 2));
   const tags = tagsForCircular();
   const tagPositions = new Map();
 
