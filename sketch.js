@@ -180,7 +180,7 @@ function preload() {
 }
 
 function setup() {
-  const canvas = createCanvas(windowWidth, windowHeight);
+  const canvas = createCanvas(Math.max(1024, windowWidth), Math.max(640, windowHeight));
   canvas.parent("canvasMount");
   pixelDensity(Math.min(2, displayDensity()));
   textFont(fontes.robotoCondensed);
@@ -212,7 +212,7 @@ function draw() {
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+  resizeCanvas(Math.max(1024, windowWidth), Math.max(640, windowHeight));
 }
 
 function buildData() {
@@ -516,8 +516,17 @@ function layoutScale() {
   return Math.min(1, space / (LAYOUT_VISUAL_W_BASE + LAYOUT_PAINEL_PRODUTO_W));
 }
 
+function filterPanelScale() {
+  if (width < 1000) return Math.max(0.65, width / 1000);
+  return 1;
+}
+
+function filterPanelW() {
+  return LAYOUT_FILTRO_W * filterPanelScale();
+}
+
 function contentSpace() {
-  return Math.max(0, width - LAYOUT_FILTRO_W);
+  return Math.max(0, width - filterPanelW());
 }
 
 function minVisualW() {
@@ -548,11 +557,11 @@ function visualW() {
 }
 
 function visualX() {
-  return LAYOUT_FILTRO_W;
+  return filterPanelW();
 }
 
 function productPanelX() {
-  return LAYOUT_FILTRO_W + visualW();
+  return filterPanelW() + visualW();
 }
 
 function visualH() {
@@ -567,7 +576,7 @@ function drawLayoutSeparators() {
   push();
   stroke("#000000");
   strokeWeight(2);
-  line(LAYOUT_FILTRO_W, 0, LAYOUT_FILTRO_W, height);
+  line(filterPanelW(), 0, filterPanelW(), height);
   line(productPanelX(), 0, productPanelX(), height);
   pop();
 }
@@ -832,24 +841,9 @@ function drawCircularView(visible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
-  const radius = Math.min(380, Math.max(30, Math.min(visualW() - 320, height - TIMELINE_H - 380) / 2));
+  const baseRadius = Math.min(380, Math.max(80, Math.min(visualW() - 320, height - TIMELINE_H - 380) / 2));
   const tags = tagsForCircular();
   const tagPositions = new Map();
-
-  noFill();
-  stroke(themeLineColor());
-  strokeWeight(13);
-  drawDashedCircle(cx, cy, radius, 38);
-
-  for (const tag of tags) {
-    const pos = tagPosition(tag, cx, cy, radius * 0.72);
-    tagPositions.set(tag.key, pos);
-    const active = !focusedCircularTagKey || focusedCircularTagKey === tag.key;
-    noStroke();
-    fill(colorAlpha(tag.color, active ? 255 : 75));
-    circle(pos.x, pos.y, active ? 11 : 8);
-    hitAreas.push({ kind: "tag", tag, cx: pos.x, cy: pos.y, r: 13 });
-  }
 
   const productsVisual = [];
   const typeTags = selectedTags().filter((tag) => tag.dimension === "tipo_obra");
@@ -864,6 +858,45 @@ function drawCircularView(visible) {
   productsVisual.sort((a, b) => b.weight - a.weight || originWeight(b.product) - originWeight(a.product) || a.product.name.localeCompare(b.product.name, "pt-BR"));
 
   if (!selectedProduct && productsVisual.length) selectProduct(productsVisual[0].product);
+
+  // Pre-calculate max radius to determine scale factor
+  let maxCornerDist = baseRadius + 160; 
+  let slotCalc = 0;
+  for (const item of productsVisual) {
+    if (slotCalc >= 38) break;
+    const segments = Math.min(constrain(item.weight, 1, 3), 38 - slotCalc);
+    const cardH = Math.max(38, (TWO_PI * baseRadius / 38) * segments * 0.92);
+    const cardW = constrain(measureText(item.product.name, 18) + 28, 100, 150);
+    const dist = Math.hypot(baseRadius + cardW + 6, cardH / 2);
+    if (dist > maxCornerDist) maxCornerDist = dist;
+    slotCalc += segments;
+  }
+
+  // Calculate safe boundaries (45px top padding for text)
+  const safeR_Y = cy - 45;
+  const safeR_X = visualW() / 2 - 20;
+  const scaleRatio = Math.min(1, safeR_Y / maxCornerDist, safeR_X / maxCornerDist);
+  const radius = baseRadius;
+
+  push();
+  translate(cx, cy);
+  scale(scaleRatio);
+  translate(-cx, -cy);
+
+  noFill();
+  stroke(themeLineColor());
+  strokeWeight(13);
+  drawDashedCircle(cx, cy, radius, 38);
+
+  for (const tag of tags) {
+    const pos = tagPosition(tag, cx, cy, radius * 0.72);
+    tagPositions.set(tag.key, pos);
+    const active = !focusedCircularTagKey || focusedCircularTagKey === tag.key;
+    noStroke();
+    fill(colorAlpha(tag.color, active ? 255 : 75));
+    circle(pos.x, pos.y, active ? 11 : 8);
+    hitAreas.push({ kind: "tag", tag, cx: cx + (pos.x - cx) * scaleRatio, cy: cy + (pos.y - cy) * scaleRatio, r: 13 * scaleRatio });
+  }
 
   let slot = 0;
   for (const item of productsVisual) {
@@ -887,9 +920,13 @@ function drawCircularView(visible) {
     }
 
     drawProductCard(item.product, cardCx, cardCy, cardW, cardH, rotation);
-    hitAreas.push({ kind: "product", product: item.product, shape: "rotatedRect", cx: cardCx, cy: cardCy, w: cardW, h: cardH, rotation });
+    const hitCx = cx + (cardCx - cx) * scaleRatio;
+    const hitCy = cy + (cardCy - cy) * scaleRatio;
+    hitAreas.push({ kind: "product", product: item.product, shape: "rotatedRect", cx: hitCx, cy: hitCy, w: cardW * scaleRatio, h: cardH * scaleRatio, rotation });
     slot += segments;
   }
+  
+  pop();
 
   if (!productsVisual.length) {
     drawCenteredVisualMessage(selectedTagKeys.size ? "Nenhum produto encontrado para os filtros atuais" : "Selecione tags no filtro para visualizar os produtos", cx, cy);
@@ -1002,7 +1039,7 @@ function drawBubbleView(productsVisible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
-  const outerR = Math.max(140, Math.min(visualW(), height - TIMELINE_H) * 0.42);
+  const outerR = Math.max(140, Math.min(visualW(), height - TIMELINE_H) * 0.46);
   const bubbleKey = `${productsVisible.map((p) => p.key).join(",")}|${cx}|${cy}|${outerR}`;
   if (bubbleKey !== _bubbleCacheKey || !_cachedBubbleGroups) {
     _cachedBubbleGroups = buildBubbleGroups(productsVisible, cx, cy, outerR);
@@ -1027,7 +1064,7 @@ function drawBubbleView(productsVisible) {
     noStroke();
     textFont(fontes.afacad);
     textStyle(BOLD);
-    textSize(fitTextSize(group.name, group.r * 1.52, 20, 9));
+    textSize(fitTextSize(group.name, group.r * 1.52, 26, 11));
     textAlign(CENTER, CENTER);
     text(group.name, group.x - group.r * 0.75, group.y - 24, group.r * 1.5, 54);
     textStyle(NORMAL);
@@ -1049,14 +1086,14 @@ function buildBubbleGroups(productsVisible, cx, cy, outerR) {
   let area = 0;
   for (const group of groups) {
     group.products.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-    group.r = constrain(30 + Math.sqrt(group.products.length) * 16, 38, 118);
+    group.r = constrain(45 + Math.sqrt(group.products.length) * 24, 55, 150);
     area += PI * group.r * group.r;
   }
-  const available = PI * outerR * outerR * 0.66;
+  const available = PI * outerR * outerR * 0.85; // Allow more density
   const scale = area > available ? Math.sqrt(available / area) : 1;
   for (let i = 0; i < groups.length; i++) {
     const group = groups[i];
-    group.r = constrain(group.r * scale, 30, 118);
+    group.r = constrain(group.r * scale, 45, 150);
     if (i === 0) {
       group.x = cx;
       group.y = cy;
@@ -1373,6 +1410,7 @@ function xToYear(x) {
 
 function drawFilterPanel() {
   push();
+  scale(filterPanelScale());
   drawFilterHeader();
   drawFilterCards();
   drawFilterBody();
@@ -1427,7 +1465,7 @@ function drawFilterCards() {
 function drawFilterBody() {
   noStroke();
   fill(panelBackground());
-  rect(0, FILTER_BODY_Y, LAYOUT_FILTRO_W, height - FILTER_BODY_Y);
+  rect(0, FILTER_BODY_Y, LAYOUT_FILTRO_W, height / filterPanelScale() - FILTER_BODY_Y);
 
   const catY = FILTER_BODY_Y + FILTER_CAT_OFFSET;
   const searchY = catY + FILTER_SEARCH_OFFSET;
@@ -1463,8 +1501,9 @@ function drawFilterBody() {
   rect(FILTER_BAR_X, clearY, FILTER_BAR_W, 28, 14);
   drawImageCentered(icones.clear, FILTER_BAR_X + FILTER_BAR_W / 2, clearY + 14, 22, 22);
 
-  if (categorySelectorOpen && activeDimension !== "tipo_obra") drawCategorySelector(listY, height - 10);
-  else drawTagList(listY, height - 10);
+  const maxH = height / filterPanelScale() - 10;
+  if (categorySelectorOpen && activeDimension !== "tipo_obra") drawCategorySelector(listY, maxH);
+  else drawTagList(listY, maxH);
 }
 
 function filterListY() {
@@ -2059,10 +2098,10 @@ function mouseWheel(event) {
     }
     return false;
   }
-  if (mouseX >= 0 && mouseX <= LAYOUT_FILTRO_W && mouseY >= filterListY()) {
+  if (mouseX >= 0 && mouseX <= filterPanelW() && mouseY >= filterListY() * filterPanelScale()) {
     const tags = tagsToDisplay();
-    const maxScroll = Math.max(0, tags.length * FILTER_TAG_ROW_H - (height - 10 - filterListY()));
-    tagScroll = constrain(tagScroll + event.delta * 0.45, 0, maxScroll);
+    const maxScroll = Math.max(0, tags.length * FILTER_TAG_ROW_H - (height / filterPanelScale() - 10 - filterListY()));
+    tagScroll = constrain(tagScroll + event.delta * 0.45 / filterPanelScale(), 0, maxScroll);
     return false;
   }
 }
@@ -2086,8 +2125,11 @@ function keyPressed() {
   }
 }
 
-function filterMousePressed(mx, my) {
-  if (mx < 0 || mx > LAYOUT_FILTRO_W || my < 0 || my > height) {
+function filterMousePressed(mxRaw, myRaw) {
+  const scale = filterPanelScale();
+  const mx = mxRaw / scale;
+  const my = myRaw / scale;
+  if (mx < 0 || mx > LAYOUT_FILTRO_W || my < 0 || my > height / scale) {
     tagSearchActive = false;
     return false;
   }

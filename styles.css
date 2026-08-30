@@ -7,7 +7,7 @@ body,
 }
 
 body {
-  overflow: hidden;
+  overflow: auto;
   background: #000000;
 }
 
