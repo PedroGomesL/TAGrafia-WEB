@@ -33,6 +33,7 @@ function preload() {
   icones.assinado = loadImage(asset("data/Icones/design_assinado.png"));
   icones.industrial = loadImage(asset("data/Icones/produto industrial.png"));
   icones.export = loadImage(asset("data/Icones/exportar.svg"));
+  icones.change = loadImage(asset("data/Icones/change.png"));
 }
 
 function setup() {
@@ -61,7 +62,6 @@ function draw() {
   background(240);
   drawCurrentVisualization();
   drawVisualizationSummary();
-  drawVisualizationMenu();
   drawProductPanel();
   drawFilterPanel();
   drawLayoutSeparators();

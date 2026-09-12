@@ -689,19 +689,6 @@ function drawMapCluster(cluster) {
 }
 
 function visualMousePressed(mx, my) {
-  if (
-    insideRect(
-      mx,
-      my,
-      viewButtonX(),
-      viewButtonY(),
-      viewButtonW(),
-      viewButtonH(),
-    )
-  ) {
-    activeView = (activeView + 1) % 4;
-    return true;
-  }
   if (mx < visualX() || mx > productPanelX() || my < 0 || my > height)
     return false;
   const yearHit = clickedYearHandle(mx, my);

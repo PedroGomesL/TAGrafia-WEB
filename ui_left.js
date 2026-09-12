@@ -44,13 +44,14 @@ function drawNavSidebar() {
   line(15, 75, LAYOUT_NAV_W - 15, 75);
 
   const navItems = [
-    { id: "filtros", label: "Filtros", y: 140, icon: icones.filtros },
-    { id: "exportar", label: "Exportar", y: 260, icon: icones.export },
-    { id: "sobre", label: "Sobre", y: 380, icon: icones.sobre },
+    { id: "filtros", label: "Filtros", y: 130, icon: icones.filtros },
+    { id: "trocar", label: "Trocar\nVisualização", y: 240, icon: icones.change },
+    { id: "exportar", label: "Exportar", y: 350, icon: icones.export },
+    { id: "sobre", label: "Sobre", y: 460, icon: icones.sobre },
   ];
 
   for (const item of navItems) {
-    const active = leftPanelTab === item.id;
+    const active = leftPanelTab === item.id || (item.id === "trocar" && false); // no active state background for "trocar" as it's an action
 
     // Draw background if active
     if (active) {
@@ -265,9 +266,9 @@ function drawCategorySelector(listY, listBottom) {
     fill("#000000");
     noStroke();
     textFont(fontes.newAmsterdam);
-    textSize(fitTextSize(option.label, 225, 18, 10));
+    textSize(fitTextSize(option.label, 225, 16, 10));
     textAlign(LEFT, BASELINE);
-    text(option.label, 18, y + rowH / 2 + 6);
+    text(option.label, FILTER_BAR_X, y + rowH / 2 + 5);
   }
 }
 
@@ -296,7 +297,7 @@ function drawTagList(listY, listBottom) {
   drawingContext.restore();
 
   if (maxScroll > 0) {
-    const trackX = 8;
+    const trackX = LAYOUT_FILTRO_W - 5;
     const trackH = listBottom - listY;
     const thumbH = Math.max(34, (trackH * trackH) / (trackH + maxScroll));
     const thumbY = listY + map(tagScroll, 0, maxScroll, 0, trackH - thumbH);
@@ -351,9 +352,9 @@ function drawFilterTag(tag, y, rowH) {
   const badgeX = LAYOUT_FILTRO_W - badgeW - 14;
 
   // Tag label
-  textSize(fitTextSize(tag.label, badgeX - 20, 15, 10));
+  textSize(fitTextSize(tag.label, badgeX - FILTER_BAR_X - 5, 15, 10));
   textAlign(LEFT, CENTER);
-  text(tag.label, 14, y + rowH / 2);
+  text(tag.label, FILTER_BAR_X, y + rowH / 2);
 
   // Badge pill
   if (badgeText) {
@@ -439,12 +440,14 @@ function filterMousePressed(mxRaw, myRaw) {
 
   if (mx < LAYOUT_NAV_W) {
     // Clicked in the Nav Sidebar
-    // Nav Items: Filtros (140), Exportar (260), Sobre (380)
-    if (my >= 110 && my <= 190) {
+    // Nav Items: Filtros (130), Trocar (240), Exportar (350), Sobre (460)
+    if (my >= 100 && my <= 160) {
       leftPanelTab = "filtros";
-    } else if (my >= 230 && my <= 310) {
+    } else if (my >= 210 && my <= 270) {
+      activeView = (activeView + 1) % 4; // Toggle view
+    } else if (my >= 320 && my <= 380) {
       leftPanelTab = "exportar";
-    } else if (my >= 350 && my <= 430) {
+    } else if (my >= 430 && my <= 490) {
       leftPanelTab = "sobre";
     }
     return true;
@@ -528,6 +531,14 @@ function filterMousePressed(mxRaw, myRaw) {
     }
   } else if (leftPanelTab === "exportar") {
     // Export tab interaction
+    const viewsY = [90, 130, 170, 210];
+    for (let i = 0; i < viewsY.length; i++) {
+      if (my >= viewsY[i] - 10 && my <= viewsY[i] + 28 && mx >= 20 && mx <= 160) {
+        exportViewsSelection[i] = !exportViewsSelection[i];
+        return true;
+      }
+    }
+
     if (my >= 310 && my <= 336) {
       saveCanvas("tagrafia-visualizacao", "pdf"); // pseudo
       return true;
@@ -556,10 +567,10 @@ function drawExportTab() {
   text("Selecione as visualizações\npara exportar", 24, 30);
 
   const views = [
-    { label: "Circular", y: 90, selected: false },
-    { label: "Bolhas", y: 130, selected: true },
-    { label: "Linha do tempo", y: 170, selected: true },
-    { label: "Mapa-Mundi", y: 210, selected: true },
+    { label: "Circular", y: 90, selected: exportViewsSelection[0] },
+    { label: "Bolhas", y: 130, selected: exportViewsSelection[1] },
+    { label: "Linha do tempo", y: 170, selected: exportViewsSelection[2] },
+    { label: "Mapa-Mundi", y: 210, selected: exportViewsSelection[3] },
   ];
 
   for (const v of views) {
