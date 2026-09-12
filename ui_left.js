@@ -87,10 +87,6 @@ function drawNavSidebar() {
     text(item.label, LAYOUT_NAV_W / 2, item.y + 35);
   }
 
-  // Right border
-  stroke("#959fff");
-  strokeWeight(1.5);
-  line(LAYOUT_NAV_W, 0, LAYOUT_NAV_W, height / filterPanelScale());
   pop();
 }
 
@@ -331,9 +327,6 @@ function drawFilterTag(tag, y, rowH) {
     noStroke();
     fill(dimColor);
     rect(0, y, LAYOUT_FILTRO_W, rowH);
-    // Left accent strip (4px)
-    fill("#959fff");
-    rect(0, y, 4, rowH);
     
     // Use black text for all light pastel backgrounds
     fill("#000000");
