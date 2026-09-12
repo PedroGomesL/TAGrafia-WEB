@@ -541,15 +541,37 @@ function filterMousePressed(mxRaw, myRaw) {
     }
 
     if (my >= 310 && my <= 336) {
-      saveCanvas("tagrafia-visualizacao", "pdf"); // pseudo
+      exportFormatDropdownOpen = !exportFormatDropdownOpen;
       return true;
     }
-    if (my >= 336 && my <= 362) {
-      saveCanvas("tagrafia-visualizacao", "jpg");
+
+    const formats = ["PDF", "JPG", "SVG"].filter(f => f !== exportFormatSelected);
+    if (exportFormatDropdownOpen) {
+      for (let i = 0; i < formats.length; i++) {
+        const oy = 310 + 26 + i * 26;
+        if (my >= oy && my <= oy + 26) {
+          exportFormatSelected = formats[i];
+          exportFormatDropdownOpen = false;
+          return true;
+        }
+      }
+    }
+
+    // Export button click
+    const btnY = exportFormatDropdownOpen ? 310 + 26 + formats.length * 26 + 20 : 310 + 46;
+    if (mx >= 24 && mx <= 168 && my >= btnY && my <= btnY + 30) {
+      if (exportFormatSelected === "JPG") {
+        saveCanvas("tagrafia-visualizacao", "jpg");
+      } else {
+        // Mock PDF/SVG export or implement if available
+        console.log("Exporting to " + exportFormatSelected);
+      }
+      exportFormatDropdownOpen = false;
       return true;
     }
-    if (my >= 362 && my <= 388) {
-      saveCanvas("tagrafia-visualizacao", "svg"); // pseudo
+
+    if (exportFormatDropdownOpen) {
+      exportFormatDropdownOpen = false; // click outside closes it
       return true;
     }
   }
@@ -608,28 +630,59 @@ function drawExportTab() {
   noStroke();
   text("Exportar em:", 24, 280);
 
+  const dy = 310;
+  
   stroke("#959fff");
   strokeWeight(1.5);
-  noFill();
-  rect(24, 310, 144, 26, 4);
-  rect(24, 336, 144, 26, 4);
-  rect(24, 362, 144, 26, 4);
-
+  fill("#FFFFFF");
+  rect(24, dy, 144, 26, 4);
+  
   fill(0);
   noStroke();
-  text("PDF", 30, 315);
-  text("JPG", 30, 341);
-  text("SVG", 30, 367);
-
+  text(exportFormatSelected, 30, dy + 5);
+  
   // Chevron
   stroke("#959fff");
   strokeWeight(2);
   noFill();
   beginShape();
-  vertex(150, 318);
-  vertex(155, 323);
-  vertex(150, 328);
+  if (exportFormatDropdownOpen) {
+    vertex(150, dy + 15);
+    vertex(155, dy + 10);
+    vertex(160, dy + 15);
+  } else {
+    vertex(150, dy + 10);
+    vertex(155, dy + 15);
+    vertex(160, dy + 10);
+  }
   endShape();
+  
+  const formats = ["PDF", "JPG", "SVG"].filter(f => f !== exportFormatSelected);
+  
+  if (exportFormatDropdownOpen) {
+    for (let i = 0; i < formats.length; i++) {
+      const oy = dy + 26 + i * 26;
+      stroke("#959fff");
+      strokeWeight(1.5);
+      fill("#FFFFFF");
+      rect(24, oy, 144, 26, 4);
+      
+      fill(0);
+      noStroke();
+      text(formats[i], 30, oy + 5);
+    }
+  }
+  
+  // Export button
+  const btnY = exportFormatDropdownOpen ? dy + 26 + formats.length * 26 + 20 : dy + 46;
+  fill("#959fff");
+  noStroke();
+  rect(24, btnY, 144, 30, 15);
+  
+  fill(255);
+  textAlign(CENTER, CENTER);
+  text("Baixar", 24 + 72, btnY + 15);
+  textAlign(LEFT, TOP);
 }
 
 function drawSobreTab() {
