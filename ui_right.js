@@ -266,6 +266,15 @@ function drawProductDetailsNew(x, y, w, h, scale) {
     const chipH = 22 * scale;
     textSize(13 * scale);
 
+    const DIM_COLORS = {
+      material: "#959fff",
+      materiais: "#959fff",
+      tecnicas: "#a7ff95",
+      estetico: "#ff9597",
+      tipo_obra: "#ffef95",
+    };
+    const tagBgColor = DIM_COLORS[dim] || "#959fff";
+
     for (const tag of tags) {
       const chipW = Math.max(50 * scale, textWidth(tag.label) + 16 * scale);
       if (cursorX + chipW > maxX) {
@@ -273,9 +282,9 @@ function drawProductDetailsNew(x, y, w, h, scale) {
         cursorY += chipH + 6 * scale;
       }
       noStroke();
-      fill(tag.color);
+      fill(tagBgColor);
       rect(cursorX, cursorY, chipW, chipH, 4);
-      fill(dim === "tecnicas" ? "#000000" : "#FFFFFF");
+      fill("#000000");
       textAlign(CENTER, CENTER);
       text(tag.label, cursorX + chipW / 2, cursorY + chipH / 2);
       cursorX += chipW + 6 * scale;
