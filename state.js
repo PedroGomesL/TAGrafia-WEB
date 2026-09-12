@@ -1,23 +1,4 @@
-let icones = {
-  menu: null,
-  filtros: null,
-  obras: null,
-  graficos: null,
-  clear: null,
-  material: null,
-  tecnicas: null,
-  estetico: null,
-  tipo_obra: null,
-  left: null,
-  right: null,
-  save: null,
-  author: null,
-  artesanal: null,
-  industrial: null,
-  export: null,
-  change: null,
-  sobre: null,
-};
+let icones = {};
 
 let fontes = {};
 let sourceLines = {};
@@ -59,7 +40,6 @@ let savedScroll = 0;
 let savedSearch = "";
 let savedSearchActive = false;
 let savedSortMode = 0;
-let productDetailsActive = true;
 let rightPanelTab = "material"; // "tecnicas", "material", "estetico", "salvos"
 let lightMode = true;
 let activeView = VISAO_CIRCULAR;
@@ -68,10 +48,6 @@ let yearEnd = YEAR_MAX;
 let draggedYearHandle = null;
 let hitAreas = [];
 let focusedCircularTagKey = "";
-let detailsPanelOpen = false;
-let exportPanelOpen = false;
-let exportMessage = "";
-let exportMessageFrame = 0;
 let exportViewsSelection = [true, true, true, true];
 let exportFormatDropdownOpen = false;
 let exportFormatSelected = "PDF";

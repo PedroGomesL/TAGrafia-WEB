@@ -36,14 +36,104 @@ const VISAO_BOLHAS = 1;
 const VISAO_LINHA_TEMPO = 2;
 const VISAO_MAPA_MUNDI = 3;
 
+const VIEWS_CONFIG = [
+  { id: VISAO_CIRCULAR, label: "Circular", iconKey: "visao_circular" },
+  { id: VISAO_BOLHAS, label: "Bolhas", iconKey: "visao_bolhas" },
+  { id: VISAO_LINHA_TEMPO, label: "Linha do tempo", iconKey: "visao_timeline" },
+  { id: VISAO_MAPA_MUNDI, label: "Mapa-Mundi", iconKey: "visao_mapa" },
+];
+
+const ICONS_CONFIG = {
+  filtros: "data/Icones/filtros.svg",
+  sobre: "data/Icones/sobre.svg",
+  export: "data/Icones/exportar.svg",
+  clear: "data/Icones/filter_alt_off.png",
+  left: "data/Icones/keyboard_arrow_left.png",
+  right: "data/Icones/keyboard_arrow_right.png",
+  save: "data/Icones/salvar_produto.png",
+  material: "data/Icones/material.png",
+  tecnicas: "data/Icones/técnica.png",
+  estetico: "data/Icones/estético.png",
+  tipo_obra: "data/Icones/tipodeproduto.png",
+  artesanal: "data/Icones/produto artesanal.png",
+  assinado: "data/Icones/design_assinado.png",
+  industrial: "data/Icones/produto industrial.png",
+  visao_circular: "data/Icones/visao_circular.svg",
+  visao_bolhas: "data/Icones/visao_bolhas.svg",
+  visao_timeline: "data/Icones/visao_timeline.svg",
+  visao_mapa: "data/Icones/visao_mapa.svg",
+};
+
 const DIMENSIONS = {
-  material: { label: "Material", color: "#3E4AD3" },
-  tecnicas: { label: "Tecnica", color: "#4AD33E" },
-  estetico: { label: "Estetico", color: "#D33E4A" },
-  tipo_obra: { label: "Tipo de produto", color: "#FFCB00" },
+  material: {
+    id: "material",
+    label: "Material",
+    iconKey: "material",
+    color: "#3E4AD3",
+    pastelColor: "#959fff",
+    gridX: 126,
+    gridY: 20,
+  },
+  tecnicas: {
+    id: "tecnicas",
+    label: "Técnica",
+    iconKey: "tecnicas",
+    color: "#4AD33E",
+    pastelColor: "#a7ff95",
+    gridX: 126,
+    gridY: 120,
+  },
+  estetico: {
+    id: "estetico",
+    label: "Estético",
+    iconKey: "estetico",
+    color: "#D33E4A",
+    pastelColor: "#ff9597",
+    gridX: 28,
+    gridY: 120,
+  },
+  tipo_obra: {
+    id: "tipo_obra",
+    label: "Tipo",
+    iconKey: "tipo_obra",
+    color: "#FFCB00",
+    pastelColor: "#ffef95",
+    gridX: 28,
+    gridY: 20,
+  },
 };
 
 const DIMENSION_ORDER = ["material", "tecnicas", "estetico", "tipo_obra"];
+
+function getDimension(dim) {
+  if (!dim) return null;
+  const normalized = dim === "materiais" ? "material" : dim;
+  return DIMENSIONS[normalized] || null;
+}
+
+function getDimensionColor(dim) {
+  return getDimension(dim)?.color || "#3E4AD3";
+}
+
+function getDimensionPastelColor(dim) {
+  return getDimension(dim)?.pastelColor || "#959fff";
+}
+
+const PRODUCTION_CONFIG = [
+  { keywords: ["artesanal"], iconKey: "artesanal", label: "Artesanal" },
+  { keywords: ["industrial", "massa", "seri"], iconKey: "industrial", label: "Industrial" },
+  { keywords: ["assinado"], iconKey: "assinado", label: "Design Assinado" },
+];
+
+function getProductionInfo(productionStr) {
+  const text = String(productionStr || "").toLowerCase();
+  for (const item of PRODUCTION_CONFIG) {
+    if (item.keywords.some((kw) => text.includes(kw))) {
+      return item;
+    }
+  }
+  return PRODUCTION_CONFIG[2]; // Default: assinado
+}
 
 const CATEGORY_FILTERS = {
   material: [

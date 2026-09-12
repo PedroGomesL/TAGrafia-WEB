@@ -50,11 +50,8 @@ function drawNavSidebar() {
   strokeWeight(1.5);
   line(15, 75, LAYOUT_NAV_W - 15, 75);
 
-  let dynamicViewIcon;
-  if (activeView === 0) dynamicViewIcon = icones.visao_circular;
-  else if (activeView === 1) dynamicViewIcon = icones.visao_bolhas;
-  else if (activeView === 2) dynamicViewIcon = icones.visao_timeline;
-  else dynamicViewIcon = icones.visao_mapa;
+  const currentView = VIEWS_CONFIG.find((v) => v.id === activeView);
+  const dynamicViewIcon = currentView ? icones[currentView.iconKey] : icones.visao_circular;
 
   const navItems = [
     { id: "filtros", label: "Filtros", y: 130, icon: icones.filtros },
@@ -102,18 +99,7 @@ function drawNavSidebar() {
   pop();
 }
 
-function drawFilterHeader() {
-  // O cabeçalho amarelo foi removido no novo design. Deixamos vazio.
-}
-
 function drawFilterCards() {
-  const cards = [
-    ["tipo_obra", "Tipo", icones.tipo_obra, "#ffef95", 28, 20],
-    ["material", "Material", icones.material, "#959fff", 126, 20],
-    ["estetico", "Estético", icones.estetico, "#ff9597", 28, 120],
-    ["tecnicas", "Técnica", icones.tecnicas, "#a7ff95", 126, 120],
-  ];
-
   push();
   // Draw the blue cross
   stroke("#959fff");
@@ -122,18 +108,21 @@ function drawFilterCards() {
   line(47, 110, 166, 110); // Horizontal
   pop();
 
-  for (let i = 0; i < cards.length; i++) {
-    const [dim, label, icon, bgColor, cx, cy] = cards[i];
-    const active = activeDimension === dim;
+  for (const dimKey of Object.keys(DIMENSIONS)) {
+    const dim = DIMENSIONS[dimKey];
+    const active = activeDimension === dimKey;
+    const cx = dim.gridX;
+    const cy = dim.gridY;
 
-    // Background ONLY if active (as per previous request)
+    // Background ONLY if active
     if (active) {
       noStroke();
-      fill(bgColor);
+      fill(dim.pastelColor);
       rect(cx, cy, 50, 50, 5); // Rounded corners like Figma
     }
 
     // Draw icon
+    const icon = icones[dim.iconKey];
     if (icon) drawImageCentered(icon, cx + 25, cy + 25, 40, 40);
 
     // Draw text
@@ -142,7 +131,7 @@ function drawFilterCards() {
     textFont(fontes.roboto);
     textSize(14);
     textAlign(CENTER, TOP);
-    text(label, cx + 25, cy + 60);
+    text(dim.label, cx + 25, cy + 60);
   }
 }
 
@@ -326,13 +315,7 @@ function drawTagList(listY, listBottom) {
 function drawFilterTag(tag, y, rowH) {
   const selected = selectedTagKeys.has(tag.key);
 
-  const DIM_COLORS = {
-    material:  "#959fff",
-    tecnicas:  "#a7ff95",
-    estetico:  "#ff9597",
-    tipo_obra: "#ffef95",
-  };
-  const dimColor = DIM_COLORS[tag.dimension] || "#959fff";
+  const dimColor = getDimensionPastelColor(tag.dimension);
 
   if (selected) {
     // Full row colored background
@@ -470,15 +453,12 @@ function filterMousePressed(mxRaw, myRaw) {
   mx -= LAYOUT_NAV_W;
 
   if (leftPanelTab === "filtros") {
-    const cards = [
-      ["tipo_obra", 28, 20],
-      ["material", 126, 20],
-      ["estetico", 28, 120],
-      ["tecnicas", 126, 120],
-    ];
-    for (const [dim, cx, cy] of cards) {
+    for (const dimKey of Object.keys(DIMENSIONS)) {
+      const dim = DIMENSIONS[dimKey];
+      const cx = dim.gridX;
+      const cy = dim.gridY;
       if (mx >= cx - 12 && mx <= cx + 62 && my >= cy && my <= cy + 90) {
-        activeDimension = dim;
+        activeDimension = dimKey;
         tagScroll = 0;
         categorySelectorOpen = false;
         return true;

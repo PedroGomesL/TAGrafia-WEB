@@ -448,20 +448,6 @@ function visibleProducts(ignoreYear = false) {
   return result;
 }
 
-function productsForCircularBase() {
-  const selected = selectedTags();
-  const selectedType = selected.filter((tag) => tag.dimension === "tipo_obra");
-  return products.filter((product) => {
-    if (product.year < yearStart || product.year > yearEnd) return false;
-    if (
-      selectedType.length &&
-      !selectedType.some((tag) => product.tagKeys.has(tag.key))
-    )
-      return false;
-    return true;
-  });
-}
-
 function selectedTags() {
   if (_cachedSelectedTags) return _cachedSelectedTags;
   _cachedSelectedTags = Array.from(selectedTagKeys)
@@ -952,3 +938,8 @@ function hashString(value) {
   }
   return hash;
 }
+
+function hasAny(textValue, terms) {
+  return terms.some((term) => textValue.includes(normalizeText(term)));
+}
+

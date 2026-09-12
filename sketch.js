@@ -18,25 +18,9 @@ function preload() {
   );
   fontes.roboto = loadFont(asset("data/Fontes/Roboto-VariableFont_wdth,wght.ttf"));
 
-  icones.material = loadImage(asset("data/Icones/material.png"));
-  icones.tecnicas = loadImage(asset("data/Icones/técnica.png"));
-  icones.estetico = loadImage(asset("data/Icones/estético.png"));
-  icones.filtros = loadImage(asset("data/Icones/filtros.svg"));
-  icones.sobre = loadImage(asset("data/Icones/sobre.svg"));
-  icones.tipo_obra = loadImage(asset("data/Icones/tipodeproduto.png"));
-  icones.clear = loadImage(asset("data/Icones/filter_alt_off.png"));
-  icones.left = loadImage(asset("data/Icones/keyboard_arrow_left.png"));
-  icones.right = loadImage(asset("data/Icones/keyboard_arrow_right.png"));
-  icones.save = loadImage(asset("data/Icones/salvar_produto.png"));
-  icones.author = loadImage(asset("data/Icones/autor.png"));
-  icones.artesanal = loadImage(asset("data/Icones/produto artesanal.png"));
-  icones.assinado = loadImage(asset("data/Icones/design_assinado.png"));
-  icones.industrial = loadImage(asset("data/Icones/produto industrial.png"));
-  icones.export = loadImage(asset("data/Icones/exportar.svg"));
-  icones.visao_circular = loadImage(asset("data/Icones/visao_circular.svg"));
-  icones.visao_bolhas = loadImage(asset("data/Icones/visao_bolhas.svg"));
-  icones.visao_timeline = loadImage(asset("data/Icones/visao_timeline.svg"));
-  icones.visao_mapa = loadImage(asset("data/Icones/visao_mapa.svg"));
+  for (const [key, path] of Object.entries(ICONS_CONFIG)) {
+    icones[key] = loadImage(asset(path));
+  }
 }
 
 function setup() {
@@ -133,10 +117,6 @@ function visualH() {
   return height;
 }
 
-function timelineW() {
-  return Math.max(0, visualW() - 8);
-}
-
 function drawLayoutSeparators() {
   push();
   stroke("#000000");
@@ -154,26 +134,9 @@ function themeLineColor() {
   return lightMode ? "#111111" : "#FFFFFF";
 }
 
-function themeTimelineColor() {
-  return lightMode ? COLORS.timelineLight : COLORS.timelineDark;
-}
-
-function themeHatchColor() {
-  return lightMode ? COLORS.hatchLight : COLORS.hatchDark;
-}
-
-function panelBackground() {
-  return lightMode ? COLORS.visualLight : COLORS.panelDark;
-}
-
-function panelTextColor() {
-  return lightMode ? "#111111" : "#FFFFFF";
-}
-
 function mousePressed() {
   if (mouseButton !== LEFT) return;
   if (filterMousePressed(mouseX, mouseY)) return false;
-  if (themeMousePressed(mouseX, mouseY)) return false;
   if (productPanelMousePressed(mouseX, mouseY)) return false;
   if (visualMousePressed(mouseX, mouseY)) return false;
 }
@@ -332,6 +295,3 @@ function insideRect(mx, my, x, y, w, h) {
   return mx >= x && mx <= x + w && my >= y && my <= y + h;
 }
 
-function hasAny(textValue, terms) {
-  return terms.some((term) => textValue.includes(normalizeText(term)));
-}

@@ -42,11 +42,15 @@ function drawProductSidebar(x, y, w, h, scale) {
   strokeWeight(1.5 * scale);
   line(x + w, y, x + w, y + h);
 
-  const items = [
-    { id: "material", label: "Material", icon: icones.material, color: "#959fff" },
-    { id: "estetico", label: "Estético", icon: icones.estetico, color: "#ff9597" },
-    { id: "tecnicas", label: "Técnica", icon: icones.tecnicas, color: "#a7ff95" },
-  ];
+  const items = ["material", "estetico", "tecnicas"].map((id) => {
+    const dim = DIMENSIONS[id];
+    return {
+      id,
+      label: dim.label,
+      icon: icones[dim.iconKey],
+      color: dim.pastelColor,
+    };
+  });
 
   let currentY = y + 25 * scale;
   for (const item of items) {
@@ -198,15 +202,8 @@ function drawProductInfo(x, y, w, h, scale) {
   }
 
   // Draw production icon with circle around it
-  let prodIcon = null;
-  const prodStr = normalizeText(selectedProduct.production || "").toLowerCase();
-  if (prodStr.includes("artesanal")) {
-    prodIcon = icones.artesanal;
-  } else if (prodStr.includes("assinado")) {
-    prodIcon = icones.assinado;
-  } else if (prodStr.includes("industrial") || prodStr.includes("massa")) {
-    prodIcon = icones.industrial;
-  }
+  const prodInfo = getProductionInfo(selectedProduct.production);
+  const prodIcon = prodInfo ? icones[prodInfo.iconKey] : null;
   
   if (prodIcon) {
     noFill();
@@ -266,14 +263,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
     const chipH = 22 * scale;
     textSize(13 * scale);
 
-    const DIM_COLORS = {
-      material: "#959fff",
-      materiais: "#959fff",
-      tecnicas: "#a7ff95",
-      estetico: "#ff9597",
-      tipo_obra: "#ffef95",
-    };
-    const tagBgColor = DIM_COLORS[dim] || "#959fff";
+    const tagBgColor = getDimensionPastelColor(dim);
 
     for (const tag of tags) {
       const chipW = Math.max(50 * scale, textWidth(tag.label) + 16 * scale);
@@ -539,20 +529,6 @@ function savedSortLabel() {
   if (savedSortMode === 1) return "ANO";
   if (savedSortMode === 2) return "TIPO";
   return "A-Z";
-}
-
-function productionIcon() {
-  const textValue = normalizeText(
-    selectedProduct ? selectedProduct.production : "",
-  );
-  if (textValue.includes("artesanal")) return icones.artesanal;
-  if (
-    textValue.includes("industrial") ||
-    textValue.includes("massa") ||
-    textValue.includes("seri")
-  )
-    return icones.industrial;
-  return icones.assinado;
 }
 
 function getCurrentProductImage() {
