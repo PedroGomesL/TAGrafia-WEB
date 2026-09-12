@@ -42,8 +42,9 @@ function drawProductSidebar(x, y, w, h, scale) {
   strokeWeight(1.5 * scale);
   line(x + w, y, x + w, y + h);
 
-  const items = ["material", "estetico", "tecnicas"].map((id) => {
-    const dim = DIMENSIONS[id];
+  const detailTabs = typeof DETAIL_TABS !== "undefined" ? DETAIL_TABS : ["material", "estetico", "tecnicas"];
+  const items = detailTabs.map((id) => {
+    const dim = getDimension(id) || DIMENSIONS[id];
     return {
       id,
       label: dim.label,
@@ -609,7 +610,7 @@ function productPanelMousePressed(mx, my) {
     let clickedY = my - imageH - titleH;
     let currentY = 25 * scale;
     
-    const tabs = ["material", "estetico", "tecnicas"];
+    const tabs = typeof DETAIL_TABS !== "undefined" ? DETAIL_TABS : ["material", "estetico", "tecnicas"];
     for (let i = 0; i < tabs.length; i++) {
       if (clickedY >= currentY - 15 * scale && clickedY <= currentY + 70 * scale) {
         rightPanelTab = tabs[i];

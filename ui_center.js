@@ -147,7 +147,6 @@ function drawCircularView(visible) {
     textAlign(CENTER, TOP);
     text(focused.label, cx, cy + radius + 28);
   }
-  drawYearBand();
 }
 
 function drawDashedCircle(cx, cy, radius, segments) {
@@ -297,7 +296,6 @@ function drawBubbleView(productsVisible) {
       cx,
       cy,
     );
-  drawYearBand();
 }
 
 function buildBubbleGroups(productsVisible, cx, cy, outerR) {
@@ -422,7 +420,6 @@ function drawTimelineView(productsVisible) {
       visualX() + visualW() / 2,
       axisY - 42,
     );
-    drawYearBand();
     return;
   }
   const positions = [];
@@ -452,7 +449,6 @@ function drawTimelineView(productsVisible) {
       r: r + 8,
     });
   }
-  drawYearBand();
 }
 
 function yearToProductX(year, x1, x2) {
@@ -551,7 +547,6 @@ function drawMapView(productsVisible) {
     visualX() + 18,
     36,
   );
-  drawYearBand();
 }
 
 function currentMapBox() {
@@ -722,6 +717,13 @@ function visualMousePressed(mx, my) {
   return false;
 }
 
+const VIEW_RENDERERS = {
+  [VISAO_CIRCULAR]: (visible) => drawCircularView(visible),
+  [VISAO_BOLHAS]: () => drawBubbleView(productsShownInCircular()),
+  [VISAO_LINHA_TEMPO]: () => drawTimelineView(productsShownInCircular()),
+  [VISAO_MAPA_MUNDI]: (visible) => drawMapView(visible),
+};
+
 function drawCurrentVisualization() {
   drawingContext.save();
   drawingContext.beginPath();
@@ -729,11 +731,10 @@ function drawCurrentVisualization() {
   drawingContext.clip();
 
   const productsVisible = visibleProducts();
-  if (activeView === VISAO_BOLHAS) drawBubbleView(productsShownInCircular());
-  else if (activeView === VISAO_LINHA_TEMPO)
-    drawTimelineView(productsShownInCircular());
-  else if (activeView === VISAO_MAPA_MUNDI) drawMapView(productsVisible);
-  else drawCircularView(productsVisible);
+  const renderer = VIEW_RENDERERS[activeView] || drawCircularView;
+  renderer(productsVisible);
+
+  drawYearBand();
 
   drawingContext.restore();
 }
@@ -745,24 +746,26 @@ function drawVisualizationBackground() {
 }
 
 function drawVisualizationSummary() {
-  const material = selectedTags().filter(
-    (tag) => tag.dimension === "material",
-  ).length;
-  const estetico = selectedTags().filter(
-    (tag) => tag.dimension === "estetico",
-  ).length;
-  const tecnica = selectedTags().filter(
-    (tag) => tag.dimension === "tecnicas",
-  ).length;
-  const totalTags = material + estetico + tecnica;
+  const sel = selectedTags();
+  const summaryDims = DIMENSION_ORDER.filter((dim) => dim !== "tipo_obra");
+  const countsByDim = {};
+  let totalTags = 0;
+  for (const dim of summaryDims) {
+    const count = sel.filter((tag) => tag.dimension === dim).length;
+    countsByDim[dim] = count;
+    totalTags += count;
+  }
   const totalProducts = visibleProducts(true).length;
   fill(colorAlpha(themeLineColor(), 215));
   noStroke();
   textFont(fontes.robotoCondensed);
   textSize(13);
   textAlign(LEFT, TOP);
+  const parts = summaryDims.map(
+    (dim) => `${getDimension(dim)?.label || dim}: ${countsByDim[dim] || 0}`,
+  );
   text(
-    `${totalProducts} obras conectadas a ${totalTags} tags - Material: ${material} - Estetico: ${estetico} - Tecnica: ${tecnica}`,
+    `${totalProducts} obras conectadas a ${totalTags} tags - ${parts.join(" - ")}`,
     visualX() + 10,
     12,
   );

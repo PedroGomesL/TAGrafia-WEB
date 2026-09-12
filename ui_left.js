@@ -53,15 +53,9 @@ function drawNavSidebar() {
   const currentView = VIEWS_CONFIG.find((v) => v.id === activeView);
   const dynamicViewIcon = currentView ? icones[currentView.iconKey] : icones.visao_circular;
 
-  const navItems = [
-    { id: "filtros", label: "Filtros", y: 130, icon: icones.filtros },
-    { id: "trocar", label: "Trocar\nVisualização", y: 240, icon: dynamicViewIcon },
-    { id: "exportar", label: "Exportar", y: 350, icon: icones.export },
-    { id: "sobre", label: "Sobre", y: 460, icon: icones.sobre },
-  ];
-
-  for (const item of navItems) {
-    const active = leftPanelTab === item.id || (item.id === "trocar" && false); // no active state background for "trocar" as it's an action
+  for (const item of NAV_CONFIG) {
+    const active = leftPanelTab === item.id;
+    const icon = item.iconKey ? icones[item.iconKey] : dynamicViewIcon;
 
     // Draw background if active
     if (active) {
@@ -71,9 +65,8 @@ function drawNavSidebar() {
     }
 
     // Icon
-    if (item.icon) {
-      // Invert color conceptually (since we can't easily tint() white for icons if they are black images, we might use them as is).
-      drawImageCentered(item.icon, LAYOUT_NAV_W / 2, item.y, 40, 40);
+    if (icon) {
+      drawImageCentered(icon, LAYOUT_NAV_W / 2, item.y, 40, 40);
     } else {
       // Fallback if missing
       noFill();
@@ -435,16 +428,15 @@ function filterMousePressed(mxRaw, myRaw) {
   }
 
   if (mx < LAYOUT_NAV_W) {
-    // Clicked in the Nav Sidebar
-    // Nav Items: Filtros (130), Trocar (240), Exportar (350), Sobre (460)
-    if (my >= 100 && my <= 160) {
-      leftPanelTab = "filtros";
-    } else if (my >= 210 && my <= 270) {
-      activeView = (activeView + 1) % 4; // Toggle view
-    } else if (my >= 320 && my <= 380) {
-      leftPanelTab = "exportar";
-    } else if (my >= 430 && my <= 490) {
-      leftPanelTab = "sobre";
+    for (const item of NAV_CONFIG) {
+      if (my >= item.y - 30 && my <= item.y + 30) {
+        if (item.id === "trocar") {
+          activeView = (activeView + 1) % VIEWS_CONFIG.length;
+        } else {
+          leftPanelTab = item.id;
+        }
+        return true;
+      }
     }
     return true;
   }
@@ -524,9 +516,9 @@ function filterMousePressed(mxRaw, myRaw) {
     }
   } else if (leftPanelTab === "exportar") {
     // Export tab interaction
-    const viewsY = [90, 130, 170, 210];
-    for (let i = 0; i < viewsY.length; i++) {
-      if (my >= viewsY[i] - 10 && my <= viewsY[i] + 28 && mx >= 20 && mx <= 160) {
+    for (let i = 0; i < VIEWS_CONFIG.length; i++) {
+      const vy = 90 + i * 40;
+      if (my >= vy - 10 && my <= vy + 28 && mx >= 20 && mx <= 160) {
         exportViewsSelection[i] = !exportViewsSelection[i];
         return true;
       }
@@ -537,7 +529,8 @@ function filterMousePressed(mxRaw, myRaw) {
       return true;
     }
 
-    const formats = ["PDF", "JPG", "SVG"].filter(f => f !== exportFormatSelected);
+    const availableFormats = typeof EXPORT_FORMATS !== "undefined" ? EXPORT_FORMATS : ["PDF", "JPG", "SVG"];
+    const formats = availableFormats.filter(f => f !== exportFormatSelected);
     if (exportFormatDropdownOpen) {
       for (let i = 0; i < formats.length; i++) {
         const oy = 310 + 26 + i * 26;
@@ -581,12 +574,11 @@ function drawExportTab() {
   textAlign(LEFT, TOP);
   text("Selecione as visualizações\npara exportar", 24, 30);
 
-  const views = [
-    { label: "Circular", y: 90, selected: exportViewsSelection[0] },
-    { label: "Bolhas", y: 130, selected: exportViewsSelection[1] },
-    { label: "Linha do tempo", y: 170, selected: exportViewsSelection[2] },
-    { label: "Mapa-Mundi", y: 210, selected: exportViewsSelection[3] },
-  ];
+  const views = VIEWS_CONFIG.map((v, i) => ({
+    label: v.label,
+    y: 90 + i * 40,
+    selected: Boolean(exportViewsSelection[i]),
+  }));
 
   for (const v of views) {
     stroke("#6750a4");

@@ -29,6 +29,7 @@ const FILTER_TAG_ROW_H = 36;
 const YEAR_MIN = 1880;
 const YEAR_MAX = 2010;
 const TIMELINE_H = 74;
+const TIMELINE_TRACK_INSET = 40;
 const GOLDEN_ANGLE = 2.399963229728653;
 
 const VISAO_CIRCULAR = 0;
@@ -42,6 +43,19 @@ const VIEWS_CONFIG = [
   { id: VISAO_LINHA_TEMPO, label: "Linha do tempo", iconKey: "visao_timeline" },
   { id: VISAO_MAPA_MUNDI, label: "Mapa-Mundi", iconKey: "visao_mapa" },
 ];
+
+const NAV_CONFIG = [
+  { id: "filtros", label: "Filtros", y: 130, iconKey: "filtros" },
+  { id: "trocar", label: "Trocar\nVisualização", y: 240, iconKey: null },
+  { id: "exportar", label: "Exportar", y: 350, iconKey: "export" },
+  { id: "sobre", label: "Sobre", y: 460, iconKey: "sobre" },
+];
+
+const DETAIL_TABS = ["material", "estetico", "tecnicas"];
+
+const EXPORT_FORMATS = ["PDF", "JPG", "SVG"];
+
+
 
 const ICONS_CONFIG = {
   filtros: "data/Icones/filtros.svg",

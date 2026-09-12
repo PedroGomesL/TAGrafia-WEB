@@ -87,6 +87,19 @@ for (const dim of DIMENSION_ORDER) {
 assert(Array.isArray(VIEWS_CONFIG), "VIEWS_CONFIG está definido");
 assert(VIEWS_CONFIG.length === 4, "VIEWS_CONFIG contém as 4 visualizações");
 
+assert(Array.isArray(NAV_CONFIG), "NAV_CONFIG é um array");
+assert(NAV_CONFIG.length === 4, "NAV_CONFIG contém 4 itens de navegação");
+for (const nav of NAV_CONFIG) {
+  assert(nav.id && nav.label && typeof nav.y === "number", `Item de navegação '${nav.id}' é válido`);
+}
+
+assert(Array.isArray(DETAIL_TABS), "DETAIL_TABS é um array");
+assert(DETAIL_TABS.length === 3, "DETAIL_TABS contém 3 dimensões para o painel de detalhes");
+
+assert(Array.isArray(EXPORT_FORMATS), "EXPORT_FORMATS é um array");
+assert(EXPORT_FORMATS.includes("PDF") && EXPORT_FORMATS.includes("JPG") && EXPORT_FORMATS.includes("SVG"), "EXPORT_FORMATS suporta PDF, JPG e SVG");
+assert(typeof TIMELINE_TRACK_INSET === "number" && TIMELINE_TRACK_INSET > 0, "TIMELINE_TRACK_INSET é um número positivo");
+
 console.log("\n=== 4. Validando Parsing e Estrutura de Dados ===");
 // Mock básico para simular funções auxiliares de sketch/p5 necessárias em data_manager
 global.cleanText = (str) => String(str ?? "").trim();
@@ -166,6 +179,66 @@ assert(sortedByYear[0].year <= sortedByYear[1].year, "Ordenação por ano funcio
 savedSortMode = 0; // Nome
 const sortedByName = savedProductsFiltered();
 assert(sortedByName[0].name.localeCompare(sortedByName[1].name, "pt-BR") <= 0, "Ordenação por nome funciona");
+
+console.log("\n=== 7. Validando Limites da Timeline (ui_timeline.js) ===");
+global.visualX = () => 100;
+global.visualW = () => 800;
+global.height = 600;
+global.map = (v, a, b, c, d) => c + ((v - a) / (b - a)) * (d - c);
+global.constrain = (v, min, max) => Math.min(Math.max(v, min), max);
+
+const uiTimelineContent = fs.readFileSync(path.join(ROOT_DIR, "ui_timeline.js"), "utf8");
+vm.runInThisContext(uiTimelineContent);
+
+assert(typeof timelineTrackBounds === "function", "timelineTrackBounds está definida");
+const bounds = timelineTrackBounds();
+assert(bounds.tx === 140, `timelineTrackBounds.tx é 140 (visualX + 40), obtido: ${bounds.tx}`);
+assert(bounds.tw === 720, `timelineTrackBounds.tw é 720 (visualW - 80), obtido: ${bounds.tw}`);
+assert(bounds.ty === 600 - TIMELINE_H / 2, `timelineTrackBounds.ty está no centro da timeline: ${bounds.ty}`);
+
+const x1880 = yearToX(YEAR_MIN);
+const x2010 = yearToX(YEAR_MAX);
+assert(x1880 === bounds.tx, "yearToX(1880) mapeia para o início do track");
+assert(x2010 === bounds.tx + bounds.tw, "yearToX(2010) mapeia para o fim do track");
+assert(xToYear(bounds.tx) === 1880, "xToYear reverte início para 1880");
+assert(xToYear(bounds.tx + bounds.tw) === 2010, "xToYear reverte fim para 2010");
+
+console.log("\n=== 8. Validando Despacho Declarativo de Visões (ui_center.js) ===");
+// Mock canvas drawingContext and missing p5 helpers for ui_center
+global.drawingContext = {
+  save: () => {},
+  beginPath: () => {},
+  rect: () => {},
+  clip: () => {},
+  restore: () => {},
+};
+global.fontes = {
+  afacad: {},
+  robotoCondensed: {},
+  roboto: {},
+};
+global.selectedTags = () => [];
+global.visibleProducts = () => [];
+global.productsShownInCircular = () => [];
+global.themeLineColor = () => "#000000";
+global.colorAlpha = (c, a) => c;
+global.noStroke = () => {};
+global.fill = () => {};
+global.textFont = () => {};
+global.textSize = () => {};
+global.textAlign = () => {};
+global.text = () => {};
+
+const uiCenterContent = fs.readFileSync(path.join(ROOT_DIR, "ui_center.js"), "utf8");
+vm.runInThisContext(uiCenterContent);
+
+assert(typeof VIEW_RENDERERS === "object" && VIEW_RENDERERS !== null, "VIEW_RENDERERS está definido");
+for (const view of VIEWS_CONFIG) {
+  assert(
+    typeof VIEW_RENDERERS[view.id] === "function",
+    `VIEW_RENDERERS possui função para a visão '${view.label}' (id: ${view.id})`,
+  );
+}
 
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);

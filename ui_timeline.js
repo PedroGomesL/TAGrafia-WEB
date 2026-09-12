@@ -1,8 +1,13 @@
-function drawYearBand() {
-  const tx = visualX() + 40;
-  const tw = visualW() - 80;
-  const ty = height - TIMELINE_H / 2; // Middle of timeline area
+function timelineTrackBounds() {
+  const inset = typeof TIMELINE_TRACK_INSET !== "undefined" ? TIMELINE_TRACK_INSET : 40;
+  const tx = visualX() + inset;
+  const tw = visualW() - inset * 2;
+  const ty = height - TIMELINE_H / 2;
+  return { tx, tw, ty };
+}
 
+function drawYearBand() {
+  const { tx, tw, ty } = timelineTrackBounds();
   const xStart = yearToX(yearStart);
   const xEnd = yearToX(yearEnd);
 
@@ -37,14 +42,12 @@ function drawYearBand() {
 }
 
 function yearToX(year) {
-  const tx = visualX() + 40;
-  const tw = visualW() - 80;
+  const { tx, tw } = timelineTrackBounds();
   return map(year, YEAR_MIN, YEAR_MAX, tx, tx + tw);
 }
 
 function xToYear(x) {
-  const tx = visualX() + 40;
-  const tw = visualW() - 80;
+  const { tx, tw } = timelineTrackBounds();
   const end = tx + tw;
   const value = map(constrain(x, tx, end), tx, end, YEAR_MIN, YEAR_MAX);
   return constrain(Math.round(value / 10) * 10, YEAR_MIN, YEAR_MAX);
