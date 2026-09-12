@@ -319,12 +319,12 @@ function drawFilterTag(tag, y, rowH) {
   const selected = selectedTagKeys.has(tag.key);
 
   const DIM_COLORS = {
-    material:  "#3e4ad3",
-    tecnicas:  "#1a8511",
-    estetico:  "#d33e4a",
+    material:  "#959fff",
+    tecnicas:  "#a7ff95",
+    estetico:  "#ff9597",
     tipo_obra: "#ffef95",
   };
-  const dimColor = DIM_COLORS[tag.dimension] || "#3e4ad3";
+  const dimColor = DIM_COLORS[tag.dimension] || "#959fff";
 
   if (selected) {
     // Full row colored background
@@ -335,12 +335,8 @@ function drawFilterTag(tag, y, rowH) {
     fill("#959fff");
     rect(0, y, 4, rowH);
     
-    // Use black text for the light yellow background
-    if (tag.dimension === "tipo_obra") {
-      fill("#000000");
-    } else {
-      fill("#FFFFFF");
-    }
+    // Use black text for all light pastel backgrounds
+    fill("#000000");
   } else {
     noStroke();
     fill("#FFFFFF");
@@ -371,9 +367,9 @@ function drawFilterTag(tag, y, rowH) {
   // Badge pill
   if (badgeText) {
     noStroke();
-    fill(selected ? color(255, 255, 255, 60) : color(217, 217, 217, 210));
+    fill(selected ? color(255, 255, 255, 120) : color(217, 217, 217, 210));
     rect(badgeX, y + rowH / 2 - 11, badgeW, 22, 11);
-    fill(selected ? "#ffffff" : color(80));
+    fill(selected ? "#000000" : color(80));
     textSize(12);
     textAlign(CENTER, CENTER);
     text(badgeText, badgeX + badgeW / 2, y + rowH / 2);
