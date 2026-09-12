@@ -33,7 +33,10 @@ function preload() {
   icones.assinado = loadImage(asset("data/Icones/design_assinado.png"));
   icones.industrial = loadImage(asset("data/Icones/produto industrial.png"));
   icones.export = loadImage(asset("data/Icones/exportar.svg"));
-  icones.change = loadImage(asset("data/Icones/change.png"));
+  icones.visao_circular = loadImage(asset("data/Icones/visao_circular.svg"));
+  icones.visao_bolhas = loadImage(asset("data/Icones/visao_bolhas.svg"));
+  icones.visao_timeline = loadImage(asset("data/Icones/visao_timeline.svg"));
+  icones.visao_mapa = loadImage(asset("data/Icones/visao_mapa.svg"));
 }
 
 function setup() {

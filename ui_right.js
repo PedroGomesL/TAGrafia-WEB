@@ -144,33 +144,6 @@ function drawProductInfo(x, y, w, h, scale) {
   fill("#190000");
   textAlign(LEFT, TOP);
   text(designerText + yearText, titleX, titleY + 22 * scale, titleW, 20 * scale);
-
-  // --- Yellow Ribbon ---
-  const ribbonH = 40 * scale;
-  const rx = x + sidebarW;
-  const rw = w - sidebarW;
-  fill(COLORS.yellow);
-  noStroke();
-  rect(rx, y + h - ribbonH, rw, ribbonH);
-
-  // 3 icon buttons on ribbon (save, author, production)
-  const icons = [icones.save, icones.author, productionIcon()];
-  const isSaved = selectedProduct && savedProductKeys.has(selectedProduct.key);
-  for (let i = 0; i < icons.length; i++) {
-    const cx = rx + rw - (105 - i * 40) * scale;
-    const cy = y + h - ribbonH / 2;
-    // White circle
-    fill("#FFFFFF");
-    noStroke();
-    circle(cx, cy, 34 * scale);
-    if (icons[i]) drawImageCentered(icons[i], cx, cy, 20 * scale, 20 * scale);
-    // Highlight save button if saved
-    if (i === 0 && isSaved) {
-      fill(COLORS.yellow);
-      noStroke();
-      circle(cx, cy, 10 * scale);
-    }
-  }
 }
 
 function drawProductDetailsNew(x, y, w, h, scale) {
@@ -516,21 +489,6 @@ function productPanelMousePressed(mx, my) {
   }
   if (dist(mx, my, x + w - 45 * scale, imageH - 64 * scale) <= 30 * scale) {
     changeProductImage(1);
-    return true;
-  }
-
-  // Save Ribbon button
-  const ribbonH = 40 * scale;
-  const ribbonY = imageH + titleH - ribbonH;
-  const rx = x + 74 * scale;
-  const rw = w - 74 * scale;
-  const saveCx = rx + (rw) - 120 * scale;
-  
-  if (
-    selectedProduct &&
-    dist(mx, my, saveCx, ribbonY + ribbonH / 2) <= 16 * scale
-  ) {
-    toggleSavedProduct();
     return true;
   }
 

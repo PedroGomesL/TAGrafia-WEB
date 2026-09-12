@@ -43,9 +43,15 @@ function drawNavSidebar() {
   strokeWeight(1.5);
   line(15, 75, LAYOUT_NAV_W - 15, 75);
 
+  let dynamicViewIcon;
+  if (activeView === 0) dynamicViewIcon = icones.visao_circular;
+  else if (activeView === 1) dynamicViewIcon = icones.visao_bolhas;
+  else if (activeView === 2) dynamicViewIcon = icones.visao_timeline;
+  else dynamicViewIcon = icones.visao_mapa;
+
   const navItems = [
     { id: "filtros", label: "Filtros", y: 130, icon: icones.filtros },
-    { id: "trocar", label: "Trocar\nVisualização", y: 240, icon: icones.change },
+    { id: "trocar", label: "Trocar\nVisualização", y: 240, icon: dynamicViewIcon },
     { id: "exportar", label: "Exportar", y: 350, icon: icones.export },
     { id: "sobre", label: "Sobre", y: 460, icon: icones.sobre },
   ];
@@ -116,7 +122,7 @@ function drawFilterCards() {
     if (active) {
       noStroke();
       fill(bgColor);
-      rect(cx, cy, 50, 50); // Sharp corners like exact layout
+      rect(cx, cy, 50, 50, 5); // Rounded corners like Figma
     }
 
     // Draw icon
@@ -148,26 +154,26 @@ function drawFilterBody() {
   const clearY = searchY + FILTER_CLEAR_OFFSET;
   const listY = clearY + FILTER_LIST_OFFSET;
 
-  // --- Category pill (white bg, black border, label centered) ---
+  // --- Category pill (white bg, radius 5, label centered) ---
   if (activeDimension !== "tipo_obra") {
     stroke("#D9D9D9");
     strokeWeight(1);
     fill("#FFFFFF");
-    rect(FILTER_BAR_X, catY, FILTER_BAR_W, 24, 12);
+    rect(FILTER_BAR_X, catY, FILTER_BAR_W, 26, 5);
     const categoryLabel = currentCategoryLabel();
     fill("#000000");
     noStroke();
     textFont(fontes.roboto);
     textSize(fitTextSize(categoryLabel, FILTER_BAR_W - 22, 14, 10));
     textAlign(CENTER, CENTER);
-    text(categoryLabel, FILTER_BAR_X + FILTER_BAR_W / 2, catY + 12);
+    text(categoryLabel, FILTER_BAR_X + FILTER_BAR_W / 2, catY + 13);
   }
 
   // --- Search bar ---
   stroke("#D9D9D9");
   strokeWeight(1);
   fill("#FFFFFF");
-  rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 24, 12);
+  rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 26, 5);
   noStroke();
   textFont(fontes.roboto);
   textSize(14);
@@ -175,15 +181,15 @@ function drawFilterBody() {
   fill(tagSearch.length ? "#000000" : color(160));
   text(
     tagSearch.length ? tagSearch : "Pesquisar tag",
-    FILTER_BAR_X + 12,
-    searchY + 12,
+    FILTER_BAR_X + 10,
+    searchY + 13,
   );
   // Blinking cursor
   if (tagSearchActive && frameCount % 60 < 30) {
-    const cx = FILTER_BAR_X + 12 + textWidth(tagSearch);
+    const cx = FILTER_BAR_X + 10 + textWidth(tagSearch);
     stroke("#000000");
     strokeWeight(1);
-    line(cx + 2, searchY + 5, cx + 2, searchY + 19);
+    line(cx + 2, searchY + 6, cx + 2, searchY + 20);
   }
 
   // --- Clear button ---
