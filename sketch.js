@@ -16,6 +16,7 @@ function preload() {
   fontes.robotoCondensed = loadFont(
     asset("data/Fontes/RobotoCondensed-VariableFont_wght.ttf"),
   );
+  fontes.roboto = loadFont(asset("data/Fontes/Roboto-VariableFont_wdth,wght.ttf"));
 
   icones.material = loadImage(asset("data/Icones/material.png"));
   icones.tecnicas = loadImage(asset("data/Icones/técnica.png"));
@@ -33,6 +34,10 @@ function preload() {
   icones.industrial = loadImage(asset("data/Icones/produto industrial.png"));
   icones.export = loadImage(asset("data/Icones/export.png"));
   icones.change = loadImage(asset("data/Icones/change.png"));
+  icones.visao_circular = loadImage(asset("data/Icones/visao_circular.svg"));
+  icones.visao_bolhas = loadImage(asset("data/Icones/visao_bolhas.svg"));
+  icones.visao_timeline = loadImage(asset("data/Icones/visao_timeline.svg"));
+  icones.visao_mapa = loadImage(asset("data/Icones/visao_mapa.svg"));
 }
 
 function setup() {

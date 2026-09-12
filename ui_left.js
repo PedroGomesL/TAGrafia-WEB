@@ -31,10 +31,12 @@ function drawNavSidebar() {
 
   // Title
   fill(0);
-  textFont(fontes.robotoCondensed);
+  textFont(fontes.afacad);
+  textStyle(BOLD);
   textSize(24);
   textAlign(CENTER, CENTER);
   text("TAGrafia", LAYOUT_NAV_W / 2, 40);
+  textStyle(NORMAL);
 
   // Divider
   stroke("#959fff");
@@ -47,7 +49,7 @@ function drawNavSidebar() {
       id: "trocar",
       label: "Trocar\nVisualização",
       y: 250,
-      icon: icones.change,
+      icon: [icones.visao_circular, icones.visao_bolhas, icones.visao_timeline, icones.visao_mapa][activeView] || icones.change,
     },
     { id: "exportar", label: "Exportar", y: 360, icon: icones.export },
     { id: "sobre", label: "Sobre", y: 470, icon: icones.sobre },
@@ -78,7 +80,7 @@ function drawNavSidebar() {
     // Text
     noStroke();
     fill(0);
-    textFont(fontes.robotoCondensed);
+    textFont(fontes.roboto);
     textSize(14);
     textAlign(CENTER, TOP);
     text(item.label, LAYOUT_NAV_W / 2, item.y + 35);
@@ -128,7 +130,7 @@ function drawFilterCards() {
     // Draw text
     fill("#000000");
     noStroke();
-    textFont(fontes.robotoCondensed);
+    textFont(fontes.roboto);
     textSize(14);
     textAlign(CENTER, TOP);
     text(label, cx + 25, cy + 60);
@@ -162,7 +164,7 @@ function drawFilterBody() {
 
   fill("#FFFFFF");
   rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 31, 15.5);
-  textFont(fontes.robotoCondensed);
+  textFont(fontes.roboto);
   textSize(14);
   textAlign(LEFT, CENTER);
   fill(tagSearch.length ? "#000000" : color(90));
@@ -323,7 +325,7 @@ function drawFilterTag(tag, y, rowH) {
   }
 
   noStroke();
-  textFont(fontes.robotoCondensed);
+  textFont(fontes.roboto);
   const badgeText =
     tag.dimension === "tipo_obra"
       ? ""
@@ -533,8 +535,8 @@ function filterMousePressed(mxRaw, myRaw) {
 function drawExportTab() {
   fill(0);
   noStroke();
-  textFont(fontes.robotoCondensed);
-  textSize(16);
+  textFont(fontes.roboto);
+  textSize(15);
   textAlign(LEFT, TOP);
   text("Selecione as visualizações\npara exportar", 24, 30);
 
@@ -606,8 +608,8 @@ function drawExportTab() {
 function drawSobreTab() {
   fill(0);
   noStroke();
-  textFont(fontes.robotoCondensed);
-  textSize(16);
+  textFont(fontes.roboto);
+  textSize(15);
   textAlign(LEFT, TOP);
   textLeading(22);
 

@@ -27,22 +27,24 @@ function drawYearBand() {
   // Labels
   noStroke();
   fill("#000000");
-  textFont(fontes.robotoCondensed);
+  textFont(fontes.afacad);
   textStyle(BOLD);
-  textSize(16);
+  textSize(24);
   textAlign(CENTER, BOTTOM);
   text(String(yearStart), xStart, ty - 22);
   text(String(yearEnd), xEnd, ty - 22);
 }
 
 function yearToX(year) {
-  const tx = visualX() + 4;
-  return tx + map(year, YEAR_MIN, YEAR_MAX, 0, timelineW() - 7);
+  const tx = visualX() + 40;
+  const tw = visualW() - 80;
+  return map(year, YEAR_MIN, YEAR_MAX, tx, tx + tw);
 }
 
 function xToYear(x) {
-  const tx = visualX() + 4;
-  const end = tx + timelineW() - 7;
+  const tx = visualX() + 40;
+  const tw = visualW() - 80;
+  const end = tx + tw;
   const value = map(constrain(x, tx, end), tx, end, YEAR_MIN, YEAR_MAX);
   return constrain(Math.round(value / 10) * 10, YEAR_MIN, YEAR_MAX);
 }

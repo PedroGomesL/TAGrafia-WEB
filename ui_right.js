@@ -59,7 +59,7 @@ function drawProductSidebar(x, y, w, h, scale) {
     if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 17 * scale, 35 * scale, 35 * scale);
     fill("#000000");
     noStroke();
-    textFont(fontes.robotoCondensed);
+    textFont(fontes.roboto);
     textSize(14 * scale);
     textAlign(CENTER, CENTER);
     text(item.label, x + w / 2, currentY + 50 * scale);
@@ -76,7 +76,7 @@ function drawProductImage(x, y, w, h, scale) {
     drawImageContain(img, x, y, w, h);
   } else {
     fill(17, 17, 17, 130);
-    textFont(fontes.robotoCondensed);
+    textFont(fontes.roboto);
     textSize(15 * scale);
     textAlign(CENTER, CENTER);
     text(
@@ -108,7 +108,7 @@ function drawProductInfo(x, y, w, h, scale) {
 
   if (!selectedProduct) {
     fill("#000000");
-    textFont(fontes.robotoCondensed);
+    textFont(fontes.roboto);
     textSize(15 * scale);
     textAlign(LEFT, CENTER);
     text("Selecione um produto", x + 14 * scale, y + h / 2);
@@ -168,7 +168,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   
   fill("#000000");
   noStroke();
-  textFont(fontes.robotoCondensed);
+  textFont(fontes.roboto);
   textSize(16 * scale);
   textAlign(LEFT, CENTER);
   text("Tags:", marginX, cursorY);
@@ -259,6 +259,15 @@ function calculateNewDetailsHeight(w, scale) {
   return h;
 }
 
+function drawPanelScroll(x, y, h, value, maxValue) {
+  if (maxValue <= 0) return;
+  const barH = Math.max(20, (h / (h + maxValue)) * h);
+  const barY = y + (value / maxValue) * (h - barH);
+  noStroke();
+  fill(180, 180, 180, 150);
+  rect(x, barY, 4, barH, 2);
+}
+
 function drawSavedProducts(x, y, w, scale) {
   const searchX = x + 22 * scale;
   const searchY = y + 18 * scale;
@@ -267,7 +276,7 @@ function drawSavedProducts(x, y, w, scale) {
   noStroke();
   rect(searchX, searchY, searchW, 20 * scale, 10 * scale);
   fill(savedSearch.length ? "#000000" : color(80));
-  textFont(fontes.robotoCondensed);
+  textFont(fontes.roboto);
   textSize(12 * scale);
   textAlign(LEFT, CENTER);
   text(
@@ -346,7 +355,7 @@ function drawSavedCard(product, x, y, w, h, scale) {
   fill(lightMode ? color(245) : "#000000");
   rect(x, y + 96 * scale, w, 19 * scale, 10);
   fill(lightMode ? "#000000" : "#FFFFFF");
-  textFont(fontes.robotoCondensed);
+  textFont(fontes.roboto);
   textSize(fitTextSize(product.name, w - 10 * scale, 11 * scale, 8 * scale));
   textAlign(CENTER, CENTER);
   text(product.name, x + w / 2, y + 105 * scale);
