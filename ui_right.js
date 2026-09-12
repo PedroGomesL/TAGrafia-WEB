@@ -399,12 +399,14 @@ function drawSavedProducts(x, y, w, scale) {
 
   const items = savedProductsFiltered();
   const gridY = y + 58 * scale;
-  const cardW = 92 * scale;
-  const cardH = 122 * scale;
-  const gapX = Math.max(12 * scale, (w - 44 * scale - cardW * 3) / 2);
-  const gapY = 32 * scale;
-  const gridX = x + 22 * scale;
-  const rows = Math.ceil(items.length / 3);
+  const gapX = 14 * scale;
+  const gridX = x + 16 * scale;
+  const cardW = Math.floor((w - 32 * scale - gapX) / 2);
+  const imgBoxH = Math.round(cardW * 0.95);
+  const pillH = Math.round(26 * scale);
+  const cardH = imgBoxH + 8 * scale + pillH;
+  const gapY = 22 * scale;
+  const rows = Math.ceil(items.length / 2);
   const totalH = rows * cardH + Math.max(0, rows - 1) * gapY;
   savedScroll = constrain(
     savedScroll,
@@ -433,8 +435,8 @@ function drawSavedProducts(x, y, w, scale) {
   }
 
   for (let i = 0; i < items.length; i++) {
-    const col = i % 3;
-    const row = Math.floor(i / 3);
+    const col = i % 2;
+    const row = Math.floor(i / 2);
     const cx = gridX + col * (cardW + gapX);
     const cy = gridY + row * (cardH + gapY) - savedScroll;
     if (cy + cardH < gridY || cy > height) continue;
@@ -455,29 +457,55 @@ function drawSavedProducts(x, y, w, scale) {
 function drawSavedCard(product, x, y, w, h, scale) {
   const colorOrigin =
     product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta;
+  const imgBoxH = Math.round(w * 0.95);
+  const pillH = Math.round(26 * scale);
+
+  // Outer container border
   noStroke();
-  fill(lightMode ? color(210) : "#8D8D8D");
-  rect(x, y, w, 88 * scale, 7);
+  fill(lightMode ? color(215) : "#8D8D8D");
+  rect(x, y, w, imgBoxH, 8 * scale);
+
+  // Inner white card
   fill("#FFFFFF");
-  rect(x + 5 * scale, y + 5 * scale, w - 10 * scale, 74 * scale, 4);
+  rect(x + 5 * scale, y + 5 * scale, w - 10 * scale, imgBoxH - 10 * scale, 5 * scale);
+
+  // Product image
   const img = getProductImage(product, 0);
-  if (img)
+  if (img) {
     drawImageContain(
       img,
       x + 8 * scale,
       y + 8 * scale,
       w - 16 * scale,
-      68 * scale,
+      imgBoxH - 30 * scale,
     );
+  }
+
+  // Origin bar at the bottom of the image container (yellow for BR, purple for INTL)
   fill(colorOrigin);
-  rect(x + 5 * scale, y + 72 * scale, w - 10 * scale, 14 * scale, 0, 0, 6, 6);
-  fill(lightMode ? color(245) : "#000000");
-  rect(x, y + 96 * scale, w, 19 * scale, 10);
+  rect(
+    x + 5 * scale,
+    y + imgBoxH - 18 * scale,
+    w - 10 * scale,
+    13 * scale,
+    0,
+    0,
+    5 * scale,
+    5 * scale,
+  );
+
+  // Pill for product name
+  const pillY = y + imgBoxH + 8 * scale;
+  fill(lightMode ? "#F0F0F0" : "#222222");
+  rect(x, pillY, w, pillH, pillH / 2);
+
   fill(lightMode ? "#000000" : "#FFFFFF");
   textFont(fontes.roboto);
-  textSize(fitTextSize(product.name, w - 10 * scale, 11 * scale, 8 * scale));
+  textStyle(BOLD);
+  textSize(fitTextSize(product.name, w - 14 * scale, 12 * scale, 8 * scale));
   textAlign(CENTER, CENTER);
-  text(product.name, x + w / 2, y + 105 * scale);
+  text(product.name, x + w / 2, pillY + pillH / 2);
+  textStyle(NORMAL);
 }
 
 function savedProductsFiltered() {
@@ -643,15 +671,17 @@ function savedProductsMousePressed(mx, my, x, contentY, w, scale) {
   }
   const items = savedProductsFiltered();
   const gridY = contentY + 58 * scale;
-  const cardW = 92 * scale;
-  const cardH = 122 * scale;
-  const gapX = Math.max(12 * scale, (w - 44 * scale - cardW * 3) / 2);
-  const gapY = 32 * scale;
-  const gridX = x + 22 * scale;
+  const gapX = 14 * scale;
+  const gridX = x + 16 * scale;
+  const cardW = Math.floor((w - 32 * scale - gapX) / 2);
+  const imgBoxH = Math.round(cardW * 0.95);
+  const pillH = Math.round(26 * scale);
+  const cardH = imgBoxH + 8 * scale + pillH;
+  const gapY = 22 * scale;
   const localY = my - gridY + savedScroll;
   for (let i = 0; i < items.length; i++) {
-    const col = i % 3;
-    const row = Math.floor(i / 3);
+    const col = i % 2;
+    const row = Math.floor(i / 2);
     const cx = gridX + col * (cardW + gapX);
     const cy = row * (cardH + gapY);
     if (mx >= cx && mx <= cx + cardW && localY >= cy && localY <= cy + cardH) {
