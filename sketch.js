@@ -20,6 +20,8 @@ function preload() {
   icones.material = loadImage(asset("data/Icones/material.png"));
   icones.tecnicas = loadImage(asset("data/Icones/técnica.png"));
   icones.estetico = loadImage(asset("data/Icones/estético.png"));
+  icones.filtros = loadImage(asset("data/Icones/filter_alt_off.png"));
+  icones.sobre = loadImage(asset("data/Icones/info.png"));
   icones.tipo_obra = loadImage(asset("data/Icones/tipodeproduto.png"));
   icones.clear = loadImage(asset("data/Icones/filter_alt_off.png"));
   icones.left = loadImage(asset("data/Icones/keyboard_arrow_left.png"));

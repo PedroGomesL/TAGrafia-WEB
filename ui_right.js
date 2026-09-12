@@ -9,78 +9,60 @@ function drawProductPanel() {
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
   const imageH = Math.round(300 * scale);
-  const barH = Math.round(44 * scale);
 
   noStroke();
-  fill(panelBackground());
+  fill("#FFFFFF");
   rect(x, 0, w, height);
 
-  // 1. Top Image (Full width)
+  // 1. Top Image
   drawProductImage(x, 0, w, imageH, scale);
 
   // 2. Title Below Image
   drawProductInfo(x, imageH, w, titleH, scale);
 
-  // 3. Left Sidebar (Below Title)
-  drawProductSidebar(
-    x,
-    imageH + titleH,
-    sidebarW,
-    height - imageH - titleH,
-    scale,
-  );
+  if (!selectedProduct) return;
 
-  // 4. Details / Content (Right of Sidebar)
-  if (productDetailsActive)
-    drawProductDetails(mainX, imageH + titleH, mainW, barH, scale);
-  else drawSavedProducts(mainX, imageH + titleH, mainW, scale);
+  // 3. Left Sidebar
+  drawProductSidebar(x, imageH + titleH, sidebarW, height - imageH - titleH, scale);
+
+  // 4. Details / Content
+  if (rightPanelTab === "salvos") {
+    drawSavedProducts(mainX, imageH + titleH, mainW, scale);
+  } else {
+    drawProductDetailsNew(mainX, imageH + titleH, mainW, height - imageH - titleH, scale);
+  }
 }
 
 function drawProductSidebar(x, y, w, h, scale) {
-  // Draw the vertical tabs
-  fill(panelBackground());
+  fill("#FFFFFF");
   noStroke();
   rect(x, y, w, h);
+  stroke(240);
+  strokeWeight(1);
+  line(x + w, y, x + w, y + h);
 
   const items = [
-    { label: "Técnico", icon: icones.tecnicas },
-    { label: "Materiais", icon: icones.material },
-    { label: "Estético", icon: icones.estetico },
-    { label: "Salvos", icon: icones.save },
+    { id: "tecnicas", label: "Técnico", icon: icones.tecnicas },
+    { id: "materiais", label: "Materiais", icon: icones.material },
+    { id: "estetico", label: "Estético", icon: icones.estetico },
+    { id: "salvos", label: "Salvos", icon: icones.save },
   ];
 
   let currentY = y + 20 * scale;
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const isSavedTab = item.label === "Salvos";
-    const active =
-      (productDetailsActive && !isSavedTab) ||
-      (!productDetailsActive && isSavedTab);
-
-    // Figma shows a blue indicator on the left if active
+  for (const item of items) {
+    const active = rightPanelTab === item.id;
     if (active) {
-      fill(COLORS.blue);
-      rect(x, currentY, 4 * scale, 50 * scale);
+      fill(240);
+      noStroke();
+      rect(x + 5 * scale, currentY - 5 * scale, w - 10 * scale, 75 * scale, 8);
     }
-
-    // Icon
-    if (item.icon)
-      drawImageCentered(
-        item.icon,
-        x + w / 2,
-        currentY + 15 * scale,
-        30 * scale,
-        30 * scale,
-      );
-
-    // Text
-    fill(active ? panelTextColor() : color(150));
+    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 17 * scale, 35 * scale, 35 * scale);
+    fill("#000000");
     noStroke();
     textFont(fontes.robotoCondensed);
-    textSize(11 * scale);
+    textSize(14 * scale);
     textAlign(CENTER, CENTER);
-    text(item.label, x + w / 2, currentY + 40 * scale);
-
+    text(item.label, x + w / 2, currentY + 50 * scale);
     currentY += 75 * scale;
   }
 }
@@ -90,8 +72,9 @@ function drawProductImage(x, y, w, h, scale) {
   noStroke();
   rect(x, y, w, h);
   const img = getCurrentProductImage();
-  if (img) drawImageContain(img, x, y, w, h);
-  else {
+  if (img) {
+    drawImageContain(img, x, y, w, h);
+  } else {
     fill(17, 17, 17, 130);
     textFont(fontes.robotoCondensed);
     textSize(15 * scale);
@@ -99,38 +82,28 @@ function drawProductImage(x, y, w, h, scale) {
     text(
       selectedProduct && productImages(selectedProduct).length
         ? "Carregando imagem..."
-        : "Imagem nao encontrada",
+        : "Imagem não encontrada",
       x + w / 2,
       y + h / 2,
     );
   }
-  drawImageCentered(
-    icones.left,
-    x + 45 * scale,
-    y + h - 64 * scale,
-    38 * scale,
-    38 * scale,
-  );
-  drawImageCentered(
-    icones.right,
-    x + w - 45 * scale,
-    y + h - 64 * scale,
-    38 * scale,
-    38 * scale,
-  );
-}
-
-function drawProductImageLine(x, y, w, scale) {
-  noStroke();
-  fill("#000000");
-  const lineW = Math.min(w - 28 * scale, 475 * scale);
-  rect(x + (w - lineW) / 2, y, lineW, 1);
+  
+  if (selectedProduct) {
+    const images = productImages(selectedProduct);
+    if (images.length > 1) {
+      fill(255, 255, 255, 200);
+      noStroke();
+      circle(x + 45 * scale, y + h - 64 * scale, 30 * scale);
+      circle(x + w - 45 * scale, y + h - 64 * scale, 30 * scale);
+      if (icones.left) drawImageCentered(icones.left, x + 45 * scale, y + h - 64 * scale, 24 * scale, 24 * scale);
+      if (icones.right) drawImageCentered(icones.right, x + w - 45 * scale, y + h - 64 * scale, 24 * scale, 24 * scale);
+    }
+  }
 }
 
 function drawProductInfo(x, y, w, h, scale) {
   noStroke();
-  // Fundo transparente/branco conforme Figma
-  fill("#ffffff");
+  fill("#FFFFFF");
   rect(x, y, w, h);
 
   if (!selectedProduct) {
@@ -142,96 +115,45 @@ function drawProductInfo(x, y, w, h, scale) {
     return;
   }
 
-  const nameX = x + 14 * scale;
+  const nameX = x + 20 * scale;
   const nameY = y + 25 * scale;
-  const containerX = x + w - 168 * scale;
-  const textW = Math.max(118 * scale, containerX - 14 * scale - nameX);
   fill("#000000");
   textFont(fontes.afacad);
   textStyle(BOLD);
-  textSize(fitTextSize(selectedProduct.name, textW, 18 * scale, 10 * scale));
+  const textW = w - 40 * scale;
+  textSize(fitTextSize(selectedProduct.name, textW, 20 * scale, 12 * scale));
   textAlign(LEFT, BASELINE);
   text(selectedProduct.name, nameX, nameY);
-  const yearText = `(${selectedProduct.year || selectedProduct.dateRaw})`;
-  const yearX = nameX + textWidth(selectedProduct.name) + 6 * scale;
-  textFont(fontes.robotoCondensed);
   textStyle(NORMAL);
-  textSize(15 * scale);
-  let authorY = y + 48 * scale;
-  if (yearX + textWidth(yearText) < nameX + textW)
-    text(yearText, yearX, nameY - 1 * scale);
-  else {
-    text(yearText, nameX, y + 42 * scale);
-    authorY = y + 57 * scale;
-  }
-  textAlign(LEFT, TOP);
-  text(selectedProduct.author || "", nameX, authorY, textW, 24 * scale);
-  drawProductInfoRibbon(x, y, w, h, scale);
-}
-
-function drawProductInfoRibbon(x, y, w, h, scale) {
-  const ribbonH = 56 * scale;
-  const containerX = x + w - 168 * scale;
-  const containerY = y + h - ribbonH;
-  noStroke();
+  
+  const designerText = selectedProduct.designer || "Designer desconhecido";
+  const yearText = ` (${selectedProduct.year || selectedProduct.dateRaw})`;
+  textSize(14 * scale);
+  fill("#000000");
+  text(designerText + yearText, nameX, nameY + 20 * scale);
+  
+  // Ribbon
+  const ribbonH = 40 * scale;
+  const rx = x + 74 * scale;
+  const rw = w - 74 * scale;
   fill(COLORS.yellow);
-  circle(containerX + ribbonH / 2, containerY + ribbonH / 2, ribbonH);
-  rect(
-    containerX + ribbonH / 2,
-    containerY,
-    x + w - (containerX + ribbonH / 2),
-    ribbonH,
-  );
+  rect(rx, y + h - ribbonH, rw, ribbonH);
+  
   const icons = [icones.save, icones.author, productionIcon()];
   for (let i = 0; i < icons.length; i++) {
-    const cx = containerX + [46, 92, 138][i] * scale;
-    const cy = containerY + ribbonH / 2;
+    const cx = rx + (rw) - (120 - i*40) * scale;
+    const cy = y + h - ribbonH / 2;
     fill("#FFFFFF");
-    circle(cx, cy, 38 * scale);
-    drawImageCentered(icons[i], cx, cy, 24 * scale, 24 * scale);
+    circle(cx, cy, 32 * scale);
+    drawImageCentered(icons[i], cx, cy, 20 * scale, 20 * scale);
   }
 }
 
-function drawProductTabs(x, y, w, h, scale) {
-  drawProductTab(
-    x,
-    y,
-    w / 2,
-    h,
-    "DETALHES DO PRODUTO",
-    productDetailsActive,
-    scale,
-  );
-  drawProductTab(
-    x + w / 2,
-    y,
-    w / 2,
-    h,
-    "PRODUTOS SALVOS",
-    !productDetailsActive,
-    scale,
-  );
-}
-
-function drawProductTab(x, y, w, h, label, active, scale) {
-  stroke("#000000");
-  strokeWeight(1);
-  fill(active ? COLORS.yellow : lightMode ? "#D8CFAF" : COLORS.inactiveTab);
-  rect(x, y, w, h);
-  fill(active ? "#000000" : panelTextColor());
-  noStroke();
-  textFont(fontes.newAmsterdam);
-  textSize(20 * scale);
-  textAlign(CENTER, CENTER);
-  text(label, x + w / 2, y + h / 2 + scale);
-}
-
-function drawProductDetails(x, y, w, barH, scale) {
-  const visibleH = height - y;
-  let contentH = detailsContentHeight(w, barH, scale);
+function drawProductDetailsNew(x, y, w, h, scale) {
+  const visibleH = h;
+  let contentH = calculateNewDetailsHeight(w, scale);
   detailScroll = constrain(detailScroll, 0, Math.max(0, contentH - visibleH));
 
-  // Clip to prevent scrolled content from overflowing into the image/tabs above
   drawingContext.save();
   drawingContext.beginPath();
   drawingContext.rect(x, y, w, visibleH);
@@ -239,101 +161,29 @@ function drawProductDetails(x, y, w, barH, scale) {
 
   push();
   translate(0, -detailScroll);
-  let cursor = y;
-  cursor = drawDetailSection(
-    x,
-    cursor,
-    w,
-    barH,
-    "material",
-    "MATERIAIS",
-    materialOpen,
-    selectedProduct ? selectedProduct.materialDescription : "",
-    scale,
-  );
-  cursor = drawDetailSection(
-    x,
-    cursor,
-    w,
-    barH,
-    "tecnicas",
-    "TECNICAS DE CONSTRUCAO",
-    techniqueOpen,
-    selectedProduct
-      ? selectedProduct.origin === "brasileiro"
-        ? selectedProduct.economicContext
-        : selectedProduct.composition
-      : "",
-    scale,
-  );
-  drawDetailSection(
-    x,
-    cursor,
-    w,
-    barH,
-    "estetico",
-    "ESTETICO",
-    aestheticOpen,
-    selectedProduct ? selectedProduct.composition : "",
-    scale,
-  );
-  pop();
-
-  drawingContext.restore();
-
-  drawPanelScroll(
-    x + w - 6,
-    y + 6,
-    visibleH - 12,
-    detailScroll,
-    Math.max(0, contentH - visibleH),
-  );
-}
-
-function drawDetailSection(x, y, w, barH, dim, label, open, textValue, scale) {
-  stroke("#000000");
-  strokeWeight(1);
-  fill(COLORS.yellow);
-  rect(x, y, w, barH);
-  drawImageCentered(
-    icones[dim] || icones.tecnicas,
-    x + 33 * scale,
-    y + barH / 2,
-    34 * scale,
-    34 * scale,
-  );
+  
+  const dim = rightPanelTab;
+  let cursorY = y + 20 * scale;
+  const marginX = x + 20 * scale;
+  
   fill("#000000");
   noStroke();
-  textFont(fontes.newAmsterdam);
-  textSize(20 * scale);
-  textAlign(LEFT, CENTER);
-  text(label, x + 64 * scale, y + barH / 2 + scale);
-  drawSectionToggle(x + w - 30 * scale, y + barH / 2, 18 * scale, open);
-  if (!open) return y + barH;
-  const h = detailSectionContentHeight(w, dim, textValue, scale);
-  noStroke();
-  fill(panelBackground());
-  rect(x, y + barH, w, h);
-  drawDetailSectionContent(x, y + barH, w, dim, textValue, scale);
-  return y + barH + h;
-}
-
-function drawDetailSectionContent(x, y, w, dim, textValue, scale) {
-  const tags = selectedProduct ? selectedProduct.tagsByDimension[dim] : [];
-  let cursorX = x + 84 * scale;
-  let cursorY = y + 14 * scale;
-  const maxX = x + w - 20 * scale;
-  const chipH = 25 * scale;
-  fill(panelTextColor());
   textFont(fontes.robotoCondensed);
   textSize(16 * scale);
   textAlign(LEFT, CENTER);
-  text("Tags:", x + 18 * scale, cursorY + chipH / 2 - scale);
+  text("Tags:", marginX, cursorY);
+  cursorY += 25 * scale;
+  
+  const tags = selectedProduct.tagsByDimension[dim] || [];
+  let cursorX = marginX;
+  const maxX = x + w - 20 * scale;
+  const chipH = 25 * scale;
+  
   for (const tag of tags) {
-    textSize(16 * scale);
+    textSize(14 * scale);
     const chipW = Math.max(54 * scale, textWidth(tag.label) + 18 * scale);
     if (cursorX + chipW > maxX) {
-      cursorX = x + 84 * scale;
+      cursorX = marginX;
       cursorY += chipH + 8 * scale;
     }
     noStroke();
@@ -344,103 +194,69 @@ function drawDetailSectionContent(x, y, w, dim, textValue, scale) {
     text(tag.label, cursorX + chipW / 2, cursorY + chipH / 2 - scale);
     cursorX += chipW + 7 * scale;
   }
-  if (!cleanText(textValue)) return;
-  fill(panelTextColor());
+  
+  if (tags.length > 0) cursorY += chipH + 20 * scale;
+  
+  fill("#000000");
+  textAlign(LEFT, CENTER);
+  textSize(16 * scale);
+  text("Detalhes:", marginX, cursorY);
+  cursorY += 20 * scale;
+  
+  let textValue = "";
+  if (dim === "materiais") textValue = selectedProduct.materialDescription;
+  else if (dim === "tecnicas") textValue = selectedProduct.origin === "brasileiro" ? selectedProduct.economicContext : selectedProduct.composition;
+  else if (dim === "estetico") textValue = selectedProduct.aestheticDescription;
+  
+  if (!textValue) textValue = "Nenhum detalhe disponível para esta categoria.";
+  
+  fill(40);
+  textSize(14 * scale);
+  textLeading(20 * scale);
   textAlign(LEFT, TOP);
-  textSize(16 * scale);
-  text(
-    cleanText(textValue),
-    x + 18 * scale,
-    cursorY + chipH + 26 * scale,
-    w - 36 * scale,
-    1000,
-  );
+  text(textValue, marginX, cursorY, w - 40 * scale, 1000 * scale);
+  
+  pop();
+  drawingContext.restore();
 }
 
-function detailsContentHeight(w, barH, scale) {
-  let total = barH;
-  if (materialOpen)
-    total += detailSectionContentHeight(
-      w,
-      "material",
-      selectedProduct ? selectedProduct.materialDescription : "",
-      scale,
-    );
-  total += barH;
-  if (techniqueOpen)
-    total += detailSectionContentHeight(
-      w,
-      "tecnicas",
-      selectedProduct
-        ? selectedProduct.origin === "brasileiro"
-          ? selectedProduct.economicContext
-          : selectedProduct.composition
-        : "",
-      scale,
-    );
-  total += barH;
-  if (aestheticOpen)
-    total += detailSectionContentHeight(
-      w,
-      "estetico",
-      selectedProduct ? selectedProduct.composition : "",
-      scale,
-    );
-  return total;
-}
-
-function detailSectionContentHeight(w, dim, textValue, scale) {
-  const tags = selectedProduct ? selectedProduct.tagsByDimension[dim] : [];
-  const lines = chipLines(tags, w - 104 * scale, scale);
-  const approxTextLines = cleanText(textValue)
-    ? Math.ceil(
-        cleanText(textValue).length /
-          Math.max(30, (w - 36 * scale) / (8 * scale)),
-      )
-    : 0;
-  return (
-    24 * scale +
-    lines * 33 * scale +
-    (approxTextLines > 0
-      ? 24 * scale + approxTextLines * 18 * scale
-      : 12 * scale)
-  );
-}
-
-function chipLines(tags, available, scale) {
-  if (!tags.length) return 1;
-  let lines = 1;
-  let used = 0;
-  textFont(fontes.robotoCondensed);
-  textSize(16 * scale);
+function calculateNewDetailsHeight(w, scale) {
+  if (!selectedProduct) return 0;
+  const dim = rightPanelTab;
+  let h = 20 * scale;
+  h += 25 * scale; // "Tags:"
+  
+  const tags = selectedProduct.tagsByDimension[dim] || [];
+  let cursorX = 20 * scale;
+  const maxX = w - 20 * scale;
+  const chipH = 25 * scale;
+  
   for (const tag of tags) {
-    const w =
-      Math.max(54 * scale, textWidth(tag.label) + 18 * scale) + 7 * scale;
-    if (used + w > available) {
-      lines++;
-      used = 0;
+    // textSize is not strictly needed here as we use an approximation, but we'll approximate textWidth
+    const estW = tag.label.length * 8 * scale;
+    const chipW = Math.max(54 * scale, estW + 18 * scale);
+    if (cursorX + chipW > maxX) {
+      cursorX = 20 * scale;
+      h += chipH + 8 * scale;
     }
-    used += w;
+    cursorX += chipW + 7 * scale;
   }
-  return lines;
-}
-
-function drawSectionToggle(cx, cy, size, open) {
-  stroke("#000000");
-  strokeWeight(Math.max(1.2, 1.8 * layoutScale()));
-  line(cx - size * 0.38, cy, cx + size * 0.38, cy);
-  if (!open) line(cx, cy - size * 0.38, cx, cy + size * 0.38);
-}
-
-function drawPanelScroll(x, y, h, value, maxValue) {
-  if (maxValue <= 0 || h <= 0) return;
-  const thumbH = Math.max(34, (h * h) / (h + maxValue));
-  const thumbY = y + map(value, 0, maxValue, 0, h - thumbH);
-  noStroke();
-  fill(lightMode ? color(0, 0, 0, 42) : color(255, 255, 255, 45));
-  rect(x, y, 3, h, 2);
-  fill(COLORS.yellow);
-  rect(x - 1, thumbY, 5, thumbH, 2);
+  if (tags.length > 0) h += chipH + 20 * scale;
+  
+  h += 40 * scale; // "Detalhes:"
+  
+  let textValue = "";
+  if (dim === "materiais") textValue = selectedProduct.materialDescription;
+  else if (dim === "tecnicas") textValue = selectedProduct.origin === "brasileiro" ? selectedProduct.economicContext : selectedProduct.composition;
+  else if (dim === "estetico") textValue = selectedProduct.aestheticDescription;
+  
+  if (!textValue) textValue = "Nenhum detalhe disponível para esta categoria.";
+  
+  const charsPerLine = Math.floor((w - 40 * scale) / (8 * scale));
+  const lines = Math.ceil(textValue.length / charsPerLine);
+  h += lines * 20 * scale + 50 * scale;
+  
+  return h;
 }
 
 function drawSavedProducts(x, y, w, scale) {
@@ -642,12 +458,16 @@ function productPanelMousePressed(mx, my) {
     return true;
   }
 
-  // Save Ribbon button (needs to be adjusted if it exists, it was inside drawProductInfo)
-  const ribbonY = imageH + titleH - 56 * scale;
-  const ribbonX = x + w - 168 * scale;
+  // Save Ribbon button
+  const ribbonH = 40 * scale;
+  const ribbonY = imageH + titleH - ribbonH;
+  const rx = x + 74 * scale;
+  const rw = w - 74 * scale;
+  const saveCx = rx + (rw) - 120 * scale;
+  
   if (
     selectedProduct &&
-    dist(mx, my, ribbonX + 46 * scale, ribbonY + 28 * scale) <= 24 * scale
+    dist(mx, my, saveCx, ribbonY + ribbonH / 2) <= 16 * scale
   ) {
     toggleSavedProduct();
     return true;
@@ -657,62 +477,19 @@ function productPanelMousePressed(mx, my) {
   if (mx >= x && mx <= x + sidebarW && my > imageH + titleH) {
     let clickedY = my - imageH - titleH - 20 * scale;
     let index = Math.floor(clickedY / (75 * scale));
+    const tabs = ["tecnicas", "materiais", "estetico", "salvos"];
     if (index >= 0 && index < 4) {
-      if (index === 3) {
-        // "Salvos" tab
-        productDetailsActive = false;
-      } else {
-        productDetailsActive = true;
-      }
+      rightPanelTab = tabs[index];
       savedSearchActive = false;
       return true;
     }
   }
 
-  const barH = Math.round(44 * scale);
   const contentY = imageH + titleH;
-  if (!productDetailsActive)
+  if (rightPanelTab === "salvos") {
     return savedProductsMousePressed(mx, my, mainX, contentY, mainW, scale);
-  detailSectionsMousePressed(mx, my, mainX, contentY, mainW, scale);
+  }
   return true;
-}
-
-function detailSectionsMousePressed(mx, my, x, contentY, w, scale) {
-  const barH = Math.round(44 * scale);
-  let y = contentY - detailScroll;
-  if (insideRect(mx, my, x, y, w, barH)) {
-    materialOpen = !materialOpen;
-    return;
-  }
-  y +=
-    barH +
-    (materialOpen
-      ? detailSectionContentHeight(
-          w,
-          "material",
-          selectedProduct ? selectedProduct.materialDescription : "",
-          scale,
-        )
-      : 0);
-  if (insideRect(mx, my, x, y, w, barH)) {
-    techniqueOpen = !techniqueOpen;
-    return;
-  }
-  y +=
-    barH +
-    (techniqueOpen
-      ? detailSectionContentHeight(
-          w,
-          "tecnicas",
-          selectedProduct
-            ? selectedProduct.origin === "brasileiro"
-              ? selectedProduct.economicContext
-              : selectedProduct.composition
-            : "",
-          scale,
-        )
-      : 0);
-  if (insideRect(mx, my, x, y, w, barH)) aestheticOpen = !aestheticOpen;
 }
 
 function savedProductsMousePressed(mx, my, x, contentY, w, scale) {
@@ -745,7 +522,7 @@ function savedProductsMousePressed(mx, my, x, contentY, w, scale) {
     const cy = row * (cardH + gapY);
     if (mx >= cx && mx <= cx + cardW && localY >= cy && localY <= cy + cardH) {
       selectProduct(items[i]);
-      productDetailsActive = true;
+      rightPanelTab = "materiais";
       return true;
     }
   }
@@ -756,20 +533,17 @@ function productPanelWheel(event) {
   const x = productPanelX();
   const w = productPanelW();
   const scale = layoutScale();
-  const contentY =
-    Math.round(337 * scale) +
-    Math.round(80 * scale) +
-    Math.round(55 * scale) +
-    2;
+  const contentY = Math.round(300 * scale) + Math.round(80 * scale);
+  
   if (mouseX < x || mouseX > x + w || mouseY < contentY) return false;
-  if (productDetailsActive) {
-    const barH = Math.round(44 * scale);
+  
+  if (rightPanelTab === "salvos") {
+    savedScroll = Math.max(0, savedScroll + event.delta * 0.45);
+  } else {
     const visibleH = height - contentY;
-    const contentH = detailsContentHeight(w, barH, scale);
+    const contentH = calculateNewDetailsHeight(w - 74 * scale, scale);
     const maxScroll = Math.max(0, contentH - visibleH);
     detailScroll = constrain(detailScroll + event.delta * 0.45, 0, maxScroll);
-  } else {
-    savedScroll = Math.max(0, savedScroll + event.delta * 0.45);
   }
   return true;
 }
