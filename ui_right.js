@@ -37,34 +37,54 @@ function drawProductSidebar(x, y, w, h, scale) {
   fill("#FFFFFF");
   noStroke();
   rect(x, y, w, h);
-  stroke(240);
-  strokeWeight(1);
+  
+  stroke("#959fff");
+  strokeWeight(1.5 * scale);
   line(x + w, y, x + w, y + h);
 
   const items = [
-    { id: "tecnicas", label: "Técnico", icon: icones.tecnicas },
-    { id: "materiais", label: "Materiais", icon: icones.material },
+    { id: "materiais", label: "Material", icon: icones.material },
     { id: "estetico", label: "Estético", icon: icones.estetico },
-    { id: "salvos", label: "Salvos", icon: icones.save },
+    { id: "tecnicas", label: "Técnica", icon: icones.tecnicas },
   ];
 
-  let currentY = y + 20 * scale;
+  let currentY = y + 25 * scale;
   for (const item of items) {
     const active = rightPanelTab === item.id;
     if (active) {
       fill(240);
       noStroke();
-      rect(x + 5 * scale, currentY - 5 * scale, w - 10 * scale, 75 * scale, 8);
+      rect(x + 5 * scale, currentY - 15 * scale, w - 10 * scale, 75 * scale, 8);
     }
-    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 17 * scale, 35 * scale, 35 * scale);
+    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 10 * scale, 35 * scale, 35 * scale);
     fill("#000000");
     noStroke();
     textFont(fontes.roboto);
     textSize(14 * scale);
     textAlign(CENTER, CENTER);
-    text(item.label, x + w / 2, currentY + 50 * scale);
-    currentY += 75 * scale;
+    text(item.label, x + w / 2, currentY + 45 * scale);
+    currentY += 80 * scale;
   }
+
+  // Draw separator before "Salvos"
+  stroke("#959fff");
+  strokeWeight(1.5 * scale);
+  line(x + 10 * scale, y + h - 90 * scale, x + w - 10 * scale, y + h - 90 * scale);
+
+  // Draw "Salvos" button at the bottom
+  const salvosActive = rightPanelTab === "salvos";
+  if (salvosActive) {
+    fill(240);
+    noStroke();
+    rect(x + 5 * scale, y + h - 80 * scale, w - 10 * scale, 75 * scale, 8);
+  }
+  if (icones.save) drawImageCentered(icones.save, x + w / 2, y + h - 55 * scale, 35 * scale, 35 * scale);
+  fill("#000000");
+  noStroke();
+  textFont(fontes.roboto);
+  textSize(14 * scale);
+  textAlign(CENTER, CENTER);
+  text("Salvos", x + w / 2, y + h - 20 * scale);
 }
 
 function drawProductImage(x, y, w, h, scale) {
@@ -106,7 +126,13 @@ function drawProductInfo(x, y, w, h, scale) {
   fill("#FFFFFF");
   rect(x, y, w, h);
 
+  // Bottom separator for the title bar
+  stroke("#959fff");
+  strokeWeight(1.5 * scale);
+  line(x, y + h, x + w, y + h);
+
   if (!selectedProduct) {
+    noStroke();
     fill("#000000");
     textFont(fontes.roboto);
     textSize(15 * scale);
@@ -115,35 +141,51 @@ function drawProductInfo(x, y, w, h, scale) {
     return;
   }
 
-  const sidebarW = 74 * scale;
-
-  // Blue vertical line separating sidebar from title area
-  stroke("#959fff");
-  strokeWeight(1.5 * scale);
-  line(x + sidebarW, y, x + sidebarW, y + h);
-
-  // --- Title area (right of sidebar) ---
-  const titleX = x + sidebarW + 10 * scale;
-  const titleW = w - sidebarW - 14 * scale;
-  const titleY = y + 6 * scale;
-
-  // Product name (small bold Afacad, matches Figma 12/700)
+  // Colored strip for origin
   noStroke();
-  fill("#190000");
+  fill(selectedProduct.origin === "brasileiro" ? "#ffef95" : "#959fff");
+  rect(x, y, 8 * scale, h);
+
+  // Title area
+  const titleX = x + 16 * scale;
+  const titleW = w - 90 * scale; // Room for icons
+  const titleY = y + 15 * scale;
+
+  fill("#000000");
   textFont(fontes.afacad);
   textStyle(BOLD);
-  textSize(fitTextSize(selectedProduct.name, titleW, 14 * scale, 10 * scale));
+  textSize(fitTextSize(selectedProduct.name, titleW, 16 * scale, 12 * scale));
   textAlign(LEFT, TOP);
   text(selectedProduct.name, titleX, titleY, titleW, 30 * scale);
   textStyle(NORMAL);
 
-  // Designer name (Afacad Regular 16)
   const designerText = selectedProduct.author || "Designer desconhecido";
   const yearText = ` (${selectedProduct.year || selectedProduct.dateRaw})`;
   textSize(14 * scale);
-  fill("#190000");
-  textAlign(LEFT, TOP);
   text(designerText + yearText, titleX, titleY + 22 * scale, titleW, 20 * scale);
+
+  // Icons on the right
+  const iconY = y + h / 2;
+  const iconSaveX = x + w - 24 * scale;
+  const iconProdX = x + w - 54 * scale;
+
+  // Draw save icon (TODO: add interaction for saving)
+  if (icones.save) {
+    drawImageCentered(icones.save, iconSaveX, iconY, 24 * scale, 24 * scale);
+  } else {
+    noFill(); stroke(0); circle(iconSaveX, iconY, 20 * scale);
+  }
+
+  // Draw production icon
+  let prodIcon = null;
+  const prodStr = (selectedProduct.production || "").toLowerCase();
+  if (prodStr.includes("artesanal")) prodIcon = icones.artesanal;
+  else if (prodStr.includes("assinado")) prodIcon = icones.author;
+  else if (prodStr.includes("industrial")) prodIcon = icones.industrial;
+  
+  if (prodIcon) {
+    drawImageCentered(prodIcon, iconProdX, iconY, 24 * scale, 24 * scale);
+  }
 }
 
 function drawProductDetailsNew(x, y, w, h, scale) {
