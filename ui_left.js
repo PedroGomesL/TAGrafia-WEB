@@ -87,6 +87,11 @@ function drawNavSidebar() {
     text(item.label, LAYOUT_NAV_W / 2, item.y + 35);
   }
 
+  // Right border
+  stroke("#959fff");
+  strokeWeight(1.5);
+  line(LAYOUT_NAV_W, 0, LAYOUT_NAV_W, height / filterPanelScale());
+  
   pop();
 }
 
