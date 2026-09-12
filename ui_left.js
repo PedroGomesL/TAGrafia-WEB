@@ -92,7 +92,11 @@ function drawNavSidebar() {
     text(item.label, LAYOUT_NAV_W / 2, item.y + 35);
   }
 
-  
+  // Divider between Exportar and Sobre
+  stroke("#959fff");
+  strokeWeight(1.5);
+  line(15, 420, LAYOUT_NAV_W - 15, 420);
+
   pop();
 }
 
