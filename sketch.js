@@ -123,7 +123,6 @@ const COLORS = {
 };
 
 let fontes = {};
-let icones = {};
 let sourceLines = {};
 let geoJson = null;
 let imageManifest = {};
@@ -1775,21 +1774,71 @@ function drawProductPanel() {
   const x = productPanelX();
   const w = productPanelW();
   const scale = layoutScale();
-  const imageH = Math.round(337 * scale);
-  const infoH = Math.round(80 * scale);
-  const tabH = Math.round(55 * scale);
+  
+  const titleH = 80 * scale;
+  const sidebarW = 74 * scale;
+  
+  const mainX = x + sidebarW;
+  const mainW = w - sidebarW;
+  const imageH = Math.round(300 * scale); 
   const barH = Math.round(44 * scale);
 
   noStroke();
   fill(panelBackground());
   rect(x, 0, w, height);
-  drawProductImage(x, 0, w, imageH, scale);
-  drawProductImageLine(x, imageH, w, scale);
-  drawProductInfo(x, imageH + 1, w, infoH, scale);
-  drawProductTabs(x, imageH + infoH + 1, w, tabH, scale);
+  
+  // Top Title
+  drawProductInfo(mainX, 0, mainW, titleH, scale);
+  
+  // Left Sidebar inside Product Panel
+  drawProductSidebar(x, titleH, sidebarW, height - titleH, scale);
+  
+  // Image
+  drawProductImage(mainX, titleH, mainW, imageH, scale);
+  
+  // Details
+  if (productDetailsActive) drawProductDetails(mainX, titleH + imageH, mainW, barH, scale);
+  else drawSavedProducts(mainX, titleH + imageH, mainW, scale);
+}
 
-  if (productDetailsActive) drawProductDetails(x, imageH + infoH + tabH + 1, w, barH, scale);
-  else drawSavedProducts(x, imageH + infoH + tabH + 1, w, scale);
+function drawProductSidebar(x, y, w, h, scale) {
+  // Draw the vertical tabs
+  fill(panelBackground());
+  noStroke();
+  rect(x, y, w, h);
+  
+  const items = [
+    { label: "Técnico", icon: icones.tecnicas },
+    { label: "Materiais", icon: icones.material },
+    { label: "Estético", icon: icones.estetico },
+    { label: "Salvos", icon: icones.save }
+  ];
+  
+  let currentY = y + 20 * scale;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const isSavedTab = item.label === "Salvos";
+    const active = (productDetailsActive && !isSavedTab) || (!productDetailsActive && isSavedTab);
+    
+    // Figma shows a blue indicator on the left if active
+    if (active) {
+      fill(COLORS.blue);
+      rect(x, currentY, 4 * scale, 50 * scale);
+    }
+    
+    // Icon
+    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 15 * scale, 30 * scale, 30 * scale);
+    
+    // Text
+    fill(active ? panelTextColor() : color(150));
+    noStroke();
+    textFont(fontes.robotoCondensed);
+    textSize(11 * scale);
+    textAlign(CENTER, CENTER);
+    text(item.label, x + w / 2, currentY + 40 * scale);
+    
+    currentY += 75 * scale;
+  }
 }
 
 function drawProductImage(x, y, w, h, scale) {
@@ -1818,8 +1867,10 @@ function drawProductImageLine(x, y, w, scale) {
 
 function drawProductInfo(x, y, w, h, scale) {
   noStroke();
-  fill("#F2F2F2");
+  // Fundo transparente/branco conforme Figma
+  fill("#ffffff");
   rect(x, y, w, h);
+  
   if (!selectedProduct) {
     fill("#000000");
     textFont(fontes.robotoCondensed);
@@ -2321,33 +2372,53 @@ function productPanelMousePressed(mx, my) {
   const x = productPanelX();
   const w = productPanelW();
   const scale = layoutScale();
-  const imageH = Math.round(337 * scale);
-  const infoH = Math.round(80 * scale);
-  const tabH = Math.round(55 * scale);
+  
+  const titleH = 80 * scale;
+  const sidebarW = 74 * scale;
+  const mainX = x + sidebarW;
+  const mainW = w - sidebarW;
+  const imageH = Math.round(300 * scale); 
+
   if (mx < x || mx > x + w || my < 0 || my > height) return false;
-  if (dist(mx, my, x + 45 * scale, imageH - 64 * scale) <= 30 * scale) {
+
+  // Previous/Next Image buttons
+  if (dist(mx, my, mainX + 45 * scale, titleH + imageH - 64 * scale) <= 30 * scale) {
     changeProductImage(-1);
     return true;
   }
-  if (dist(mx, my, x + w - 45 * scale, imageH - 64 * scale) <= 30 * scale) {
+  if (dist(mx, my, mainX + mainW - 45 * scale, titleH + imageH - 64 * scale) <= 30 * scale) {
     changeProductImage(1);
     return true;
   }
-  const ribbonY = imageH + 1 + infoH - 56 * scale;
-  const ribbonX = x + w - 168 * scale;
+  
+  // Save Ribbon button (needs to be adjusted if it exists, it was inside drawProductInfo)
+  const ribbonY = titleH - 56 * scale;
+  const ribbonX = mainX + mainW - 168 * scale;
   if (selectedProduct && dist(mx, my, ribbonX + 46 * scale, ribbonY + 28 * scale) <= 24 * scale) {
     toggleSavedProduct();
     return true;
   }
-  const tabsY = imageH + infoH + 1;
-  if (my >= tabsY && my <= tabsY + tabH) {
-    productDetailsActive = mx < x + w / 2;
-    savedSearchActive = false;
-    return true;
+  
+  // Vertical Tabs Click
+  if (mx >= x && mx <= x + sidebarW && my > titleH) {
+    let clickedY = my - titleH - 20 * scale;
+    let index = Math.floor(clickedY / (75 * scale));
+    if (index >= 0 && index < 4) {
+      if (index === 3) {
+        // "Salvos" tab
+        productDetailsActive = false;
+      } else {
+        productDetailsActive = true;
+      }
+      savedSearchActive = false;
+      return true;
+    }
   }
-  const contentY = imageH + infoH + tabH + 1;
-  if (!productDetailsActive) return savedProductsMousePressed(mx, my, x, contentY, w, scale);
-  detailSectionsMousePressed(mx, my, x, contentY, w, scale);
+
+  const barH = Math.round(44 * scale);
+  const contentY = titleH + imageH;
+  if (!productDetailsActive) return savedProductsMousePressed(mx, my, mainX, contentY, mainW, scale);
+  detailSectionsMousePressed(mx, my, mainX, contentY, mainW, scale);
   return true;
 }
 
