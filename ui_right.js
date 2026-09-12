@@ -184,7 +184,12 @@ function drawProductInfo(x, y, w, h, scale) {
   const iconProdX = x + w - 64 * scale;
 
   // Draw save icon with circle around it
-  noFill();
+  const isSaved = selectedProduct && savedProductKeys.has(selectedProduct.key);
+  if (isSaved) {
+    fill("#959fff");
+  } else {
+    noFill();
+  }
   stroke("#000000");
   strokeWeight(1.2 * scale);
   circle(iconSaveX, iconY, 32 * scale);
@@ -413,6 +418,20 @@ function drawSavedProducts(x, y, w, scale) {
   drawingContext.rect(x, gridY, w, height - gridY);
   drawingContext.clip();
 
+  if (!items.length) {
+    fill(120);
+    textFont(fontes.roboto);
+    textSize(13 * scale);
+    textAlign(CENTER, CENTER);
+    text(
+      savedSearch.length
+        ? "Nenhuma obra encontrada."
+        : "Nenhuma obra salva ainda.\nClique no ícone de salvar para adicionar.",
+      x + w / 2,
+      gridY + 60 * scale,
+    );
+  }
+
   for (let i = 0; i < items.length; i++) {
     const col = i % 3;
     const row = Math.floor(i / 3);
@@ -564,6 +583,14 @@ function productPanelMousePressed(mx, my) {
   }
   if (dist(mx, my, x + w - 45 * scale, imageH - 64 * scale) <= 30 * scale) {
     changeProductImage(1);
+    return true;
+  }
+
+  // Save Icon Button Click (in title bar)
+  const saveIconY = imageH + titleH / 2;
+  const saveIconX = x + w - 24 * scale;
+  if (dist(mx, my, saveIconX, saveIconY) <= 20 * scale) {
+    toggleSavedProduct();
     return true;
   }
 
