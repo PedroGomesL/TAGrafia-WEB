@@ -375,28 +375,48 @@ function drawPanelScroll(x, y, h, value, maxValue) {
 }
 
 function drawSavedProducts(x, y, w, scale) {
+  const searchH = 26 * scale;
   const searchX = x + 22 * scale;
   const searchY = y + 18 * scale;
   const searchW = Math.min(240 * scale, w - 150 * scale);
+  
+  stroke("#D9D9D9");
+  strokeWeight(1);
   fill(lightMode ? "#FFFFFF" : "#D9D9D9");
+  rect(searchX, searchY, searchW, searchH, 5);
+
+  fill(savedSearch.length ? "#000000" : color(120));
   noStroke();
-  rect(searchX, searchY, searchW, 20 * scale, 10 * scale);
-  fill(savedSearch.length ? "#000000" : color(80));
   textFont(fontes.roboto);
   textSize(12 * scale);
   textAlign(LEFT, CENTER);
   text(
     savedSearch.length ? savedSearch : "Digite o nome, tipo ou ano",
-    searchX + 13 * scale,
-    searchY + 9 * scale,
+    searchX + 12 * scale,
+    searchY + searchH / 2,
   );
 
+  // Blinking cursor if search active
+  if (savedSearchActive && frameCount % 60 < 30) {
+    const cx = searchX + 12 * scale + textWidth(savedSearch);
+    stroke("#000000");
+    strokeWeight(1);
+    line(cx + 2, searchY + 5 * scale, cx + 2, searchY + searchH - 5 * scale);
+  }
+
   const buttonX = x + w - 88 * scale;
+  const buttonW = 66 * scale;
+  stroke("#D9D9D9");
+  strokeWeight(1);
   fill(lightMode ? "#FFFFFF" : "#D9D9D9");
-  rect(buttonX, searchY, 66 * scale, 20 * scale, 10 * scale);
+  rect(buttonX, searchY, buttonW, searchH, 5);
+
   fill("#000000");
+  noStroke();
+  textFont(fontes.roboto);
+  textSize(12 * scale);
   textAlign(CENTER, CENTER);
-  text(savedSortLabel(), buttonX + 33 * scale, searchY + 9 * scale);
+  text(savedSortLabel(), buttonX + buttonW / 2, searchY + searchH / 2);
 
   const items = savedProductsFiltered();
   const gridY = y + 58 * scale;
@@ -639,16 +659,18 @@ function productPanelMousePressed(mx, my) {
 }
 
 function savedProductsMousePressed(mx, my, x, contentY, w, scale) {
+  const searchH = 26 * scale;
   const searchY = contentY + 18 * scale;
   const searchX = x + 22 * scale;
   const searchW = Math.min(240 * scale, w - 150 * scale);
-  if (insideRect(mx, my, searchX, searchY, searchW, 20 * scale)) {
+  if (insideRect(mx, my, searchX, searchY, searchW, searchH)) {
     savedSearchActive = true;
     return true;
   }
   savedSearchActive = false;
   const sortX = x + w - 88 * scale;
-  if (insideRect(mx, my, sortX, searchY, 66 * scale, 20 * scale)) {
+  const sortW = 66 * scale;
+  if (insideRect(mx, my, sortX, searchY, sortW, searchH)) {
     savedSortMode = (savedSortMode + 1) % 3;
     savedScroll = 0;
     return true;
