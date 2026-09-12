@@ -72,7 +72,7 @@ let detailsPanelOpen = false;
 let exportPanelOpen = false;
 let exportMessage = "";
 let exportMessageFrame = 0;
-let exportViewsSelection = [false, true, true, true];
+let exportViewsSelection = [true, true, true, true];
 let exportFormatDropdownOpen = false;
 let exportFormatSelected = "PDF";
 
