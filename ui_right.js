@@ -460,16 +460,16 @@ function drawSavedCard(product, x, y, w, h, scale) {
   const imgBoxH = Math.round(w * 0.95);
   const pillH = Math.round(26 * scale);
 
-  // Outer container border
+  // Outer container border with origin color
   noStroke();
-  fill(lightMode ? color(215) : "#8D8D8D");
+  fill(colorOrigin);
   rect(x, y, w, imgBoxH, 8 * scale);
 
   // Inner white card
   fill("#FFFFFF");
-  rect(x + 5 * scale, y + 5 * scale, w - 10 * scale, imgBoxH - 10 * scale, 5 * scale);
+  rect(x + 4 * scale, y + 4 * scale, w - 8 * scale, imgBoxH - 8 * scale, 5 * scale);
 
-  // Product image
+  // Product image (occupies full interior)
   const img = getProductImage(product, 0);
   if (img) {
     drawImageContain(
@@ -477,22 +477,9 @@ function drawSavedCard(product, x, y, w, h, scale) {
       x + 8 * scale,
       y + 8 * scale,
       w - 16 * scale,
-      imgBoxH - 30 * scale,
+      imgBoxH - 16 * scale,
     );
   }
-
-  // Origin bar at the bottom of the image container (yellow for BR, purple for INTL)
-  fill(colorOrigin);
-  rect(
-    x + 5 * scale,
-    y + imgBoxH - 18 * scale,
-    w - 10 * scale,
-    13 * scale,
-    0,
-    0,
-    5 * scale,
-    5 * scale,
-  );
 
   // Pill for product name
   const pillY = y + imgBoxH + 8 * scale;
