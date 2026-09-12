@@ -459,27 +459,37 @@ function drawSavedCard(product, x, y, w, h, scale) {
     product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta;
   const imgBoxH = Math.round(w * 0.95);
   const pillH = Math.round(26 * scale);
+  const strokeW = 2 * scale;
 
-  // Outer container border with origin color
+  // White card background
   noStroke();
-  fill(colorOrigin);
+  fill("#FFFFFF");
   rect(x, y, w, imgBoxH, 8 * scale);
 
-  // Inner white card
-  fill("#FFFFFF");
-  rect(x + 4 * scale, y + 4 * scale, w - 8 * scale, imgBoxH - 8 * scale, 5 * scale);
-
-  // Product image (occupies full interior)
+  // Product image (occupies interior)
   const img = getProductImage(product, 0);
   if (img) {
     drawImageContain(
       img,
-      x + 8 * scale,
-      y + 8 * scale,
-      w - 16 * scale,
-      imgBoxH - 16 * scale,
+      x + 6 * scale,
+      y + 6 * scale,
+      w - 12 * scale,
+      imgBoxH - 12 * scale,
     );
   }
+
+  // Stroke with origin color and 90% opacity
+  noFill();
+  stroke(colorAlpha(colorOrigin, 230));
+  strokeWeight(strokeW);
+  rect(
+    x + strokeW / 2,
+    y + strokeW / 2,
+    w - strokeW,
+    imgBoxH - strokeW,
+    8 * scale,
+  );
+  noStroke();
 
   // Pill for product name
   const pillY = y + imgBoxH + 8 * scale;
