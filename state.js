@@ -45,7 +45,7 @@ let _cachedBubbleGroups = null;
 let _bubbleCacheKey = "";
 
 let activeCategoryByDimension = {
-  material: -2,
+  material: -1,
   tecnicas: -1,
   estetico: -1,
   tipo_obra: -1,
