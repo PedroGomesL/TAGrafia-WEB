@@ -1,10 +1,10 @@
 function drawFilterPanel() {
-  const scale = filterPanelScale();
+  const scl = filterPanelScale();
   push();
-  scale(scale);
+  scale(scl);
   noStroke();
   fill(255);
-  rect(0, 0, LAYOUT_NAV_W + LAYOUT_FILTRO_W, height / scale);
+  rect(0, 0, LAYOUT_NAV_W + LAYOUT_FILTRO_W, height / scl);
 
   drawNavSidebar();
 

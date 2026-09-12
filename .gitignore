@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+Thumbs.db
+.env
+.idea/
+.vscode/
+
+# Figma / Temp AI scripts
+figma_*.json
+parsed_*.txt
+*.bak
+split.js
+extract_data.js
+clean_left.js

@@ -689,16 +689,6 @@ function drawMapCluster(cluster) {
 }
 
 function visualMousePressed(mx, my) {
-  if (dist(mx, my, legendButtonX(), menuIconY()) <= 15) {
-    detailsPanelOpen = !detailsPanelOpen;
-    exportPanelOpen = false;
-    return true;
-  }
-  if (dist(mx, my, exportButtonX(), menuIconY()) <= 15) {
-    exportPanelOpen = !exportPanelOpen;
-    detailsPanelOpen = false;
-    return true;
-  }
   if (
     insideRect(
       mx,
@@ -712,7 +702,6 @@ function visualMousePressed(mx, my) {
     activeView = (activeView + 1) % 4;
     return true;
   }
-  if (exportPanelOpen && exportPanelMousePressed(mx, my)) return true;
   if (mx < visualX() || mx > productPanelX() || my < 0 || my > height)
     return false;
   const yearHit = clickedYearHandle(mx, my);
@@ -809,8 +798,6 @@ function drawVisualizationMenu() {
   line(x + 13, y + 49, x + w - 13, y + 49);
 
   drawChangeViewButton();
-  drawLegendButton();
-  drawExportButton();
 }
 
 function drawChangeViewButton() {
