@@ -243,6 +243,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   textSize(15 * scale);
   textAlign(LEFT, CENTER);
   text("Tags:", marginX, cursorY + 8 * scale);
+  text("Tags:", marginX + 0.5, cursorY + 8 * scale);
   textStyle(NORMAL);
   cursorY += 26 * scale;
 
@@ -292,6 +293,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   textSize(15 * scale);
   textAlign(LEFT, CENTER);
   text("Detalhes:", marginX, cursorY + 8 * scale);
+  text("Detalhes:", marginX + 0.5, cursorY + 8 * scale);
   textStyle(NORMAL);
   cursorY += 26 * scale;
 
