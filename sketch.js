@@ -36,9 +36,9 @@ let icones = {
 const LAYOUT_PAINEL_PRODUTO_W_MIN = 300;
 
 // Filter panel layout
-const FILTER_HEADER_H = 56;
+const FILTER_HEADER_H = 20;
 const FILTER_CARD_H = 100;
-const FILTER_BODY_Y = FILTER_HEADER_H + FILTER_CARD_H * 2; // 256
+const FILTER_BODY_Y = FILTER_HEADER_H + FILTER_CARD_H * 2 + 10;
 const FILTER_CAT_OFFSET = 38;
 const FILTER_SEARCH_OFFSET = 41;
 const FILTER_CLEAR_OFFSET = 41;
@@ -1394,32 +1394,40 @@ function drawMapCluster(cluster) {
 }
 
 function drawYearBand() {
-  const tx = visualX() + 4;
-  const ty = height - TIMELINE_H;
+  const tx = visualX() + 40;
+  const tw = visualW() - 80;
+  const ty = height - TIMELINE_H / 2; // Middle of timeline area
+
+  const xStart = yearToProductX(yearStart, tx, tx + tw);
+  const xEnd = yearToProductX(yearEnd, tx, tx + tw);
+
+  // Background track (lighter)
+  stroke("#8a93e3");
+  strokeWeight(8);
+  strokeCap(ROUND);
+  line(tx, ty, tx + tw, ty);
+
+  // Active track (dark blue)
+  stroke(COLORS.blue);
+  strokeWeight(8);
+  line(xStart, ty, xEnd, ty);
+
+  // Handles
+  stroke("#000000");
+  strokeWeight(2);
+  fill("#ffffff");
+  circle(xStart, ty, 30);
+  circle(xEnd, ty, 30);
+
+  // Labels
   noStroke();
-  fill(themeTimelineColor());
-  rect(tx, ty + 28, timelineW(), 42);
-  const xStart = yearToX(yearStart);
-  const xEnd = yearToX(yearEnd);
-  fill(COLORS.yellow);
-  rect(xStart + 7, ty + 28, Math.max(0, xEnd - xStart - 7), 42);
-  stroke(themeHatchColor());
-  strokeWeight(3);
-  for (let hx = xStart - 60; hx < xEnd; hx += 18) line(hx, ty + 70, hx + 58, ty + 28);
-  noStroke();
-  fill(themeTimelineColor());
-  rect(tx, ty + 28, Math.max(0, xStart + 7 - tx), 42);
-  rect(xEnd, ty + 28, Math.max(0, tx + timelineW() - xEnd), 42);
-  fill(themeLineColor());
-  rect(xStart, ty + 6, 7, 48);
-  rect(xEnd, ty + 6, 7, 48);
-  textFont(fontes.afacad);
+  fill("#000000");
+  textFont(fontes.robotoCondensed);
   textStyle(BOLD);
-  textSize(22);
+  textSize(16);
   textAlign(CENTER, BOTTOM);
-  text(String(yearStart), constrain(xStart, visualX() + 48, visualX() + visualW() - 48), ty + 7);
-  text(String(yearEnd), constrain(xEnd, visualX() + 48, visualX() + visualW() - 48), ty + 7);
-  textStyle(NORMAL);
+  text(String(yearStart), xStart, ty - 22);
+  text(String(yearEnd), xEnd, ty - 22);
 }
 
 function yearToX(year) {
@@ -1502,16 +1510,7 @@ function drawNavSidebar() {
 }
 
 function drawFilterHeader() {
-  stroke("#000000");
-  strokeWeight(2);
-  fill(COLORS.yellow);
-  rect(0, 0, LAYOUT_FILTRO_W, FILTER_HEADER_H);
-  fill("#000000");
-  noStroke();
-  textFont(fontes.newAmsterdam);
-  textSize(40);
-  textAlign(CENTER, CENTER);
-  text("FILTROS", LAYOUT_FILTRO_W / 2, FILTER_HEADER_H / 2);
+  // O cabeçalho amarelo foi removido no novo design. Deixamos vazio.
 }
 
 function drawFilterCards() {
@@ -1787,18 +1786,18 @@ function drawProductPanel() {
   fill(panelBackground());
   rect(x, 0, w, height);
   
-  // Top Title
-  drawProductInfo(mainX, 0, mainW, titleH, scale);
+  // 1. Top Image (Full width)
+  drawProductImage(x, 0, w, imageH, scale);
   
-  // Left Sidebar inside Product Panel
-  drawProductSidebar(x, titleH, sidebarW, height - titleH, scale);
+  // 2. Title Below Image
+  drawProductInfo(x, imageH, w, titleH, scale);
   
-  // Image
-  drawProductImage(mainX, titleH, mainW, imageH, scale);
+  // 3. Left Sidebar (Below Title)
+  drawProductSidebar(x, imageH + titleH, sidebarW, height - imageH - titleH, scale);
   
-  // Details
-  if (productDetailsActive) drawProductDetails(mainX, titleH + imageH, mainW, barH, scale);
-  else drawSavedProducts(mainX, titleH + imageH, mainW, scale);
+  // 4. Details / Content (Right of Sidebar)
+  if (productDetailsActive) drawProductDetails(mainX, imageH + titleH, mainW, barH, scale);
+  else drawSavedProducts(mainX, imageH + titleH, mainW, scale);
 }
 
 function drawProductSidebar(x, y, w, h, scale) {
@@ -2382,26 +2381,26 @@ function productPanelMousePressed(mx, my) {
   if (mx < x || mx > x + w || my < 0 || my > height) return false;
 
   // Previous/Next Image buttons
-  if (dist(mx, my, mainX + 45 * scale, titleH + imageH - 64 * scale) <= 30 * scale) {
+  if (dist(mx, my, x + 45 * scale, imageH - 64 * scale) <= 30 * scale) {
     changeProductImage(-1);
     return true;
   }
-  if (dist(mx, my, mainX + mainW - 45 * scale, titleH + imageH - 64 * scale) <= 30 * scale) {
+  if (dist(mx, my, x + w - 45 * scale, imageH - 64 * scale) <= 30 * scale) {
     changeProductImage(1);
     return true;
   }
   
   // Save Ribbon button (needs to be adjusted if it exists, it was inside drawProductInfo)
-  const ribbonY = titleH - 56 * scale;
-  const ribbonX = mainX + mainW - 168 * scale;
+  const ribbonY = imageH + titleH - 56 * scale;
+  const ribbonX = x + w - 168 * scale;
   if (selectedProduct && dist(mx, my, ribbonX + 46 * scale, ribbonY + 28 * scale) <= 24 * scale) {
     toggleSavedProduct();
     return true;
   }
   
   // Vertical Tabs Click
-  if (mx >= x && mx <= x + sidebarW && my > titleH) {
-    let clickedY = my - titleH - 20 * scale;
+  if (mx >= x && mx <= x + sidebarW && my > imageH + titleH) {
+    let clickedY = my - imageH - titleH - 20 * scale;
     let index = Math.floor(clickedY / (75 * scale));
     if (index >= 0 && index < 4) {
       if (index === 3) {
@@ -2416,7 +2415,7 @@ function productPanelMousePressed(mx, my) {
   }
 
   const barH = Math.round(44 * scale);
-  const contentY = titleH + imageH;
+  const contentY = imageH + titleH;
   if (!productDetailsActive) return savedProductsMousePressed(mx, my, mainX, contentY, mainW, scale);
   detailSectionsMousePressed(mx, my, mainX, contentY, mainW, scale);
   return true;
