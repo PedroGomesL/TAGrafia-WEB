@@ -43,14 +43,14 @@ function drawProductSidebar(x, y, w, h, scale) {
   line(x + w, y, x + w, y + h);
 
   const items = [
-    { id: "materiais", label: "Material", icon: icones.material, color: "#959fff" },
+    { id: "material", label: "Material", icon: icones.material, color: "#959fff" },
     { id: "estetico", label: "Estético", icon: icones.estetico, color: "#ff9597" },
     { id: "tecnicas", label: "Técnica", icon: icones.tecnicas, color: "#a7ff95" },
   ];
 
   let currentY = y + 25 * scale;
   for (const item of items) {
-    const active = rightPanelTab === item.id;
+    const active = rightPanelTab === item.id || (item.id === "material" && rightPanelTab === "materiais");
     if (active) {
       fill(item.color);
       noStroke();
@@ -131,9 +131,12 @@ function drawProductInfo(x, y, w, h, scale) {
   fill("#FFFFFF");
   rect(x, y, w, h);
 
-  // Bottom separator for the title bar
+  // Top separator between image and title bar
   stroke("#959fff");
   strokeWeight(1.5 * scale);
+  line(x, y, x + w, y);
+
+  // Bottom separator for the title bar
   line(x, y + h, x + w, y + h);
 
   if (!selectedProduct) {
@@ -150,29 +153,30 @@ function drawProductInfo(x, y, w, h, scale) {
   const titleX = x + 24 * scale;
   const titleW = w - 90 * scale; // Room for icons
 
-  const titleSize = fitTextSize(selectedProduct.name, titleW, 16 * scale, 12 * scale);
+  const yearText = selectedProduct.year || selectedProduct.dateRaw ? ` (${selectedProduct.year || selectedProduct.dateRaw})` : "";
+  const titleWithYear = `${selectedProduct.name}${yearText}`;
 
-  // Colored strip for origin: positioned exclusively in front of the product name
+  const titleSize = fitTextSize(titleWithYear, titleW, 16 * scale, 12 * scale);
+
+  // Colored strip for origin: spans the product text block
   noStroke();
   fill(selectedProduct.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
-  rect(x + 12 * scale, titleY + 1 * scale, 4 * scale, titleSize * 1.15, 2 * scale);
+  rect(x + 10 * scale, titleY, 5 * scale, 38 * scale, 2.5 * scale);
 
-  // Title area (product name)
+  // Title area (product name + year)
   fill("#000000");
   textFont(fontes.afacad);
   textStyle(BOLD);
   textSize(titleSize);
   textAlign(LEFT, TOP);
-  text(selectedProduct.name, titleX, titleY, titleW, 30 * scale);
-  // Repeat slight offset for simulated heavy bold if variable font defaults to regular
-  text(selectedProduct.name, titleX + 0.5, titleY, titleW, 30 * scale);
+  text(titleWithYear, titleX, titleY, titleW, 30 * scale);
+  text(titleWithYear, titleX + 0.5, titleY, titleW, 30 * scale);
   textStyle(NORMAL);
 
-  // Author and year (Regular, below product name)
+  // Author (Regular, below product name)
   const designerText = selectedProduct.author || "Designer desconhecido";
-  const yearText = ` (${selectedProduct.year || selectedProduct.dateRaw})`;
   textSize(14 * scale);
-  text(designerText + yearText, titleX, titleY + 22 * scale, titleW, 20 * scale);
+  text(designerText, titleX, titleY + 22 * scale, titleW, 20 * scale);
 
   // Icons on the right
   const iconY = y + h / 2;
@@ -190,10 +194,14 @@ function drawProductInfo(x, y, w, h, scale) {
 
   // Draw production icon with circle around it
   let prodIcon = null;
-  const prodStr = (selectedProduct.production || "").toLowerCase();
-  if (prodStr.includes("artesanal")) prodIcon = icones.artesanal;
-  else if (prodStr.includes("assinado")) prodIcon = icones.author;
-  else if (prodStr.includes("industrial")) prodIcon = icones.industrial;
+  const prodStr = normalizeText(selectedProduct.production || "").toLowerCase();
+  if (prodStr.includes("artesanal")) {
+    prodIcon = icones.artesanal;
+  } else if (prodStr.includes("assinado")) {
+    prodIcon = icones.assinado;
+  } else if (prodStr.includes("industrial") || prodStr.includes("massa")) {
+    prodIcon = icones.industrial;
+  }
   
   if (prodIcon) {
     noFill();
@@ -222,7 +230,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   push();
   translate(0, -detailScroll);
 
-  const dim = rightPanelTab;
+  const dim = rightPanelTab === "materiais" ? "material" : rightPanelTab;
   const marginX = x + 13 * scale;
   const contentW = w - 26 * scale;
   let cursorY = y + 14 * scale;
@@ -289,7 +297,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
 
   // Body text
   let textValue = "";
-  if (dim === "materiais") textValue = selectedProduct.materialDescription;
+  if (dim === "material" || dim === "materiais") textValue = selectedProduct.materialDescription;
   else if (dim === "tecnicas")
     textValue =
       selectedProduct.origin === "brasileiro"
@@ -312,7 +320,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
 
 function calculateNewDetailsHeight(w, scale) {
   if (!selectedProduct) return 0;
-  const dim = rightPanelTab;
+  const dim = rightPanelTab === "materiais" ? "material" : rightPanelTab;
   let h = 20 * scale;
   h += 25 * scale; // "Tags:"
   
@@ -336,7 +344,7 @@ function calculateNewDetailsHeight(w, scale) {
   h += 40 * scale; // "Detalhes:"
   
   let textValue = "";
-  if (dim === "materiais") textValue = selectedProduct.materialDescription;
+  if (dim === "material" || dim === "materiais") textValue = selectedProduct.materialDescription;
   else if (dim === "tecnicas") textValue = selectedProduct.origin === "brasileiro" ? selectedProduct.economicContext : selectedProduct.composition;
   else if (dim === "estetico") textValue = selectedProduct.aestheticDescription;
   
@@ -562,7 +570,7 @@ function productPanelMousePressed(mx, my) {
     let clickedY = my - imageH - titleH;
     let currentY = 25 * scale;
     
-    const tabs = ["materiais", "estetico", "tecnicas"];
+    const tabs = ["material", "estetico", "tecnicas"];
     for (let i = 0; i < tabs.length; i++) {
       if (clickedY >= currentY - 15 * scale && clickedY <= currentY + 70 * scale) {
         rightPanelTab = tabs[i];
@@ -619,7 +627,7 @@ function savedProductsMousePressed(mx, my, x, contentY, w, scale) {
     const cy = row * (cardH + gapY);
     if (mx >= cx && mx <= cx + cardW && localY >= cy && localY <= cy + cardH) {
       selectProduct(items[i]);
-      rightPanelTab = "materiais";
+      rightPanelTab = "material";
       return true;
     }
   }
