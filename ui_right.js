@@ -115,41 +115,70 @@ function drawProductInfo(x, y, w, h, scale) {
     return;
   }
 
-  const nameX = x + 20 * scale;
-  const nameY = y + 25 * scale;
-  fill("#000000");
+  const sidebarW = 74 * scale;
+
+  // Blue vertical line separating sidebar from title area
+  stroke("#959fff");
+  strokeWeight(1.5 * scale);
+  line(x + sidebarW, y, x + sidebarW, y + h);
+
+  // --- Title area (right of sidebar) ---
+  const titleX = x + sidebarW + 10 * scale;
+  const titleW = w - sidebarW - 14 * scale;
+  const titleY = y + 6 * scale;
+
+  // Product name (small bold Afacad, matches Figma 12/700)
+  noStroke();
+  fill("#190000");
   textFont(fontes.afacad);
   textStyle(BOLD);
-  const textW = w - 40 * scale;
-  textSize(fitTextSize(selectedProduct.name, textW, 20 * scale, 12 * scale));
-  textAlign(LEFT, BASELINE);
-  text(selectedProduct.name, nameX, nameY);
+  textSize(fitTextSize(selectedProduct.name, titleW, 14 * scale, 10 * scale));
+  textAlign(LEFT, TOP);
+  text(selectedProduct.name, titleX, titleY, titleW, 30 * scale);
   textStyle(NORMAL);
-  
+
+  // Designer name (Afacad Regular 16)
   const designerText = selectedProduct.designer || "Designer desconhecido";
   const yearText = ` (${selectedProduct.year || selectedProduct.dateRaw})`;
   textSize(14 * scale);
-  fill("#000000");
-  text(designerText + yearText, nameX, nameY + 20 * scale);
-  
-  // Ribbon
+  fill("#190000");
+  textAlign(LEFT, TOP);
+  text(designerText + yearText, titleX, titleY + 22 * scale, titleW, 20 * scale);
+
+  // --- Yellow Ribbon ---
   const ribbonH = 40 * scale;
-  const rx = x + 74 * scale;
-  const rw = w - 74 * scale;
+  const rx = x + sidebarW;
+  const rw = w - sidebarW;
   fill(COLORS.yellow);
+  noStroke();
   rect(rx, y + h - ribbonH, rw, ribbonH);
-  
+
+  // 3 icon buttons on ribbon (save, author, production)
   const icons = [icones.save, icones.author, productionIcon()];
+  const isSaved = selectedProduct && savedProductKeys.has(selectedProduct.key);
   for (let i = 0; i < icons.length; i++) {
-    const cx = rx + (rw) - (120 - i*40) * scale;
+    const cx = rx + rw - (105 - i * 40) * scale;
     const cy = y + h - ribbonH / 2;
+    // White circle
     fill("#FFFFFF");
-    circle(cx, cy, 32 * scale);
-    drawImageCentered(icons[i], cx, cy, 20 * scale, 20 * scale);
+    noStroke();
+    circle(cx, cy, 34 * scale);
+    if (icons[i]) drawImageCentered(icons[i], cx, cy, 20 * scale, 20 * scale);
+    // Highlight save button if saved
+    if (i === 0 && isSaved) {
+      fill(COLORS.yellow);
+      noStroke();
+      circle(cx, cy, 10 * scale);
+    }
   }
 }
 
 function drawProductDetailsNew(x, y, w, h, scale) {
+  // White content background
+  noStroke();
+  fill("#FFFFFF");
+  rect(x, y, w, h);
+
   const visibleH = h;
   let contentH = calculateNewDetailsHeight(w, scale);
   detailScroll = constrain(detailScroll, 0, Math.max(0, contentH - visibleH));
@@ -161,61 +190,84 @@ function drawProductDetailsNew(x, y, w, h, scale) {
 
   push();
   translate(0, -detailScroll);
-  
+
   const dim = rightPanelTab;
-  let cursorY = y + 20 * scale;
-  const marginX = x + 20 * scale;
-  
+  const marginX = x + 13 * scale;
+  const contentW = w - 26 * scale;
+  let cursorY = y + 14 * scale;
+
+  // ─── Tags section header ───
   fill("#000000");
   noStroke();
   textFont(fontes.roboto);
-  textSize(16 * scale);
+  textStyle(BOLD);
+  textSize(15 * scale);
   textAlign(LEFT, CENTER);
-  text("Tags:", marginX, cursorY);
-  cursorY += 25 * scale;
-  
+  text("Tags:", marginX, cursorY + 8 * scale);
+  textStyle(NORMAL);
+  cursorY += 26 * scale;
+
+  // Tag chips
   const tags = selectedProduct.tagsByDimension[dim] || [];
-  let cursorX = marginX;
-  const maxX = x + w - 20 * scale;
-  const chipH = 25 * scale;
-  
-  for (const tag of tags) {
-    textSize(14 * scale);
-    const chipW = Math.max(54 * scale, textWidth(tag.label) + 18 * scale);
-    if (cursorX + chipW > maxX) {
-      cursorX = marginX;
-      cursorY += chipH + 8 * scale;
+  if (tags.length === 0) {
+    fill(120);
+    textSize(13 * scale);
+    textAlign(LEFT, CENTER);
+    text("Sem tags nesta categoria", marginX, cursorY + 10 * scale);
+    cursorY += 26 * scale;
+  } else {
+    let cursorX = marginX;
+    const maxX = x + w - 13 * scale;
+    const chipH = 22 * scale;
+    textSize(13 * scale);
+
+    for (const tag of tags) {
+      const chipW = Math.max(50 * scale, textWidth(tag.label) + 16 * scale);
+      if (cursorX + chipW > maxX) {
+        cursorX = marginX;
+        cursorY += chipH + 6 * scale;
+      }
+      noStroke();
+      fill(tag.color);
+      rect(cursorX, cursorY, chipW, chipH, 4);
+      fill(dim === "tecnicas" ? "#000000" : "#FFFFFF");
+      textAlign(CENTER, CENTER);
+      text(tag.label, cursorX + chipW / 2, cursorY + chipH / 2);
+      cursorX += chipW + 6 * scale;
     }
-    noStroke();
-    fill(tag.color);
-    rect(cursorX, cursorY, chipW, chipH, 3);
-    fill(dim === "tecnicas" ? "#000000" : "#FFFFFF");
-    textAlign(CENTER, CENTER);
-    text(tag.label, cursorX + chipW / 2, cursorY + chipH / 2 - scale);
-    cursorX += chipW + 7 * scale;
+    cursorY += chipH + 14 * scale;
   }
-  
-  if (tags.length > 0) cursorY += chipH + 20 * scale;
-  
+
+  // ─── Detalhes section header ───
   fill("#000000");
+  noStroke();
+  textFont(fontes.roboto);
+  textStyle(BOLD);
+  textSize(15 * scale);
   textAlign(LEFT, CENTER);
-  textSize(16 * scale);
-  text("Detalhes:", marginX, cursorY);
-  cursorY += 20 * scale;
-  
+  text("Detalhes:", marginX, cursorY + 8 * scale);
+  textStyle(NORMAL);
+  cursorY += 26 * scale;
+
+  // Body text
   let textValue = "";
   if (dim === "materiais") textValue = selectedProduct.materialDescription;
-  else if (dim === "tecnicas") textValue = selectedProduct.origin === "brasileiro" ? selectedProduct.economicContext : selectedProduct.composition;
+  else if (dim === "tecnicas")
+    textValue =
+      selectedProduct.origin === "brasileiro"
+        ? selectedProduct.economicContext
+        : selectedProduct.composition;
   else if (dim === "estetico") textValue = selectedProduct.aestheticDescription;
-  
+
   if (!textValue) textValue = "Nenhum detalhe disponível para esta categoria.";
-  
-  fill(40);
-  textSize(14 * scale);
-  textLeading(20 * scale);
+
+  fill("#1B1212");
+  textFont(fontes.roboto);
+  textSize(15 * scale);
+  textLeading(22 * scale);
   textAlign(LEFT, TOP);
-  text(textValue, marginX, cursorY, w - 40 * scale, 1000 * scale);
-  
+  text(textValue, marginX, cursorY, contentW, 2000 * scale);
+
   pop();
   drawingContext.restore();
 }

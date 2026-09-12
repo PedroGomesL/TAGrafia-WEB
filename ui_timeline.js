@@ -3,8 +3,8 @@ function drawYearBand() {
   const tw = visualW() - 80;
   const ty = height - TIMELINE_H / 2; // Middle of timeline area
 
-  const xStart = yearToProductX(yearStart, tx, tx + tw);
-  const xEnd = yearToProductX(yearEnd, tx, tx + tw);
+  const xStart = yearToX(yearStart);
+  const xEnd = yearToX(yearEnd);
 
   // Background track (lighter)
   stroke("#8a93e3");
@@ -33,6 +33,7 @@ function drawYearBand() {
   textAlign(CENTER, BOTTOM);
   text(String(yearStart), xStart, ty - 22);
   text(String(yearEnd), xEnd, ty - 22);
+  textStyle(NORMAL);
 }
 
 function yearToX(year) {

@@ -21,8 +21,8 @@ function preload() {
   icones.material = loadImage(asset("data/Icones/material.png"));
   icones.tecnicas = loadImage(asset("data/Icones/técnica.png"));
   icones.estetico = loadImage(asset("data/Icones/estético.png"));
-  icones.filtros = loadImage(asset("data/Icones/filter_alt_off.png"));
-  icones.sobre = loadImage(asset("data/Icones/detalhes.png"));
+  icones.filtros = loadImage(asset("data/Icones/filtros.svg"));
+  icones.sobre = loadImage(asset("data/Icones/sobre.svg"));
   icones.tipo_obra = loadImage(asset("data/Icones/tipodeproduto.png"));
   icones.clear = loadImage(asset("data/Icones/filter_alt_off.png"));
   icones.left = loadImage(asset("data/Icones/keyboard_arrow_left.png"));
@@ -32,12 +32,7 @@ function preload() {
   icones.artesanal = loadImage(asset("data/Icones/produto artesanal.png"));
   icones.assinado = loadImage(asset("data/Icones/design_assinado.png"));
   icones.industrial = loadImage(asset("data/Icones/produto industrial.png"));
-  icones.export = loadImage(asset("data/Icones/export.png"));
-  icones.change = loadImage(asset("data/Icones/change.png"));
-  icones.visao_circular = loadImage(asset("data/Icones/visao_circular.svg"));
-  icones.visao_bolhas = loadImage(asset("data/Icones/visao_bolhas.svg"));
-  icones.visao_timeline = loadImage(asset("data/Icones/visao_timeline.svg"));
-  icones.visao_mapa = loadImage(asset("data/Icones/visao_mapa.svg"));
+  icones.export = loadImage(asset("data/Icones/exportar.svg"));
 }
 
 function setup() {

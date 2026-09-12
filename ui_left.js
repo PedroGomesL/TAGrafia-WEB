@@ -45,14 +45,8 @@ function drawNavSidebar() {
 
   const navItems = [
     { id: "filtros", label: "Filtros", y: 140, icon: icones.filtros },
-    {
-      id: "trocar",
-      label: "Trocar\nVisualização",
-      y: 250,
-      icon: [icones.visao_circular, icones.visao_bolhas, icones.visao_timeline, icones.visao_mapa][activeView] || icones.change,
-    },
-    { id: "exportar", label: "Exportar", y: 360, icon: icones.export },
-    { id: "sobre", label: "Sobre", y: 470, icon: icones.sobre },
+    { id: "exportar", label: "Exportar", y: 260, icon: icones.export },
+    { id: "sobre", label: "Sobre", y: 380, icon: icones.sobre },
   ];
 
   for (const item of navItems) {
@@ -138,8 +132,9 @@ function drawFilterCards() {
 }
 
 function drawFilterBody() {
+  // White background for entire filter body
   noStroke();
-  fill(panelBackground());
+  fill("#FFFFFF");
   rect(
     0,
     FILTER_BODY_Y,
@@ -152,43 +147,54 @@ function drawFilterBody() {
   const clearY = searchY + FILTER_CLEAR_OFFSET;
   const listY = clearY + FILTER_LIST_OFFSET;
 
-  noStroke();
-  fill("#FFFFFF");
-  rect(FILTER_BAR_X, catY, FILTER_BAR_W, 31, 15.5);
-  fill("#000000");
-  textFont(fontes.newAmsterdam);
-  const categoryLabel = currentCategoryLabel();
-  textSize(fitTextSize(categoryLabel, FILTER_BAR_W - 22, 22, 12));
-  textAlign(CENTER, CENTER);
-  text(categoryLabel, FILTER_BAR_X + FILTER_BAR_W / 2, catY + 15);
+  // --- Category pill (white bg, black border, label centered) ---
+  if (activeDimension !== "tipo_obra") {
+    stroke("#D9D9D9");
+    strokeWeight(1);
+    fill("#FFFFFF");
+    rect(FILTER_BAR_X, catY, FILTER_BAR_W, 24, 12);
+    const categoryLabel = currentCategoryLabel();
+    fill("#000000");
+    noStroke();
+    textFont(fontes.roboto);
+    textSize(fitTextSize(categoryLabel, FILTER_BAR_W - 22, 14, 10));
+    textAlign(CENTER, CENTER);
+    text(categoryLabel, FILTER_BAR_X + FILTER_BAR_W / 2, catY + 12);
+  }
 
+  // --- Search bar ---
+  stroke("#D9D9D9");
+  strokeWeight(1);
   fill("#FFFFFF");
-  rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 31, 15.5);
+  rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 24, 12);
+  noStroke();
   textFont(fontes.roboto);
   textSize(14);
   textAlign(LEFT, CENTER);
-  fill(tagSearch.length ? "#000000" : color(90));
+  fill(tagSearch.length ? "#000000" : color(160));
   text(
-    tagSearch.length ? tagSearch : "Pesquisar",
-    FILTER_BAR_X + 13,
-    searchY + 15,
+    tagSearch.length ? tagSearch : "Pesquisar tag",
+    FILTER_BAR_X + 12,
+    searchY + 12,
   );
+  // Blinking cursor
   if (tagSearchActive && frameCount % 60 < 30) {
-    const cx = FILTER_BAR_X + 13 + textWidth(tagSearch);
+    const cx = FILTER_BAR_X + 12 + textWidth(tagSearch);
     stroke("#000000");
     strokeWeight(1);
-    line(cx + 2, searchY + 8, cx + 2, searchY + 23);
+    line(cx + 2, searchY + 5, cx + 2, searchY + 19);
   }
 
-  fill(selectedTagKeys.size ? "#D9D9D9" : color(190));
+  // --- Clear button ---
   noStroke();
-  rect(FILTER_BAR_X, clearY, FILTER_BAR_W, 28, 14);
+  fill(selectedTagKeys.size ? "#D9D9D9" : color(220));
+  rect(FILTER_BAR_X, clearY, FILTER_BAR_W, 26, 13);
   drawImageCentered(
     icones.clear,
     FILTER_BAR_X + FILTER_BAR_W / 2,
-    clearY + 14,
-    22,
-    22,
+    clearY + 13,
+    20,
+    20,
   );
 
   const maxH = height / filterPanelScale() - 10;
@@ -282,12 +288,9 @@ function drawTagList(listY, listBottom) {
   for (let i = 0; i < tags.length; i++) {
     const y = listY - tagScroll + i * FILTER_TAG_ROW_H;
     if (y + FILTER_TAG_ROW_H < listY || y > listBottom) continue;
-    if (i % 2 === 1) {
-      noStroke();
-      fill(lightMode ? color(0, 0, 0, 12) : color(255, 255, 255, 9));
-      rect(0, y, LAYOUT_FILTRO_W, FILTER_TAG_ROW_H);
-    }
-    drawFilterTag(tags[i], y, FILTER_TAG_ROW_H);
+    const tag = tags[i];
+    tag._index = i; // used by drawFilterTag for alternating stripe
+    drawFilterTag(tag, y, FILTER_TAG_ROW_H);
   }
 
   drawingContext.restore();
@@ -308,20 +311,33 @@ function drawTagList(listY, listBottom) {
 function drawFilterTag(tag, y, rowH) {
   const selected = selectedTagKeys.has(tag.key);
 
-  const TAG_COLORS = {
-    material: "#3e4ad3", // Azul
-    tecnicas: "#1a8511", // Verde
-    estetico: "#d33e4a", // Vermelho
-    tipo_obra: "#d3a81a", // Amarelo escuro
+  const DIM_COLORS = {
+    material:  "#3e4ad3",
+    tecnicas:  "#1a8511",
+    estetico:  "#d33e4a",
+    tipo_obra: "#d3a81a",
   };
+  const dimColor = DIM_COLORS[tag.dimension] || "#3e4ad3";
 
   if (selected) {
+    // Full row colored background
     noStroke();
-    fill(TAG_COLORS[tag.dimension] || tag.color);
-    rect(10, y + 2, LAYOUT_FILTRO_W - 20, rowH - 4, 8);
-    fill("#ffffff"); // White text for selected
+    fill(dimColor);
+    rect(0, y, LAYOUT_FILTRO_W, rowH);
+    // Yellow left accent strip (4px)
+    fill(COLORS.yellow);
+    rect(0, y, 4, rowH);
+    fill("#FFFFFF");
   } else {
-    fill(panelTextColor());
+    noStroke();
+    fill("#FFFFFF");
+    rect(0, y, LAYOUT_FILTRO_W, rowH);
+    // Subtle alternating stripe
+    if (tag._index % 2 === 1) {
+      fill(0, 0, 0, 8);
+      rect(0, y, LAYOUT_FILTRO_W, rowH);
+    }
+    fill("#000000");
   }
 
   noStroke();
@@ -331,19 +347,20 @@ function drawFilterTag(tag, y, rowH) {
       ? ""
       : String(countProductsWithTagInCurrentType(tag));
   textSize(12);
-  const badgeW = badgeText ? Math.max(24, textWidth(badgeText) + 14) : 0;
-  const badgeX = LAYOUT_FILTRO_W - badgeW - 17;
-  textSize(fitTextSize(tag.label, badgeX - 25, 16, 10));
+  const badgeW = badgeText ? Math.max(26, textWidth(badgeText) + 14) : 0;
+  const badgeX = LAYOUT_FILTRO_W - badgeW - 14;
+
+  // Tag label
+  textSize(fitTextSize(tag.label, badgeX - 20, 15, 10));
   textAlign(LEFT, CENTER);
-  text(tag.label, 20, y + rowH / 2 - 1);
+  text(tag.label, 14, y + rowH / 2);
+
+  // Badge pill
   if (badgeText) {
-    if (selected) {
-      fill(255, 255, 255, 60);
-    } else {
-      fill(217, 217, 217, 210);
-    }
+    noStroke();
+    fill(selected ? color(255, 255, 255, 60) : color(217, 217, 217, 210));
     rect(badgeX, y + rowH / 2 - 11, badgeW, 22, 11);
-    fill(selected ? "#ffffff" : color(90));
+    fill(selected ? "#ffffff" : color(80));
     textSize(12);
     textAlign(CENTER, CENTER);
     text(badgeText, badgeX + badgeW / 2, y + rowH / 2);
@@ -422,14 +439,12 @@ function filterMousePressed(mxRaw, myRaw) {
 
   if (mx < LAYOUT_NAV_W) {
     // Clicked in the Nav Sidebar
-    // Nav Items: Filtros (140), Trocar Visualizacao (250), Exportar (360), Sobre (470)
-    if (my >= 130 && my <= 190) {
+    // Nav Items: Filtros (140), Exportar (260), Sobre (380)
+    if (my >= 110 && my <= 190) {
       leftPanelTab = "filtros";
-    } else if (my >= 240 && my <= 300) {
-      activeView = (activeView + 1) % 4; // Toggle view
-    } else if (my >= 350 && my <= 410) {
+    } else if (my >= 230 && my <= 310) {
       leftPanelTab = "exportar";
-    } else if (my >= 460 && my <= 520) {
+    } else if (my >= 350 && my <= 430) {
       leftPanelTab = "sobre";
     }
     return true;
