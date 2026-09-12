@@ -273,10 +273,10 @@ function drawCategorySelector(listY, listBottom) {
     line(13, y + rowH - 3, LAYOUT_FILTRO_W - 13, y + rowH - 3);
     fill("#000000");
     noStroke();
-    textFont(fontes.newAmsterdam);
-    textSize(fitTextSize(option.label, 225, 16, 10));
+    textFont(fontes.roboto);
+    textSize(fitTextSize(option.label.toUpperCase(), 225, 14, 10));
     textAlign(LEFT, BASELINE);
-    text(option.label, FILTER_BAR_X, y + rowH / 2 + 5);
+    text(option.label.toUpperCase(), FILTER_BAR_X, y + rowH / 2 + 5);
   }
 }
 
