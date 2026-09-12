@@ -255,7 +255,7 @@ function drawCategorySelector(listY, listBottom) {
   const rowH = 34;
   noStroke();
   fill(lightMode ? "#FFFFFF" : "#D9D9D9");
-  rect(0, listY - 6, 255, Math.max(0, listBottom - listY + 6));
+  rect(0, listY - 6, LAYOUT_FILTRO_W, Math.max(0, listBottom - listY + 6));
   for (let i = 0; i < options.length; i++) {
     const y = listY + i * rowH;
     if (y > listBottom) break;
@@ -264,11 +264,11 @@ function drawCategorySelector(listY, listBottom) {
     if (active) {
       noStroke();
       fill("#959fff");
-      rect(13, y + rowH - 6, 229, 3);
+      rect(13, y + rowH - 6, LAYOUT_FILTRO_W - 26, 3);
     }
     stroke(lightMode ? color(0, 0, 0, 65) : color(0, 0, 0, 80));
-    strokeWeight(1);
-    line(13, y + rowH - 3, 242, y + rowH - 3);
+    strokeWeight(0.5);
+    line(13, y + rowH - 3, LAYOUT_FILTRO_W - 13, y + rowH - 3);
     fill("#000000");
     noStroke();
     textFont(fontes.newAmsterdam);
@@ -322,7 +322,7 @@ function drawFilterTag(tag, y, rowH) {
     material:  "#3e4ad3",
     tecnicas:  "#1a8511",
     estetico:  "#d33e4a",
-    tipo_obra: "#d3a81a",
+    tipo_obra: "#ffef95",
   };
   const dimColor = DIM_COLORS[tag.dimension] || "#3e4ad3";
 
@@ -334,7 +334,13 @@ function drawFilterTag(tag, y, rowH) {
     // Left accent strip (4px)
     fill("#959fff");
     rect(0, y, 4, rowH);
-    fill("#FFFFFF");
+    
+    // Use black text for the light yellow background
+    if (tag.dimension === "tipo_obra") {
+      fill("#000000");
+    } else {
+      fill("#FFFFFF");
+    }
   } else {
     noStroke();
     fill("#FFFFFF");
