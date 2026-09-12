@@ -34,14 +34,16 @@ function drawNavSidebar() {
   fill(255);
   rect(0, 0, LAYOUT_NAV_W, height / filterPanelScale());
 
-  // Title
-  fill(0);
-  textFont(fontes.afacad);
-  textStyle(BOLD);
-  textSize(24);
-  textAlign(CENTER, CENTER);
-  text("TAGrafia", LAYOUT_NAV_W / 2, 40);
-  textStyle(NORMAL);
+  // Title (Figma: Afacad Flux, 24px, weight 600, color #000, text-align center)
+  fill("#000000");
+  noStroke();
+  drawingContext.save();
+  drawingContext.font = "600 24px 'Afacad Flux', sans-serif";
+  drawingContext.fillStyle = "#000000";
+  drawingContext.textAlign = "center";
+  drawingContext.textBaseline = "middle";
+  drawingContext.fillText("TAGrafia", LAYOUT_NAV_W / 2, 40);
+  drawingContext.restore();
 
   // Divider
   stroke("#959fff");
