@@ -390,7 +390,13 @@ function canonicalTag(dimension, value) {
 }
 
 function inferTypeFromName(name) {
-  return canonicalTag("tipo_obra", name);
+  const inferred = canonicalTag("tipo_obra", name);
+  // Se o canonicalTag não conseguiu agrupar (ou seja, retornou o próprio nome cru),
+  // não queremos criar uma tag com o nome inteiro do produto.
+  if (normalizeText(inferred) === normalizeText(cleanText(name))) {
+    return "";
+  }
+  return inferred;
 }
 
 function categoryForTag(dimension, label) {
