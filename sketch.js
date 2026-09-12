@@ -6,10 +6,33 @@ const DATA_PATHS = {
   images: "data/image-manifest.json",
 };
 
-const LAYOUT_FILTRO_W = 255;
+const LAYOUT_NAV_W = 125;
+const LAYOUT_FILTRO_W = 225;
 const LAYOUT_VISUAL_W_BASE = 1180;
 const LAYOUT_PAINEL_PRODUTO_W = 405;
 const LAYOUT_VISUAL_W_MIN = 320;
+
+let icones = {
+  menu: null,
+  filtros: null,
+  obras: null,
+  graficos: null,
+  clear: null,
+  material: null,
+  tecnicas: null,
+  estetico: null,
+  tipo_obra: null,
+  left: null,
+  right: null,
+  save: null,
+  author: null,
+  artesanal: null,
+  industrial: null,
+  export: null,
+  change: null,
+  sobre: null
+};
+
 const LAYOUT_PAINEL_PRODUTO_W_MIN = 300;
 
 // Filter panel layout
@@ -81,12 +104,14 @@ const CATEGORY_FILTERS = {
 };
 
 const COLORS = {
-  yellow: "#FFCB00",
-  magenta: "#FF00FB",
+  yellow: "#ffbf00",
+  magenta: "#801893",
   blue: "#3E4AD3",
   green: "#4AD33E",
   red: "#D33E4A",
   cyan: "#48BFC6",
+  pink: "#FFA8ED",
+  orange: "#FF8A00",
   visualDark: "#111111",
   visualLight: "#F3F1EA",
   timelineDark: "#505050",
@@ -177,6 +202,8 @@ function preload() {
   icones.artesanal = loadImage(asset("data/Icones/produto artesanal.png"));
   icones.assinado = loadImage(asset("data/Icones/design_assinado.png"));
   icones.industrial = loadImage(asset("data/Icones/produto industrial.png"));
+  icones.export = loadImage(asset("data/Icones/export.png"));
+  icones.change = loadImage(asset("data/Icones/change.png"));
 }
 
 function setup() {
@@ -522,7 +549,7 @@ function filterPanelScale() {
 }
 
 function filterPanelW() {
-  return LAYOUT_FILTRO_W * filterPanelScale();
+  return (LAYOUT_NAV_W + LAYOUT_FILTRO_W) * filterPanelScale();
 }
 
 function contentSpace() {
@@ -1411,10 +1438,68 @@ function xToYear(x) {
 function drawFilterPanel() {
   push();
   scale(filterPanelScale());
+  
+  drawNavSidebar();
+  
+  translate(LAYOUT_NAV_W, 0);
+  
   drawFilterHeader();
   drawFilterCards();
   drawFilterBody();
   pop();
+}
+
+function drawNavSidebar() {
+  fill("#ffffff");
+  noStroke();
+  rect(0, 0, LAYOUT_NAV_W, height / filterPanelScale());
+  
+  fill("#000000");
+  textFont(fontes.newAmsterdam);
+  textSize(32);
+  textAlign(CENTER, TOP);
+  text("TAGrafia", LAYOUT_NAV_W / 2, 30);
+  
+  textFont(fontes.robotoCondensed);
+  textSize(16);
+  text("cA", LAYOUT_NAV_W / 2, 70);
+  
+  stroke(230);
+  strokeWeight(1);
+  line(LAYOUT_NAV_W - 1, 0, LAYOUT_NAV_W - 1, height / filterPanelScale());
+  
+  const navItems = [
+    { label: "Filtros", y: 140, icon: null },
+    { label: "Trocar\nVisualização", y: 250, icon: icones.change },
+    { label: "Exportar", y: 360, icon: icones.export },
+    { label: "Sobre", y: 470, icon: null }
+  ];
+  
+  for (let item of navItems) {
+    fill("#000000");
+    noStroke();
+    textFont(fontes.robotoCondensed);
+    textSize(15);
+    textAlign(CENTER, CENTER);
+    text(item.label, LAYOUT_NAV_W / 2, item.y + 40);
+    
+    if (item.label === "Filtros") {
+      fill("#959fff");
+      noStroke();
+    } else {
+      fill(245);
+      stroke(220);
+      strokeWeight(1);
+    }
+    rect(LAYOUT_NAV_W / 2 - 25, item.y - 20, 50, 50, 10);
+    
+    if (item.icon) {
+      drawImageCentered(item.icon, LAYOUT_NAV_W / 2, item.y + 5, 30, 30);
+    } else if (item.label === "Filtros") {
+      // Draw standard filter icon for 'Filtros' (placeholder, since we don't have the exact image 49)
+      drawImageCentered(icones.clear, LAYOUT_NAV_W / 2, item.y + 5, 24, 24);
+    }
+  }
 }
 
 function drawFilterHeader() {
@@ -1434,29 +1519,32 @@ function drawFilterCards() {
   const cardW = LAYOUT_FILTRO_W / 2;
   const footerH = 26;
   const cards = [
-    ["material", "Material", icones.material],
-    ["tecnicas", "Técnica", icones.tecnicas],
-    ["estetico", "Estético", icones.estetico],
-    ["tipo_obra", "Tipo de produto", icones.tipo_obra],
+    ["material", "Material", icones.material, "#959fff"],
+    ["tecnicas", "Técnica", icones.tecnicas, "#a7ff95"],
+    ["estetico", "Estético", icones.estetico, "#ff9597"],
+    ["tipo_obra", "Tipo", icones.tipo_obra, "#ffef95"],
   ];
   for (let i = 0; i < cards.length; i++) {
-    const [dim, label, icon] = cards[i];
+    const [dim, label, icon, bgColor] = cards[i];
     const col = i % 2;
     const row = Math.floor(i / 2);
     const x = col * cardW;
     const y = FILTER_HEADER_H + row * FILTER_CARD_H;
     const active = activeDimension === dim;
-    stroke("#000000");
-    strokeWeight(2);
-    fill(active ? COLORS.yellow : "#FFFFFF");
-    rect(x, y, cardW, FILTER_CARD_H - footerH);
-    drawImageCentered(icon, x + cardW / 2, y + (FILTER_CARD_H - footerH) / 2, 70, 58);
-    fill(active ? DIMENSIONS[dim].color : "#000000");
-    rect(x, y + FILTER_CARD_H - footerH, cardW, footerH);
-    fill(active && dim === "tipo_obra" ? "#000000" : "#FFFFFF");
+    
+    // Draw background ONLY if active
+    if (active) {
+      noStroke();
+      fill(bgColor);
+      rect(x + 10, y + 10, cardW - 20, FILTER_CARD_H - footerH - 10, 10);
+    }
+    
+    // Draw icon and text
+    drawImageCentered(icon, x + cardW / 2, y + (FILTER_CARD_H - footerH) / 2, 45, 45);
+    
+    fill(panelTextColor());
     noStroke();
     textFont(fontes.robotoCondensed);
-    textSize(fitTextSize(label, cardW - 24, 18, 10));
     textAlign(CENTER, CENTER);
     text(label, x + cardW / 2, y + FILTER_CARD_H - footerH / 2);
   }
@@ -1598,30 +1686,43 @@ function drawTagList(listY, listBottom) {
 
 function drawFilterTag(tag, y, rowH) {
   const selected = selectedTagKeys.has(tag.key);
-  const cx = 27 + 10;
-  const cy = y + rowH / 2;
-  stroke(lightMode ? color(0, 0, 0, 80) : color(217));
-  strokeWeight(2);
-  fill(selected ? tag.color : panelBackground());
-  circle(cx, cy, 20);
+  
+  const TAG_COLORS = {
+    material: "#3e4ad3",   // Azul
+    tecnicas: "#1a8511",   // Verde
+    estetico: "#d33e4a",   // Vermelho
+    tipo_obra: "#d3a81a"   // Amarelo escuro
+  };
+  
+  if (selected) {
+    noStroke();
+    fill(TAG_COLORS[tag.dimension] || tag.color);
+    rect(10, y + 2, LAYOUT_FILTRO_W - 20, rowH - 4, 8);
+    fill("#ffffff"); // White text for selected
+  } else {
+    fill(panelTextColor());
+  }
 
-  fill(panelTextColor());
   noStroke();
   textFont(fontes.robotoCondensed);
   const badgeText = tag.dimension === "tipo_obra" ? "" : String(countProductsWithTagInCurrentType(tag));
   textSize(12);
   const badgeW = badgeText ? Math.max(24, textWidth(badgeText) + 14) : 0;
-  const badgeX = 255 - badgeW - 17;
-  textSize(fitTextSize(tag.label, badgeX - 67, 16, 10));
+  const badgeX = LAYOUT_FILTRO_W - badgeW - 17;
+  textSize(fitTextSize(tag.label, badgeX - 25, 16, 10));
   textAlign(LEFT, CENTER);
-  text(tag.label, 57, cy - 1);
+  text(tag.label, 20, y + rowH / 2 - 1);
   if (badgeText) {
-    fill(217, 217, 217, selected ? 245 : 210);
-    rect(badgeX, cy - 12, badgeW, 24, 12);
-    fill(0, 170);
+    if (selected) {
+      fill(255, 255, 255, 60);
+    } else {
+      fill(217, 217, 217, 210);
+    }
+    rect(badgeX, y + rowH / 2 - 11, badgeW, 22, 11);
+    fill(selected ? "#ffffff" : color(90));
     textSize(12);
     textAlign(CENTER, CENTER);
-    text(badgeText, badgeX + badgeW / 2, cy - 1);
+    text(badgeText, badgeX + badgeW / 2, y + rowH / 2);
   }
 }
 
@@ -2127,12 +2228,22 @@ function keyPressed() {
 
 function filterMousePressed(mxRaw, myRaw) {
   const scale = filterPanelScale();
-  const mx = mxRaw / scale;
+  let mx = mxRaw / scale;
   const my = myRaw / scale;
-  if (mx < 0 || mx > LAYOUT_FILTRO_W || my < 0 || my > height / scale) {
+  
+  if (mx < 0 || mx > LAYOUT_NAV_W + LAYOUT_FILTRO_W || my < 0 || my > height / scale) {
     tagSearchActive = false;
     return false;
   }
+  
+  if (mx < LAYOUT_NAV_W) {
+    // Clicked in the Nav Sidebar
+    return true;
+  }
+  
+  // Adjust mx for the Filter area
+  mx -= LAYOUT_NAV_W;
+  
   const cardW = LAYOUT_FILTRO_W / 2;
   const cards = [
     ["material", 0, FILTER_HEADER_H],
