@@ -148,9 +148,10 @@ function drawProductInfo(x, y, w, h, scale) {
 
   const titleY = y + 15 * scale;
 
-  // Colored strip for origin (made thicker as requested)
+  // Colored strip for origin
   noStroke();
-  fill(selectedProduct.origin === "brasileiro" ? "#ffef95" : "#959fff");
+  // Changed international color to a clearer purple instead of the material blue
+  fill(selectedProduct.origin === "brasileiro" ? "#ffef95" : "#c495ff");
   rect(x + 10 * scale, titleY + 2 * scale, 8 * scale, 35 * scale, 2 * scale);
 
   // Title area
@@ -159,7 +160,7 @@ function drawProductInfo(x, y, w, h, scale) {
 
   fill("#000000");
   textFont(fontes.afacad);
-  textStyle(NORMAL); // Changed back to regular per request
+  textStyle(BOLD); // Make title BOLD as requested
   textSize(fitTextSize(selectedProduct.name, titleW, 16 * scale, 12 * scale));
   textAlign(LEFT, TOP);
   text(selectedProduct.name, titleX, titleY, titleW, 30 * scale);
@@ -173,16 +174,18 @@ function drawProductInfo(x, y, w, h, scale) {
   // Icons on the right
   const iconY = y + h / 2;
   const iconSaveX = x + w - 24 * scale;
-  const iconProdX = x + w - 54 * scale;
+  const iconProdX = x + w - 64 * scale;
 
-  // Draw save icon (TODO: add interaction for saving)
+  // Draw save icon with circle around it
+  noFill();
+  stroke("#000000");
+  strokeWeight(1.2 * scale);
+  circle(iconSaveX, iconY, 32 * scale);
   if (icones.save) {
-    drawImageCentered(icones.save, iconSaveX, iconY, 24 * scale, 24 * scale);
-  } else {
-    noFill(); stroke(0); circle(iconSaveX, iconY, 20 * scale);
+    drawImageCentered(icones.save, iconSaveX, iconY, 18 * scale, 18 * scale);
   }
 
-  // Draw production icon
+  // Draw production icon with circle around it
   let prodIcon = null;
   const prodStr = (selectedProduct.production || "").toLowerCase();
   if (prodStr.includes("artesanal")) prodIcon = icones.artesanal;
@@ -190,7 +193,11 @@ function drawProductInfo(x, y, w, h, scale) {
   else if (prodStr.includes("industrial")) prodIcon = icones.industrial;
   
   if (prodIcon) {
-    drawImageCentered(prodIcon, iconProdX, iconY, 24 * scale, 24 * scale);
+    noFill();
+    stroke("#000000");
+    strokeWeight(1.2 * scale);
+    circle(iconProdX, iconY, 32 * scale);
+    drawImageCentered(prodIcon, iconProdX, iconY, 18 * scale, 18 * scale);
   }
 }
 
@@ -256,8 +263,15 @@ function drawProductDetailsNew(x, y, w, h, scale) {
       text(tag.label, cursorX + chipW / 2, cursorY + chipH / 2);
       cursorX += chipW + 6 * scale;
     }
-    cursorY += chipH + 14 * scale;
+    if (tags.length > 0) cursorY += chipH + 10 * scale;
   }
+
+  // --- Draw horizontal separator between Tags and Detalhes ---
+  cursorY += 5 * scale;
+  stroke("#959fff");
+  strokeWeight(1.5 * scale);
+  line(x, cursorY, x + w, cursorY);
+  cursorY += 15 * scale;
 
   // ─── Detalhes section header ───
   fill("#000000");
