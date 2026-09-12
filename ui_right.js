@@ -43,19 +43,19 @@ function drawProductSidebar(x, y, w, h, scale) {
   line(x + w, y, x + w, y + h);
 
   const items = [
-    { id: "materiais", label: "Material", icon: icones.material },
-    { id: "estetico", label: "Estético", icon: icones.estetico },
-    { id: "tecnicas", label: "Técnica", icon: icones.tecnicas },
+    { id: "materiais", label: "Material", icon: icones.material, color: "#959fff" },
+    { id: "estetico", label: "Estético", icon: icones.estetico, color: "#ff9597" },
+    { id: "tecnicas", label: "Técnica", icon: icones.tecnicas, color: "#a7ff95" },
   ];
 
   let currentY = y + 25 * scale;
   for (const item of items) {
     const active = rightPanelTab === item.id;
     if (active) {
-      fill("#959fff");
+      fill(item.color);
       noStroke();
-      // Draw square background behind the icon, exactly like the left menu
-      rect((x + w / 2) - 25 * scale, currentY - 10 * scale, 50 * scale, 50 * scale, 10 * scale);
+      // Draw circular background (elipse) behind the active icon
+      circle(x + w / 2, currentY + 15 * scale, 48 * scale);
     }
     if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 15 * scale, 35 * scale, 35 * scale);
     fill("#000000");
@@ -80,7 +80,8 @@ function drawProductSidebar(x, y, w, h, scale) {
   if (salvosActive) {
     fill("#959fff");
     noStroke();
-    rect((x + w / 2) - 25 * scale, currentY - 10 * scale, 50 * scale, 50 * scale, 10 * scale);
+    // Draw circular background (elipse) behind the active icon
+    circle(x + w / 2, currentY + 15 * scale, 48 * scale);
   }
   if (icones.save) drawImageCentered(icones.save, x + w / 2, currentY + 15 * scale, 35 * scale, 35 * scale);
   fill("#000000");
@@ -106,7 +107,7 @@ function drawProductImage(x, y, w, h, scale) {
     text(
       selectedProduct && productImages(selectedProduct).length
         ? "Carregando imagem..."
-        : "Imagem não encontrada",
+        : "Imagem nǜo encontrada",
       x + w / 2,
       y + h / 2,
     );
@@ -147,18 +148,18 @@ function drawProductInfo(x, y, w, h, scale) {
 
   const titleY = y + 15 * scale;
 
-  // Colored strip for origin
+  // Colored strip for origin (made thicker as requested)
   noStroke();
   fill(selectedProduct.origin === "brasileiro" ? "#ffef95" : "#959fff");
-  rect(x + 10 * scale, titleY + 2 * scale, 4 * scale, 35 * scale, 2 * scale);
+  rect(x + 10 * scale, titleY + 2 * scale, 8 * scale, 35 * scale, 2 * scale);
 
   // Title area
-  const titleX = x + 22 * scale;
+  const titleX = x + 26 * scale;
   const titleW = w - 90 * scale; // Room for icons
 
   fill("#000000");
   textFont(fontes.afacad);
-  textStyle(BOLD);
+  textStyle(NORMAL); // Changed back to regular per request
   textSize(fitTextSize(selectedProduct.name, titleW, 16 * scale, 12 * scale));
   textAlign(LEFT, TOP);
   text(selectedProduct.name, titleX, titleY, titleW, 30 * scale);
