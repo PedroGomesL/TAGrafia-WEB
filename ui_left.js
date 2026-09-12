@@ -263,7 +263,7 @@ function drawCategorySelector(listY, listBottom) {
     const active = activeCategoryByDimension[activeDimension] === option.value;
     if (active) {
       noStroke();
-      fill(COLORS.yellow);
+      fill("#959fff");
       rect(13, y + rowH - 6, 229, 3);
     }
     stroke(lightMode ? color(0, 0, 0, 65) : color(0, 0, 0, 80));
@@ -310,7 +310,7 @@ function drawTagList(listY, listBottom) {
     noStroke();
     fill(lightMode ? color(0, 0, 0, 45) : color(255, 255, 255, 45));
     rect(trackX, listY, 5, trackH, 2.5);
-    fill(COLORS.yellow);
+    fill("#959fff");
     rect(trackX, thumbY, 5, thumbH, 2.5);
   }
 }
@@ -331,8 +331,8 @@ function drawFilterTag(tag, y, rowH) {
     noStroke();
     fill(dimColor);
     rect(0, y, LAYOUT_FILTRO_W, rowH);
-    // Yellow left accent strip (4px)
-    fill(COLORS.yellow);
+    // Left accent strip (4px)
+    fill("#959fff");
     rect(0, y, 4, rowH);
     fill("#FFFFFF");
   } else {

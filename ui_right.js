@@ -138,7 +138,7 @@ function drawProductInfo(x, y, w, h, scale) {
   textStyle(NORMAL);
 
   // Designer name (Afacad Regular 16)
-  const designerText = selectedProduct.designer || "Designer desconhecido";
+  const designerText = selectedProduct.author || "Designer desconhecido";
   const yearText = ` (${selectedProduct.year || selectedProduct.dateRaw})`;
   textSize(14 * scale);
   fill("#190000");
