@@ -25,12 +25,9 @@ let _cachedTagCounts = null;
 let _cachedBubbleGroups = null;
 let _bubbleCacheKey = "";
 
-let activeCategoryByDimension = {
-  material: -1,
-  tecnicas: -1,
-  estetico: -1,
-  tipo_obra: -1,
-};
+let activeCategoryByDimension = Object.fromEntries(
+  DIMENSION_ORDER.map((dim) => [dim, -1]),
+);
 let categorySelectorOpen = false;
 let tagSearch = "";
 let tagSearchActive = false;
@@ -48,7 +45,7 @@ let yearEnd = YEAR_MAX;
 let draggedYearHandle = null;
 let hitAreas = [];
 let focusedCircularTagKey = "";
-let exportViewsSelection = [true, true, true, true];
+let exportViewsSelection = VIEWS_CONFIG.map(() => true);
 let exportFormatDropdownOpen = false;
 let exportFormatSelected = "PDF";
 

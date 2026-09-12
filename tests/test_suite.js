@@ -240,6 +240,53 @@ for (const view of VIEWS_CONFIG) {
   );
 }
 
+console.log("\n=== 9. Validando Novas Funções de UI e Dados (ui_right.js e ui_left.js) ===");
+// Carrega ui_left.js
+const uiLeftContent = fs.readFileSync(path.join(ROOT_DIR, "ui_left.js"), "utf8");
+vm.runInThisContext(uiLeftContent);
+
+// Teste de FONTS_CONFIG e STORAGE_KEYS
+assert(typeof FONTS_CONFIG === "object" && FONTS_CONFIG !== null, "FONTS_CONFIG está definido");
+for (const [fkey, fpath] of Object.entries(FONTS_CONFIG)) {
+  assert(fs.existsSync(path.join(ROOT_DIR, fpath)), `Arquivo de fonte '${fkey}' existe: ${fpath}`);
+}
+assert(typeof STORAGE_KEYS === "object" && STORAGE_KEYS.savedProducts === "tagrafia-saved-products", "STORAGE_KEYS.savedProducts está configurado");
+
+// Teste de getProductDetailsForDimension
+assert(typeof getProductDetailsForDimension === "function", "getProductDetailsForDimension está definida");
+const testProd = products[0];
+const matDetails = getProductDetailsForDimension(testProd, "material");
+assert(typeof matDetails === "string" && matDetails.length > 0, "getProductDetailsForDimension retorna descrição de material");
+const tecDetails = getProductDetailsForDimension(testProd, "tecnicas");
+assert(typeof tecDetails === "string" && tecDetails.length > 0, "getProductDetailsForDimension retorna descrição de técnicas");
+const estDetails = getProductDetailsForDimension(testProd, "estetico");
+assert(typeof estDetails === "string" && estDetails.length > 0, "getProductDetailsForDimension retorna descrição de estético");
+
+// Teste de getFilterCategoryOptions
+assert(typeof getFilterCategoryOptions === "function", "getFilterCategoryOptions está definida");
+const catOpts = getFilterCategoryOptions("material");
+assert(Array.isArray(catOpts) && catOpts.length >= 2, "getFilterCategoryOptions retorna opções de categorias para 'material'");
+assert(catOpts[0].value === -2 && catOpts[1].value === -1, "Opções incluem 'Tags disponíveis' (-2) e 'Tags ativas' (-1)");
+
+console.log("\n=== 10. Validando getCircularVisualProducts e countProductsWithTagInCurrentType (data_manager.js) ===");
+vm.runInThisContext(dmContent);
+assert(typeof getCircularVisualProducts === "function", "getCircularVisualProducts está definida");
+const sampleTag = tagsByDimension.material[0];
+selectedTagKeys.clear();
+selectedTagKeys.add(sampleTag.key);
+_cachedSelectedTags = null;
+const circularItems = getCircularVisualProducts();
+assert(Array.isArray(circularItems) && circularItems.length > 0, `getCircularVisualProducts retornou ${circularItems.length} itens para a tag '${sampleTag.label}'`);
+assert(circularItems[0].product && circularItems[0].tags, "Itens circulares possuem product e tags associadas");
+
+assert(typeof countProductsWithTagInCurrentType === "function", "countProductsWithTagInCurrentType está definida");
+_cachedTagCounts = null;
+const tagCount = countProductsWithTagInCurrentType(sampleTag);
+assert(tagCount > 0, `countProductsWithTagInCurrentType retornou contagem correta (${tagCount}) para a tag '${sampleTag.label}'`);
+selectedTagKeys.clear();
+_cachedSelectedTags = null;
+_cachedTagCounts = null;
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {

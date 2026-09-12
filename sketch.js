@@ -9,14 +9,9 @@ function preload() {
   geoJson = loadJSON(asset(DATA_PATHS.geo));
   imageManifest = loadJSON(asset(DATA_PATHS.images));
 
-  fontes.afacad = loadFont(
-    asset("data/Fontes/AfacadFlux-VariableFont_slnt,wght.ttf"),
-  );
-  fontes.newAmsterdam = loadFont(asset("data/Fontes/NewAmsterdam-Regular.ttf"));
-  fontes.robotoCondensed = loadFont(
-    asset("data/Fontes/RobotoCondensed-VariableFont_wght.ttf"),
-  );
-  fontes.roboto = loadFont(asset("data/Fontes/Roboto-VariableFont_wdth,wght.ttf"));
+  for (const [key, path] of Object.entries(FONTS_CONFIG)) {
+    fontes[key] = loadFont(asset(path));
+  }
 
   for (const [key, path] of Object.entries(ICONS_CONFIG)) {
     icones[key] = loadImage(asset(path));

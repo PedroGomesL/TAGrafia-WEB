@@ -126,12 +126,7 @@ function createProduct(row, origin) {
     ),
     raw: row,
     tagKeys: new Set(),
-    tagsByDimension: {
-      material: [],
-      estetico: [],
-      tecnicas: [],
-      tipo_obra: [],
-    },
+    tagsByDimension: Object.fromEntries(DIMENSION_ORDER.map((dim) => [dim, []])),
   };
 }
 
@@ -465,9 +460,8 @@ function tagsForCircular() {
   return [];
 }
 
-function productsShownInCircular() {
-  const tags = tagsForCircular();
-  if (!tags.length) return [];
+function getCircularVisualProducts(tags = tagsForCircular()) {
+  if (!tags || !tags.length) return [];
   const typeTags = selectedTags().filter(
     (tag) => tag.dimension === "tipo_obra",
   );
@@ -494,7 +488,11 @@ function productsShownInCircular() {
       originWeight(b.product) - originWeight(a.product) ||
       a.product.name.localeCompare(b.product.name, "pt-BR"),
   );
+  return visualProducts;
+}
 
+function productsShownInCircular() {
+  const visualProducts = getCircularVisualProducts();
   const shown = [];
   let slot = 0;
   for (const item of visualProducts) {
@@ -504,6 +502,39 @@ function productsShownInCircular() {
     slot += segments;
   }
   return shown;
+}
+
+function countProductsWithTagInCurrentType(tag) {
+  if (!tag) return 0;
+  if (_cachedTagCounts) {
+    const cached = _cachedTagCounts.get(tag.key);
+    if (cached !== undefined) return cached;
+  }
+
+  if (!_cachedTagCounts) {
+    _cachedTagCounts = new Map();
+    const typeTags = selectedTags().filter(
+      (item) => item.dimension === "tipo_obra",
+    );
+    if (!typeTags.length) {
+      // No type filter — all tags use their raw count
+      for (const [key, t] of tagsByKey) _cachedTagCounts.set(key, t.count);
+    } else {
+      // Pre-compute counts for all tags at once
+      const counters = new Map();
+      for (const product of products) {
+        if (!typeTags.some((typeTag) => product.tagKeys.has(typeTag.key)))
+          continue;
+        for (const key of product.tagKeys) {
+          counters.set(key, (counters.get(key) || 0) + 1);
+        }
+      }
+      for (const [key] of tagsByKey)
+        _cachedTagCounts.set(key, counters.get(key) || 0);
+    }
+  }
+
+  return _cachedTagCounts.get(tag.key) || 0;
 }
 
 function buildGeoCountries() {

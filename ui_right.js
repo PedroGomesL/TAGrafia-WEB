@@ -112,7 +112,7 @@ function drawProductImage(x, y, w, h, scale) {
     text(
       selectedProduct && productImages(selectedProduct).length
         ? "Carregando imagem..."
-        : "Imagem nǜo encontrada",
+        : "Imagem não encontrada",
       x + w / 2,
       y + h / 2,
     );
@@ -303,16 +303,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   cursorY += 26 * scale;
 
   // Body text
-  let textValue = "";
-  if (dim === "material" || dim === "materiais") textValue = selectedProduct.materialDescription;
-  else if (dim === "tecnicas")
-    textValue =
-      selectedProduct.origin === "brasileiro"
-        ? selectedProduct.economicContext
-        : selectedProduct.composition;
-  else if (dim === "estetico") textValue = selectedProduct.aestheticDescription;
-
-  if (!textValue) textValue = "Nenhum detalhe disponível para esta categoria.";
+  const textValue = getProductDetailsForDimension(selectedProduct, dim);
 
   fill("#1B1212");
   textFont(fontes.roboto);
@@ -323,6 +314,21 @@ function drawProductDetailsNew(x, y, w, h, scale) {
 
   pop();
   drawingContext.restore();
+}
+
+function getProductDetailsForDimension(product, dimension) {
+  if (!product) return "Nenhum detalhe disponível para esta categoria.";
+  const dim = dimension === "materiais" ? "material" : dimension;
+  let textValue = "";
+  if (dim === "material") textValue = product.materialDescription;
+  else if (dim === "tecnicas")
+    textValue =
+      product.origin === "brasileiro"
+        ? product.economicContext
+        : product.composition;
+  else if (dim === "estetico") textValue = product.aestheticDescription;
+
+  return textValue || "Nenhum detalhe disponível para esta categoria.";
 }
 
 function calculateNewDetailsHeight(w, scale) {
@@ -350,12 +356,7 @@ function calculateNewDetailsHeight(w, scale) {
   
   h += 40 * scale; // "Detalhes:"
   
-  let textValue = "";
-  if (dim === "material" || dim === "materiais") textValue = selectedProduct.materialDescription;
-  else if (dim === "tecnicas") textValue = selectedProduct.origin === "brasileiro" ? selectedProduct.economicContext : selectedProduct.composition;
-  else if (dim === "estetico") textValue = selectedProduct.aestheticDescription;
-  
-  if (!textValue) textValue = "Nenhum detalhe disponível para esta categoria.";
+  const textValue = getProductDetailsForDimension(selectedProduct, dim);
   
   const charsPerLine = Math.floor((w - 40 * scale) / (8 * scale));
   const lines = Math.ceil(textValue.length / charsPerLine);
@@ -711,9 +712,10 @@ function toggleSavedProduct() {
 }
 
 function loadSavedProducts() {
+  const key = typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.savedProducts : "tagrafia-saved-products";
   try {
     savedProductKeys = new Set(
-      JSON.parse(localStorage.getItem("tagrafia-saved-products") || "[]"),
+      JSON.parse(localStorage.getItem(key) || "[]"),
     );
   } catch {
     savedProductKeys = new Set();
@@ -721,8 +723,9 @@ function loadSavedProducts() {
 }
 
 function persistSavedProducts() {
+  const key = typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.savedProducts : "tagrafia-saved-products";
   localStorage.setItem(
-    "tagrafia-saved-products",
+    key,
     JSON.stringify(Array.from(savedProductKeys)),
   );
 }

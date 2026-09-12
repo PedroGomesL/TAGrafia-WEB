@@ -9,32 +9,7 @@ function drawCircularView(visible) {
   const tags = tagsForCircular();
   const tagPositions = new Map();
 
-  const productsVisual = [];
-  const typeTags = selectedTags().filter(
-    (tag) => tag.dimension === "tipo_obra",
-  );
-  for (const product of products) {
-    if (product.year < yearStart || product.year > yearEnd) continue;
-    if (
-      typeTags.length &&
-      !typeTags.some((tag) => product.tagKeys.has(tag.key))
-    )
-      continue;
-    const matched = tags.filter((tag) => product.tagKeys.has(tag.key));
-    if (!matched.length) continue;
-    if (
-      focusedCircularTagKey &&
-      !matched.some((tag) => tag.key === focusedCircularTagKey)
-    )
-      continue;
-    productsVisual.push({ product, tags: matched, weight: matched.length });
-  }
-  productsVisual.sort(
-    (a, b) =>
-      b.weight - a.weight ||
-      originWeight(b.product) - originWeight(a.product) ||
-      a.product.name.localeCompare(b.product.name, "pt-BR"),
-  );
+  const productsVisual = getCircularVisualProducts(tags);
 
   if (!selectedProduct && productsVisual.length)
     selectProduct(productsVisual[0].product);

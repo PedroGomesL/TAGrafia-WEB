@@ -233,15 +233,19 @@ function categoryOptions(dimension) {
     );
 }
 
-function drawCategorySelector(listY, listBottom) {
-  const options = [
+function getFilterCategoryOptions(dimension) {
+  return [
     { label: "Tags disponiveis", value: -2 },
     { label: "Tags ativas", value: -1 },
-    ...categoryOptions(activeDimension).map((option, index) => ({
+    ...categoryOptions(dimension).map((option, index) => ({
       label: option.label,
       value: index,
     })),
   ];
+}
+
+function drawCategorySelector(listY, listBottom) {
+  const options = getFilterCategoryOptions(activeDimension);
   const rowH = 34;
   noStroke();
   fill(lightMode ? "#FFFFFF" : "#D9D9D9");
@@ -380,38 +384,6 @@ function categoryAllowsTag(tag) {
   return option ? tag.category === option.category : true;
 }
 
-function countProductsWithTagInCurrentType(tag) {
-  if (_cachedTagCounts) {
-    const cached = _cachedTagCounts.get(tag.key);
-    if (cached !== undefined) return cached;
-  }
-
-  if (!_cachedTagCounts) {
-    _cachedTagCounts = new Map();
-    const typeTags = selectedTags().filter(
-      (item) => item.dimension === "tipo_obra",
-    );
-    if (!typeTags.length) {
-      // No type filter — all tags use their raw count
-      for (const [key, t] of tagsByKey) _cachedTagCounts.set(key, t.count);
-    } else {
-      // Pre-compute counts for all tags at once
-      const counters = new Map();
-      for (const product of products) {
-        if (!typeTags.some((typeTag) => product.tagKeys.has(typeTag.key)))
-          continue;
-        for (const key of product.tagKeys) {
-          counters.set(key, (counters.get(key) || 0) + 1);
-        }
-      }
-      for (const [key] of tagsByKey)
-        _cachedTagCounts.set(key, counters.get(key) || 0);
-    }
-  }
-
-  return _cachedTagCounts.get(tag.key) || 0;
-}
-
 function filterMousePressed(mxRaw, myRaw) {
   const scale = filterPanelScale();
   let mx = mxRaw / scale;
@@ -485,14 +457,7 @@ function filterMousePressed(mxRaw, myRaw) {
       activeDimension !== "tipo_obra" &&
       my >= listY
     ) {
-      const options = [
-        { label: "Tags disponiveis", value: -2 },
-        { label: "Tags ativas", value: -1 },
-        ...categoryOptions(activeDimension).map((option, index) => ({
-          label: option.label,
-          value: index,
-        })),
-      ];
+      const options = getFilterCategoryOptions(activeDimension);
       const index = Math.floor((my - listY) / 34);
       if (index >= 0 && index < options.length) {
         activeCategoryByDimension[activeDimension] = options[index].value;
@@ -641,7 +606,8 @@ function drawExportTab() {
   }
   endShape();
   
-  const formats = ["PDF", "JPG", "SVG"].filter(f => f !== exportFormatSelected);
+  const availableFormats = typeof EXPORT_FORMATS !== "undefined" ? EXPORT_FORMATS : ["PDF", "JPG", "SVG"];
+  const formats = availableFormats.filter(f => f !== exportFormatSelected);
   
   if (exportFormatDropdownOpen) {
     for (let i = 0; i < formats.length; i++) {

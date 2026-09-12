@@ -55,7 +55,15 @@ const DETAIL_TABS = ["material", "estetico", "tecnicas"];
 
 const EXPORT_FORMATS = ["PDF", "JPG", "SVG"];
 
+const FONTS_CONFIG = {
+  afacad: "data/Fontes/AfacadFlux-VariableFont_slnt,wght.ttf",
+  robotoCondensed: "data/Fontes/RobotoCondensed-VariableFont_wght.ttf",
+  roboto: "data/Fontes/Roboto-VariableFont_wdth,wght.ttf",
+};
 
+const STORAGE_KEYS = {
+  savedProducts: "tagrafia-saved-products",
+};
 
 const ICONS_CONFIG = {
   filtros: "data/Icones/filtros.svg",
