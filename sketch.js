@@ -1514,37 +1514,42 @@ function drawFilterHeader() {
 }
 
 function drawFilterCards() {
-  const cardW = LAYOUT_FILTRO_W / 2;
-  const footerH = 26;
   const cards = [
-    ["material", "Material", icones.material, "#959fff"],
-    ["tecnicas", "Técnica", icones.tecnicas, "#a7ff95"],
-    ["estetico", "Estético", icones.estetico, "#ff9597"],
-    ["tipo_obra", "Tipo", icones.tipo_obra, "#ffef95"],
+    ["tipo_obra", "Tipo", icones.tipo_obra, "#ffef95", 28, 20],
+    ["material", "Material", icones.material, "#959fff", 126, 20],
+    ["estetico", "Estético", icones.estetico, "#ff9597", 28, 120],
+    ["tecnicas", "Técnica", icones.tecnicas, "#a7ff95", 126, 120],
   ];
+  
+  push();
+  // Draw the blue cross
+  stroke("#959fff");
+  strokeWeight(1.5);
+  line(107, 50, 107, 169); // Vertical
+  line(47, 110, 166, 110); // Horizontal
+  pop();
+
   for (let i = 0; i < cards.length; i++) {
-    const [dim, label, icon, bgColor] = cards[i];
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const x = col * cardW;
-    const y = FILTER_HEADER_H + row * FILTER_CARD_H;
+    const [dim, label, icon, bgColor, cx, cy] = cards[i];
     const active = activeDimension === dim;
     
-    // Draw background ONLY if active
+    // Background ONLY if active (as per previous request)
     if (active) {
       noStroke();
       fill(bgColor);
-      rect(x + 10, y + 10, cardW - 20, FILTER_CARD_H - footerH - 10, 10);
+      rect(cx, cy, 50, 50); // Sharp corners like exact layout
     }
     
-    // Draw icon and text
-    drawImageCentered(icon, x + cardW / 2, y + (FILTER_CARD_H - footerH) / 2, 45, 45);
+    // Draw icon
+    if (icon) drawImageCentered(icon, cx + 25, cy + 25, 40, 40);
     
-    fill(panelTextColor());
+    // Draw text
+    fill("#000000");
     noStroke();
     textFont(fontes.robotoCondensed);
-    textAlign(CENTER, CENTER);
-    text(label, x + cardW / 2, y + FILTER_CARD_H - footerH / 2);
+    textSize(14);
+    textAlign(CENTER, TOP);
+    text(label, cx + 25, cy + 60);
   }
 }
 
@@ -2288,21 +2293,33 @@ function filterMousePressed(mxRaw, myRaw) {
   
   if (mx < LAYOUT_NAV_W) {
     // Clicked in the Nav Sidebar
+    // Nav Items: Filtros (140), Trocar Visualizacao (250), Exportar (360), Sobre (470)
+    if (my >= 130 && my <= 190) {
+      // Filtros is already active basically
+    } else if (my >= 240 && my <= 300) {
+      activeView = (activeView + 1) % 4; // Toggle view
+    } else if (my >= 350 && my <= 410) {
+      exportPanelOpen = !exportPanelOpen;
+      detailsPanelOpen = false;
+    } else if (my >= 460 && my <= 520) {
+      detailsPanelOpen = !detailsPanelOpen;
+      exportPanelOpen = false;
+    }
     return true;
   }
   
   // Adjust mx for the Filter area
   mx -= LAYOUT_NAV_W;
   
-  const cardW = LAYOUT_FILTRO_W / 2;
   const cards = [
-    ["material", 0, FILTER_HEADER_H],
-    ["tecnicas", cardW, FILTER_HEADER_H],
-    ["estetico", 0, FILTER_HEADER_H + FILTER_CARD_H],
-    ["tipo_obra", cardW, FILTER_HEADER_H + FILTER_CARD_H],
+    ["tipo_obra", 28, 20],
+    ["material", 126, 20],
+    ["estetico", 28, 120],
+    ["tecnicas", 126, 120],
   ];
-  for (const [dim, x, y] of cards) {
-    if (insideRect(mx, my, x, y, cardW, FILTER_CARD_H)) {
+  for (const [dim, cx, cy] of cards) {
+    // Hitbox for card is 74x90 (encompasses icon and text)
+    if (mx >= cx - 12 && mx <= cx + 62 && my >= cy && my <= cy + 90) {
       activeDimension = dim;
       tagScroll = 0;
       categorySelectorOpen = false;
