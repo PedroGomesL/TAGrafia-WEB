@@ -52,39 +52,43 @@ function drawProductSidebar(x, y, w, h, scale) {
   for (const item of items) {
     const active = rightPanelTab === item.id;
     if (active) {
-      fill(240);
+      fill("#959fff");
       noStroke();
-      rect(x + 5 * scale, currentY - 15 * scale, w - 10 * scale, 75 * scale, 8);
+      // Draw square background behind the icon, exactly like the left menu
+      rect((x + w / 2) - 25 * scale, currentY - 10 * scale, 50 * scale, 50 * scale, 10 * scale);
     }
-    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 10 * scale, 35 * scale, 35 * scale);
+    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 15 * scale, 35 * scale, 35 * scale);
     fill("#000000");
     noStroke();
     textFont(fontes.roboto);
     textSize(14 * scale);
     textAlign(CENTER, CENTER);
-    text(item.label, x + w / 2, currentY + 45 * scale);
-    currentY += 80 * scale;
+    text(item.label, x + w / 2, currentY + 50 * scale);
+    currentY += 85 * scale;
   }
 
-  // Draw separator before "Salvos"
+  // Draw separator before "Salvos" immediately after the technique icon
+  currentY -= 5 * scale;
   stroke("#959fff");
   strokeWeight(1.5 * scale);
-  line(x + 10 * scale, y + h - 90 * scale, x + w - 10 * scale, y + h - 90 * scale);
+  line(x + 10 * scale, currentY, x + w - 10 * scale, currentY);
 
-  // Draw "Salvos" button at the bottom
+  currentY += 25 * scale;
+
+  // Draw "Salvos" button right below the separator
   const salvosActive = rightPanelTab === "salvos";
   if (salvosActive) {
-    fill(240);
+    fill("#959fff");
     noStroke();
-    rect(x + 5 * scale, y + h - 80 * scale, w - 10 * scale, 75 * scale, 8);
+    rect((x + w / 2) - 25 * scale, currentY - 10 * scale, 50 * scale, 50 * scale, 10 * scale);
   }
-  if (icones.save) drawImageCentered(icones.save, x + w / 2, y + h - 55 * scale, 35 * scale, 35 * scale);
+  if (icones.save) drawImageCentered(icones.save, x + w / 2, currentY + 15 * scale, 35 * scale, 35 * scale);
   fill("#000000");
   noStroke();
   textFont(fontes.roboto);
   textSize(14 * scale);
   textAlign(CENTER, CENTER);
-  text("Salvos", x + w / 2, y + h - 20 * scale);
+  text("Salvos", x + w / 2, currentY + 50 * scale);
 }
 
 function drawProductImage(x, y, w, h, scale) {
@@ -141,15 +145,16 @@ function drawProductInfo(x, y, w, h, scale) {
     return;
   }
 
+  const titleY = y + 15 * scale;
+
   // Colored strip for origin
   noStroke();
   fill(selectedProduct.origin === "brasileiro" ? "#ffef95" : "#959fff");
-  rect(x, y, 8 * scale, h);
+  rect(x + 10 * scale, titleY + 2 * scale, 4 * scale, 35 * scale, 2 * scale);
 
   // Title area
-  const titleX = x + 16 * scale;
+  const titleX = x + 22 * scale;
   const titleW = w - 90 * scale; // Room for icons
-  const titleY = y + 15 * scale;
 
   fill("#000000");
   textFont(fontes.afacad);
@@ -536,11 +541,24 @@ function productPanelMousePressed(mx, my) {
 
   // Vertical Tabs Click
   if (mx >= x && mx <= x + sidebarW && my > imageH + titleH) {
-    let clickedY = my - imageH - titleH - 20 * scale;
-    let index = Math.floor(clickedY / (75 * scale));
-    const tabs = ["tecnicas", "materiais", "estetico", "salvos"];
-    if (index >= 0 && index < 4) {
-      rightPanelTab = tabs[index];
+    let clickedY = my - imageH - titleH;
+    let currentY = 25 * scale;
+    
+    const tabs = ["materiais", "estetico", "tecnicas"];
+    for (let i = 0; i < tabs.length; i++) {
+      if (clickedY >= currentY - 15 * scale && clickedY <= currentY + 70 * scale) {
+        rightPanelTab = tabs[i];
+        savedSearchActive = false;
+        return true;
+      }
+      currentY += 85 * scale;
+    }
+    
+    currentY -= 5 * scale;
+    currentY += 25 * scale;
+    
+    if (clickedY >= currentY - 15 * scale && clickedY <= currentY + 70 * scale) {
+      rightPanelTab = "salvos";
       savedSearchActive = false;
       return true;
     }
