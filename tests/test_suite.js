@@ -146,10 +146,13 @@ console.log("\n=== 5. Validando Sistema de Produção ===");
 if (typeof getProductionInfo === "function") {
   const pArtesanal = getProductionInfo("Produto artesanal feito à mão");
   assert(pArtesanal.iconKey === "artesanal", "getProductionInfo identifica 'artesanal'");
+  assert(pArtesanal.tooltip === "Artesanal", "Tooltip de artesanal é 'Artesanal'");
   const pIndustrial = getProductionInfo("Fabricação industrial em série");
   assert(pIndustrial.iconKey === "industrial", "getProductionInfo identifica 'industrial'");
+  assert(pIndustrial.tooltip === "Industrial", "Tooltip de industrial é 'Industrial'");
   const pAssinado = getProductionInfo("Design assinado edição limitada");
   assert(pAssinado.iconKey === "assinado", "getProductionInfo identifica 'assinado'");
+  assert(pAssinado.tooltip === "Design assinado", "Tooltip de assinado é 'Design assinado'");
 }
 
 console.log("\n=== 6. Validando Funções de Obras Salvas e Ordenação ===");
@@ -267,6 +270,9 @@ assert(typeof getFilterCategoryOptions === "function", "getFilterCategoryOptions
 const catOpts = getFilterCategoryOptions("material");
 assert(Array.isArray(catOpts) && catOpts.length >= 2, "getFilterCategoryOptions retorna opções de categorias para 'material'");
 assert(catOpts[0].value === -2 && catOpts[1].value === -1, "Opções incluem 'Tags disponíveis' (-2) e 'Tags ativas' (-1)");
+
+// Teste de drawProductHeaderTooltip
+assert(typeof drawProductHeaderTooltip === "function", "drawProductHeaderTooltip está definida");
 
 console.log("\n=== 10. Validando getCircularVisualProducts e countProductsWithTagInCurrentType (data_manager.js) ===");
 vm.runInThisContext(dmContent);

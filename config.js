@@ -142,9 +142,9 @@ function getDimensionPastelColor(dim) {
 }
 
 const PRODUCTION_CONFIG = [
-  { keywords: ["artesanal"], iconKey: "artesanal", label: "Artesanal" },
-  { keywords: ["industrial", "massa", "seri"], iconKey: "industrial", label: "Industrial" },
-  { keywords: ["assinado"], iconKey: "assinado", label: "Design Assinado" },
+  { keywords: ["artesanal"], iconKey: "artesanal", label: "Artesanal", tooltip: "Artesanal" },
+  { keywords: ["industrial", "massa", "seri"], iconKey: "industrial", label: "Industrial", tooltip: "Industrial" },
+  { keywords: ["assinado"], iconKey: "assinado", label: "Design assinado", tooltip: "Design assinado" },
 ];
 
 function getProductionInfo(productionStr) {

@@ -1,3 +1,6 @@
+let activeProductHeaderTooltip = null;
+let _headerHoverHandSet = false;
+
 function drawProductPanel() {
   const x = productPanelX();
   const w = productPanelW();
@@ -31,6 +34,9 @@ function drawProductPanel() {
   } else {
     drawProductDetailsNew(mainX, imageH + titleH, mainW, height - imageH - titleH, scale);
   }
+
+  // 5. Tooltip on top of all panel layers
+  drawProductHeaderTooltip(scale);
 }
 
 function drawProductSidebar(x, y, w, h, scale) {
@@ -145,6 +151,11 @@ function drawProductInfo(x, y, w, h, scale) {
   line(x, y + h, x + w, y + h);
 
   if (!selectedProduct) {
+    if (_headerHoverHandSet) {
+      cursor(ARROW);
+      _headerHoverHandSet = false;
+    }
+    activeProductHeaderTooltip = null;
     noStroke();
     fill("#000000");
     textFont(fontes.roboto);
@@ -156,7 +167,7 @@ function drawProductInfo(x, y, w, h, scale) {
 
   const titleY = y + 16 * scale;
   const titleX = x + 24 * scale;
-  const titleW = w - 90 * scale; // Room for icons
+  const titleW = w - 128 * scale; // Room for enlarged icons
 
   const yearText = selectedProduct.year || selectedProduct.dateRaw ? ` (${selectedProduct.year || selectedProduct.dateRaw})` : "";
   const titleWithYear = `${selectedProduct.name}${yearText}`;
@@ -185,8 +196,11 @@ function drawProductInfo(x, y, w, h, scale) {
 
   // Icons on the right
   const iconY = y + h / 2;
-  const iconSaveX = x + w - 24 * scale;
-  const iconProdX = x + w - 64 * scale;
+  const iconRadius = 20 * scale;
+  const iconCircleD = 40 * scale;
+  const iconImgSize = 24 * scale;
+  const iconSaveX = x + w - 30 * scale;
+  const iconProdX = x + w - 78 * scale;
 
   // Draw save icon with circle around it
   const isSaved = selectedProduct && savedProductKeys.has(selectedProduct.key);
@@ -196,10 +210,10 @@ function drawProductInfo(x, y, w, h, scale) {
     noFill();
   }
   stroke("#000000");
-  strokeWeight(1.2 * scale);
-  circle(iconSaveX, iconY, 32 * scale);
+  strokeWeight(1.4 * scale);
+  circle(iconSaveX, iconY, iconCircleD);
   if (icones.save) {
-    drawImageCentered(icones.save, iconSaveX, iconY, 18 * scale, 18 * scale);
+    drawImageCentered(icones.save, iconSaveX, iconY, iconImgSize, iconImgSize);
   }
 
   // Draw production icon with circle around it
@@ -209,10 +223,92 @@ function drawProductInfo(x, y, w, h, scale) {
   if (prodIcon) {
     noFill();
     stroke("#000000");
-    strokeWeight(1.2 * scale);
-    circle(iconProdX, iconY, 32 * scale);
-    drawImageCentered(prodIcon, iconProdX, iconY, 18 * scale, 18 * scale);
+    strokeWeight(1.4 * scale);
+    circle(iconProdX, iconY, iconCircleD);
+    drawImageCentered(prodIcon, iconProdX, iconY, iconImgSize, iconImgSize);
   }
+
+  // Tooltip & Hover Detection
+  activeProductHeaderTooltip = null;
+  const hoverSave = dist(mouseX, mouseY, iconSaveX, iconY) <= iconRadius + 2 * scale;
+  const hoverProd = prodIcon && dist(mouseX, mouseY, iconProdX, iconY) <= iconRadius + 2 * scale;
+
+  if (hoverSave) {
+    activeProductHeaderTooltip = {
+      text: isSaved ? "Salvo" : "Salvar",
+      targetX: iconSaveX,
+      targetY: iconY,
+      radius: iconRadius,
+      panelX: x,
+      panelW: w,
+    };
+  } else if (hoverProd) {
+    const prodTooltip = prodInfo.tooltip || prodInfo.label || "Design assinado";
+    activeProductHeaderTooltip = {
+      text: prodTooltip,
+      targetX: iconProdX,
+      targetY: iconY,
+      radius: iconRadius,
+      panelX: x,
+      panelW: w,
+    };
+  }
+
+  if (hoverSave || hoverProd) {
+    cursor(HAND);
+    _headerHoverHandSet = true;
+  } else if (_headerHoverHandSet) {
+    cursor(ARROW);
+    _headerHoverHandSet = false;
+  }
+}
+
+function drawProductHeaderTooltip(scale) {
+  if (!activeProductHeaderTooltip) return;
+
+  const { text: tooltipText, targetX, targetY, radius, panelX, panelW } = activeProductHeaderTooltip;
+  push();
+  textFont(fontes.roboto);
+  textStyle(NORMAL);
+  textSize(12 * scale);
+  const padX = 10 * scale;
+  const padY = 5 * scale;
+  const tw = textWidth(tooltipText);
+  const boxW = Math.round(tw + padX * 2);
+  const boxH = Math.round(24 * scale);
+
+  // Position above the circle
+  let boxX = Math.round(targetX - boxW / 2);
+  let boxY = Math.round(targetY - radius - boxH - 7 * scale);
+
+  // Constrain within right panel boundaries
+  boxX = constrain(boxX, panelX + 8 * scale, panelX + panelW - boxW - 8 * scale);
+
+  // Drop shadow
+  noStroke();
+  fill(0, 0, 0, 40);
+  rect(boxX + 1, boxY + 2, boxW, boxH, 4 * scale);
+
+  // Tooltip background
+  fill("#1E1E1E");
+  noStroke();
+  rect(boxX, boxY, boxW, boxH, 4 * scale);
+
+  // Pointer triangle
+  const arrowX = constrain(targetX, boxX + 6 * scale, boxX + boxW - 6 * scale);
+  const arrowY = boxY + boxH;
+  const arrowSize = 5 * scale;
+  triangle(
+    arrowX - arrowSize, arrowY,
+    arrowX + arrowSize, arrowY,
+    arrowX, arrowY + arrowSize
+  );
+
+  // Tooltip text
+  fill("#FFFFFF");
+  textAlign(CENTER, CENTER);
+  text(tooltipText, boxX + boxW / 2, boxY + boxH / 2);
+  pop();
 }
 
 function drawProductDetailsNew(x, y, w, h, scale) {
@@ -620,9 +716,15 @@ function productPanelMousePressed(mx, my) {
 
   // Save Icon Button Click (in title bar)
   const saveIconY = imageH + titleH / 2;
-  const saveIconX = x + w - 24 * scale;
-  if (dist(mx, my, saveIconX, saveIconY) <= 20 * scale) {
+  const saveIconX = x + w - 30 * scale;
+  if (dist(mx, my, saveIconX, saveIconY) <= 22 * scale) {
     toggleSavedProduct();
+    return true;
+  }
+
+  // Production Icon Click (prevent unselecting or leaking clicks)
+  const prodIconX = x + w - 78 * scale;
+  if (dist(mx, my, prodIconX, saveIconY) <= 22 * scale) {
     return true;
   }
 
