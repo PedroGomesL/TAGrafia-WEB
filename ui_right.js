@@ -146,26 +146,29 @@ function drawProductInfo(x, y, w, h, scale) {
     return;
   }
 
-  const titleY = y + 15 * scale;
-
-  // Colored strip for origin
-  noStroke();
-  // Changed international color to a clearer purple instead of the material blue
-  fill(selectedProduct.origin === "brasileiro" ? "#ffef95" : "#c495ff");
-  rect(x + 10 * scale, titleY + 2 * scale, 8 * scale, 35 * scale, 2 * scale);
-
-  // Title area
-  const titleX = x + 26 * scale;
+  const titleY = y + 16 * scale;
+  const titleX = x + 24 * scale;
   const titleW = w - 90 * scale; // Room for icons
 
+  const titleSize = fitTextSize(selectedProduct.name, titleW, 16 * scale, 12 * scale);
+
+  // Colored strip for origin: positioned exclusively in front of the product name
+  noStroke();
+  fill(selectedProduct.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
+  rect(x + 12 * scale, titleY + 1 * scale, 4 * scale, titleSize * 1.15, 2 * scale);
+
+  // Title area (product name)
   fill("#000000");
   textFont(fontes.afacad);
-  textStyle(BOLD); // Make title BOLD as requested
-  textSize(fitTextSize(selectedProduct.name, titleW, 16 * scale, 12 * scale));
+  textStyle(BOLD);
+  textSize(titleSize);
   textAlign(LEFT, TOP);
   text(selectedProduct.name, titleX, titleY, titleW, 30 * scale);
+  // Repeat slight offset for simulated heavy bold if variable font defaults to regular
+  text(selectedProduct.name, titleX + 0.5, titleY, titleW, 30 * scale);
   textStyle(NORMAL);
 
+  // Author and year (Regular, below product name)
   const designerText = selectedProduct.author || "Designer desconhecido";
   const yearText = ` (${selectedProduct.year || selectedProduct.dateRaw})`;
   textSize(14 * scale);
