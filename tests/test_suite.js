@@ -266,7 +266,10 @@ global.themeLineColor = () => "#000000";
 global.colorAlpha = (c, a) => c;
 global.noStroke = () => {};
 global.fill = () => {};
+global.BOLD = "bold";
+global.NORMAL = "normal";
 global.textFont = () => {};
+global.textStyle = () => {};
 global.textSize = () => {};
 global.textAlign = () => {};
 global.text = () => {};
@@ -1625,6 +1628,29 @@ try {
   exportDrawSucceeded = false;
 }
 assert(exportDrawSucceeded, "drawExportTab() executa sem lançar exceção no modo escuro (#222222)");
+
+console.log("\n=== 23. Validando Resolução dos Ícones Vetoriais e Tipografia Acessível ===");
+const svgsToCheck = [
+  "exportar_white.svg",
+  "exportar.svg",
+  "sobre_white.svg",
+  "sobre.svg",
+  "filtros_white.svg",
+  "filtros.svg",
+  "theme_toggle_white.svg",
+  "theme_toggle_dark.svg",
+  "material_white.svg",
+  "tecnicas_white.svg",
+  "estetico_white.svg",
+  "tipo_obra_white.svg",
+];
+for (const svgFile of svgsToCheck) {
+  const content = fs.readFileSync(path.join(ROOT_DIR, "data/Icones", svgFile), "utf8");
+  const wMatch = content.match(/width="([^"]+)"/);
+  const hMatch = content.match(/height="([^"]+)"/);
+  assert(wMatch && parseFloat(wMatch[1]) >= 200, `SVG ${svgFile} possui largura de alta resolução (>= 200px: ${wMatch ? wMatch[1] : 'null'})`);
+  assert(hMatch && parseFloat(hMatch[1]) >= 150, `SVG ${svgFile} possui altura de alta resolução (>= 150px: ${hMatch ? hMatch[1] : 'null'})`);
+}
 
 // Restaura estado padrão
 lightMode = true;
