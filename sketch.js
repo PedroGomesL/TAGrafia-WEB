@@ -145,6 +145,10 @@ function drawClickRipples() {
 }
 
 function draw() {
+  if (typeof mouseIsPressed !== "undefined" && !mouseIsPressed) {
+    draggedYearHandle = null;
+    if (typeof mapState !== "undefined") mapState.dragging = false;
+  }
   currentFrameCursor = typeof ARROW !== "undefined" ? ARROW : "default";
   hitAreas = [];
   hoveredCircularTag = null;
@@ -226,7 +230,10 @@ function drawMobileSobreScreen() {
   noStroke();
   fill(lightMode ? 255 : "#222222");
   rect(0, 0, width / scl, height / scl);
+  push();
+  translate(LAYOUT_NAV_W, 0);
   drawSobreTab();
+  pop();
   pop();
 }
 
@@ -237,7 +244,10 @@ function drawMobileExportarScreen() {
   noStroke();
   fill(lightMode ? 255 : "#222222");
   rect(0, 0, width / scl, height / scl);
+  push();
+  translate(LAYOUT_NAV_W, 0);
   drawExportTab();
+  pop();
   pop();
 }
 
@@ -936,8 +946,9 @@ function handleA11yArrow(direction) {
     }
     if (!prods.length) return;
     let idx = prods.findIndex((p) => p.key === selectedProduct?.key);
-    if (idx === -1) idx = 0;
-    if (direction === "right" || direction === "down") {
+    if (idx === -1) {
+      idx = (direction === "left" || direction === "up") ? prods.length - 1 : 0;
+    } else if (direction === "right" || direction === "down") {
       idx = (idx + 1) % prods.length;
     } else if (direction === "left" || direction === "up") {
       idx = (idx - 1 + prods.length) % prods.length;

@@ -1506,14 +1506,45 @@ assert(isChronological, "Navegação por seta direita na linha do tempo avança 
 // 4. Validação da Seleção e Efeito de Posição na Visualização Circular
 activeView = VISAO_CIRCULAR;
 // Seleciona tags para gerar produtos visuais circulares
-const testTagKey = Array.from(tagsByKey.keys()).find(k => tagsByKey.get(k).dimension !== "tipo_obra");
-if (testTagKey) selectedTagKeys.add(testTagKey);
+const testTagKey = Array.from(tagsByKey.keys()).find(k => tagsByKey.get(k).dimension !== "tipo_obra" && tagsByKey.get(k).count > 20);
+if (testTagKey) {
+  selectedTagKeys.add(testTagKey);
+  _cachedSelectedTags = null;
+}
 const circularProds = productsShownInCircular();
+assert(circularProds.length > 0, `Visualização circular populada com sucesso (${circularProds.length} obras para a tag)`);
 if (circularProds.length > 0) {
   selectProduct(circularProds[circularProds.length - 1]);
   // productsShownInCircular deve manter o produto selecionado na lista visível
   const updatedShown = productsShownInCircular();
   assert(updatedShown.some(p => p.key === selectedProduct.key), "Visualização circular garante que o produto selecionado está sempre presente entre as obras renderizadas");
+
+  // Valida que navegação contínua percorre todas as obras exibidas no círculo sem travar em loop prematuro de 17 itens
+  setA11yFocus({ type: "center_product", id: "center_product" });
+  selectProduct(updatedShown[0]);
+  const visitedCircular = [];
+  for (let s = 0; s < updatedShown.length; s++) {
+    handleA11yArrow("right");
+    visitedCircular.push(selectedProduct.key);
+  }
+  const uniqueCircularCount = new Set(visitedCircular).size;
+  assert(uniqueCircularCount === updatedShown.length, `Navegação circular percorre todas as ${updatedShown.length} obras visíveis sem loop antecipado (visitadas: ${uniqueCircularCount})`);
+  assert(selectedProduct.key === updatedShown[0].key, "Após percorrer todas as obras do círculo, navegação retorna ciclicamente à primeira");
+
+  // Valida que com tags no círculo, setas navegam exclusivamente dentro do conjunto circular (sem saltar para obras fora do círculo)
+  const allShownKeys = new Set(updatedShown.map(p => p.key));
+  let allStepsContained = true;
+  for (let s = 0; s < 10; s++) {
+    handleA11yArrow("right");
+    if (!allShownKeys.has(selectedProduct.key)) allStepsContained = false;
+  }
+  assert(allStepsContained, "Navegação por setas na visão circular restringe-se estritamente às obras visíveis do círculo");
+
+  // Restaura tag para próximos testes
+  if (testTagKey) {
+    selectedTagKeys.add(testTagKey);
+    _cachedSelectedTags = null;
+  }
 }
 
 // Valida que clique em produto no canvas define foco acessível em center_product
@@ -1524,6 +1555,22 @@ global.clickedYearHandle = () => null;
 visualMousePressed(200, 200);
 assert(a11yState.focusTarget && a11yState.focusTarget.type === "center_product", "Clique em obra no canvas define a11yState.focusTarget como 'center_product'");
 assert(keyboardFocusActive === true, "Clique em obra reativa imediatamente keyboardFocusActive para setas funcionarem");
+
+// Valida que draw() reseta estados presos de arraste quando o mouse não está pressionado (anti-travamento de interação)
+global.draggedYearHandle = "start";
+global.mapState = global.mapState || { dragging: false, panX: 0, panY: 0, zoom: 1 };
+global.mapState.dragging = true;
+global.mouseIsPressed = false;
+global.drawDesktopLayout = () => {};
+global.drawMobileLayout = () => {};
+global.drawClickRipples = () => {};
+global.cursor = () => {};
+global.frameCount = 1;
+global.filterPanelScale = () => 1;
+global.background = () => {};
+draw();
+assert(draggedYearHandle === null, "draw() reseta draggedYearHandle quando mouseIsPressed é false");
+assert(mapState.dragging === false, "draw() reseta mapState.dragging quando mouseIsPressed é false");
 
 // 5. Validação de Abertura da Aba Exportar em Modo Escuro
 lightMode = false;

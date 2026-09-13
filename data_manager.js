@@ -495,19 +495,33 @@ function productsShownInCircular() {
   const visualProducts = getCircularVisualProducts();
   if (!visualProducts.length) return [];
 
+  let slot = 0;
+  let maxFitIdx = -1;
+  for (let i = 0; i < visualProducts.length; i++) {
+    if (slot >= 38) break;
+    const seg = Math.min(Math.max(1, visualProducts[i].weight), 3, 38 - slot);
+    slot += seg;
+    maxFitIdx = i;
+  }
+
   let list = visualProducts;
   if (typeof selectedProduct !== "undefined" && selectedProduct) {
-    const selIdx = list.findIndex(
+    const selIdx = visualProducts.findIndex(
       (item) => item.product.key === selectedProduct.key,
     );
-    if (selIdx > 15) {
-      const item = list[selIdx];
-      list = [item, ...list.slice(0, selIdx), ...list.slice(selIdx + 1)];
+    if (selIdx > maxFitIdx && maxFitIdx >= 0) {
+      const item = visualProducts[selIdx];
+      list = [
+        ...visualProducts.slice(0, maxFitIdx),
+        item,
+        ...visualProducts.slice(maxFitIdx, selIdx),
+        ...visualProducts.slice(selIdx + 1),
+      ];
     }
   }
 
   const shown = [];
-  let slot = 0;
+  slot = 0;
   for (const item of list) {
     if (slot >= 38) break;
     const segments = Math.min(Math.max(1, item.weight), 3, 38 - slot);

@@ -13,12 +13,25 @@ function drawCircularView(visible) {
   let productsVisual = getCircularVisualProducts(tags);
 
   if (selectedProduct && productsVisual.length) {
+    let slot = 0;
+    let maxFitIdx = -1;
+    for (let i = 0; i < productsVisual.length; i++) {
+      if (slot >= 38) break;
+      const seg = Math.min(Math.max(1, productsVisual[i].weight), 3, 38 - slot);
+      slot += seg;
+      maxFitIdx = i;
+    }
     const selIdx = productsVisual.findIndex(
       (item) => item.product.key === selectedProduct.key,
     );
-    if (selIdx > 15) {
+    if (selIdx > maxFitIdx && maxFitIdx >= 0) {
       const item = productsVisual[selIdx];
-      productsVisual = [item, ...productsVisual.slice(0, selIdx), ...productsVisual.slice(selIdx + 1)];
+      productsVisual = [
+        ...productsVisual.slice(0, maxFitIdx),
+        item,
+        ...productsVisual.slice(maxFitIdx, selIdx),
+        ...productsVisual.slice(selIdx + 1),
+      ];
     }
   }
 

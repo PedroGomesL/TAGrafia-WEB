@@ -810,7 +810,9 @@ function selectProduct(product) {
 }
 
 function ensureSelectedVisible() {
-  const visible = visibleProducts();
+  const visible = (typeof activeView !== "undefined" && activeView === VISAO_CIRCULAR)
+    ? (typeof productsShownInCircular === "function" && productsShownInCircular().length ? productsShownInCircular() : visibleProducts())
+    : visibleProducts();
   if (
     !selectedProduct ||
     !visible.some((product) => product.key === selectedProduct.key)
