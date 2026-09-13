@@ -1,7 +1,9 @@
 function timelineTrackBounds() {
   const inset = typeof TIMELINE_TRACK_INSET !== "undefined" ? TIMELINE_TRACK_INSET : 40;
-  const tx = visualX() + inset;
-  const tw = visualW() - inset * 2;
+  const maxTimelineW = 1800;
+  const rawW = Math.max(100, visualW() - inset * 2);
+  const tw = Math.min(rawW, maxTimelineW);
+  const tx = visualX() + (visualW() - tw) / 2;
   const ty = height - TIMELINE_H / 2;
   return { tx, tw, ty };
 }

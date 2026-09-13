@@ -351,6 +351,59 @@ assert(rightWOpen === rightWClosed, `productPanelW permanece estável ao abrir/f
 
 leftPanelExtendedOpen = true; // restaurar estado inicial
 
+console.log("\n=== 13. Validando Adaptação Multi-Resolução, Ultrawide e Escalas DPI ===");
+
+// 1. Resolução Notebook Padrão (1366 x 768 / viewport ~1366 x 650)
+global.width = 1366;
+global.height = 650;
+const scaleNotebook = filterPanelScale();
+assert(scaleNotebook === 1.0, `Notebook 1366x650 mantém filterPanelScale === 1.0 (obtido: ${scaleNotebook})`);
+const prodWNotebook = productPanelW();
+assert(prodWNotebook >= 250 && prodWNotebook <= 405, `productPanelW em notebook 1366x650 fica em faixa ergonômica (obtido: ${prodWNotebook})`);
+const visWNotebook = visualW();
+assert(filterPanelW() + visWNotebook + prodWNotebook === 1366, "Layout 1366x650 preenche exatamente a largura da tela");
+
+// 2. Notebook com Escala Windows 125% (FHD 1920x1080 -> CSS 1536 x ~700)
+global.width = 1536;
+global.height = 700;
+const scaleLaptopDpi = filterPanelScale();
+assert(scaleLaptopDpi === 1.0, `Notebook FHD 125% (1536x700) mantém filterPanelScale === 1.0 (obtido: ${scaleLaptopDpi})`);
+const topBoundsFHD125 = productPanelTopBounds(layoutScale());
+assert(topBoundsFHD125.imageH + topBoundsFHD125.titleH <= (700 - 160) * 0.45 + 2, "Topo do painel direito adapta altura para evitar overflow vertical em 700px");
+
+// 3. Notebook Compacto com Escala Windows 125% (1366x768 -> CSS 1092 x ~500)
+global.width = 1092;
+global.height = 500;
+const scaleSmallLaptop = filterPanelScale();
+assert(scaleSmallLaptop < 1.0 && scaleSmallLaptop >= 0.85, `Notebook compacto 125% (1092x500) reduz escala proporcionalmente (obtido: ${scaleSmallLaptop.toFixed(3)})`);
+
+// 4. Ultrawide 21:9 (2560 x 1080 e 3440 x 1440)
+global.width = 2560;
+global.height = 950;
+leftPanelExtendedOpen = true;
+const scaleUltrawide = filterPanelScale();
+assert(scaleUltrawide === 1.0, `Ultrawide 2560x950 mantém escala base do filtro (obtido: ${scaleUltrawide})`);
+const prodWUltrawide = productPanelW();
+assert(prodWUltrawide === LAYOUT_PAINEL_PRODUTO_W, `Painel de produto em ultrawide mantém largura padrão (obtido: ${prodWUltrawide})`);
+const track2560 = timelineTrackBounds();
+assert(track2560.tw <= 1800, `Track da timeline em 2560px respeita limite máximo (obtido: ${track2560.tw})`);
+
+// Ultrawide 3440 x 1440 (limite superior de track)
+global.width = 3440;
+global.height = 1350;
+const ultrawideTrack = timelineTrackBounds();
+assert(ultrawideTrack.tw === 1800, `Track da timeline em Ultrawide 3440px é limitado a 1800px para não deformar (obtido: ${ultrawideTrack.tw})`);
+const ultrawideExpectedTx = visualX() + (visualW() - 1800) / 2;
+assert(Math.abs(ultrawideTrack.tx - ultrawideExpectedTx) < 0.001, `Track da timeline fica perfeitamente centralizado em Ultrawide (obtido: ${ultrawideTrack.tx})`);
+
+// 5. Monitor 4K UHD (3840 x 2160)
+global.width = 3840;
+global.height = 2160;
+const scale4K = filterPanelScale();
+assert(scale4K === 1.25, `Monitor 4K escala legibilidade para 1.25x (obtido: ${scale4K})`);
+const lScale4K = layoutScale();
+assert(lScale4K === 1.25, `layoutScale escala até 1.25x em tela 4K (obtido: ${lScale4K})`);
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {

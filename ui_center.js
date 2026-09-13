@@ -2,9 +2,11 @@ function drawCircularView(visible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
-  const baseRadius = Math.min(
+  const availH = height - TIMELINE_H;
+  const baseRadius = constrain(
+    Math.min(visualW() * 0.36, availH * 0.36),
+    100,
     380,
-    Math.max(80, Math.min(visualW() - 320, height - TIMELINE_H - 380) / 2),
   );
   const tags = tagsForCircular();
   const tagPositions = new Map();
