@@ -22,12 +22,20 @@ function drawYearBand() {
   strokeWeight(8);
   line(xStart, ty, xEnd, ty);
 
+  // Handles hover & interaction
+  const hoverStart = dist(mouseX, mouseY, xStart, ty) <= 18;
+  const hoverEnd = dist(mouseX, mouseY, xEnd, ty) <= 18;
+  if ((hoverStart || hoverEnd || draggedYearHandle) && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+
   // Handles
   stroke("#000000");
   strokeWeight(2);
-  fill("#ffffff");
-  circle(xStart, ty, 30);
-  circle(xEnd, ty, 30);
+  fill(hoverStart || draggedYearHandle === "start" ? "#F0F2FF" : "#ffffff");
+  circle(xStart, ty, hoverStart || draggedYearHandle === "start" ? 33 : 30);
+  fill(hoverEnd || draggedYearHandle === "end" ? "#F0F2FF" : "#ffffff");
+  circle(xEnd, ty, hoverEnd || draggedYearHandle === "end" ? 33 : 30);
 
   // Labels
   noStroke();

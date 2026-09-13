@@ -58,3 +58,8 @@ let mapState = {
   previousY: 0,
 };
 let imageCache = new Map();
+let exportDropdownAnim = 0;
+let tagClickAnim = new Map();
+let clickRipples = [];
+let currentFrameCursor = null;
+

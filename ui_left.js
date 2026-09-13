@@ -53,14 +53,27 @@ function drawNavSidebar() {
   const currentView = VIEWS_CONFIG.find((v) => v.id === activeView);
   const dynamicViewIcon = currentView ? icones[currentView.iconKey] : icones.visao_circular;
 
+  const scl = filterPanelScale();
+  const mx = mouseX / scl;
+  const my = mouseY / scl;
+
   for (const item of NAV_CONFIG) {
     const active = leftPanelTab === item.id;
     const icon = item.iconKey ? icones[item.iconKey] : dynamicViewIcon;
+    const hover = mx >= 0 && mx <= LAYOUT_NAV_W && my >= item.y - 30 && my <= item.y + 30;
 
-    // Draw background if active
+    if (hover && typeof requestCursor === "function") {
+      requestCursor(HAND);
+    }
+
+    // Draw background if active or hovered
     if (active) {
       noStroke();
       fill("#959fff");
+      rect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 50, 10);
+    } else if (hover) {
+      noStroke();
+      fill(0, 0, 0, 15);
       rect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 50, 10);
     }
 
@@ -101,17 +114,30 @@ function drawFilterCards() {
   line(47, 110, 166, 110); // Horizontal
   pop();
 
+  const scl = filterPanelScale();
+  const mx = mouseX / scl - LAYOUT_NAV_W;
+  const my = mouseY / scl;
+
   for (const dimKey of Object.keys(DIMENSIONS)) {
     const dim = DIMENSIONS[dimKey];
     const active = activeDimension === dimKey;
     const cx = dim.gridX;
     const cy = dim.gridY;
+    const hover = mx >= cx - 12 && mx <= cx + 62 && my >= cy && my <= cy + 90;
 
-    // Background ONLY if active
+    if (hover && typeof requestCursor === "function") {
+      requestCursor(HAND);
+    }
+
+    // Background if active or subtle hover
     if (active) {
       noStroke();
       fill(dim.pastelColor);
       rect(cx, cy, 50, 50, 5); // Rounded corners like Figma
+    } else if (hover) {
+      noStroke();
+      fill(dim.pastelColor + "44"); // Soft pastel hover
+      rect(cx, cy, 50, 50, 5);
     }
 
     // Draw icon
@@ -144,11 +170,17 @@ function drawFilterBody() {
   const clearY = searchY + FILTER_CLEAR_OFFSET;
   const listY = clearY + FILTER_LIST_OFFSET;
 
+  const scl = filterPanelScale();
+  const mx = mouseX / scl - LAYOUT_NAV_W;
+  const my = mouseY / scl;
+
   // --- Category pill (white bg, radius 5, label centered) ---
   if (activeDimension !== "tipo_obra") {
+    const hoverCat = insideRect(mx, my, FILTER_BAR_X, catY, FILTER_BAR_W, 26);
+    if (hoverCat && typeof requestCursor === "function") requestCursor(HAND);
     stroke("#D9D9D9");
     strokeWeight(1);
-    fill("#FFFFFF");
+    fill(hoverCat ? "#F4F4F8" : "#FFFFFF");
     rect(FILTER_BAR_X, catY, FILTER_BAR_W, 26, 5);
     const categoryLabel = currentCategoryLabel();
     fill("#000000");
@@ -160,9 +192,11 @@ function drawFilterBody() {
   }
 
   // --- Search bar ---
+  const hoverSearch = insideRect(mx, my, FILTER_BAR_X, searchY, FILTER_BAR_W, 26);
+  if (hoverSearch && typeof requestCursor === "function") requestCursor(TEXT);
   stroke("#D9D9D9");
   strokeWeight(1);
-  fill("#FFFFFF");
+  fill(hoverSearch && !tagSearchActive ? "#FAFAFC" : "#FFFFFF");
   rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 26, 5);
   noStroke();
   textFont(fontes.roboto);
@@ -183,8 +217,10 @@ function drawFilterBody() {
   }
 
   // --- Clear button ---
+  const hoverClear = insideRect(mx, my, FILTER_BAR_X, clearY, FILTER_BAR_W, 26);
+  if (hoverClear && selectedTagKeys.size && typeof requestCursor === "function") requestCursor(HAND);
   noStroke();
-  fill(selectedTagKeys.size ? "#D9D9D9" : color(220));
+  fill(selectedTagKeys.size ? (hoverClear ? "#C8C8C8" : "#D9D9D9") : color(220));
   rect(FILTER_BAR_X, clearY, FILTER_BAR_W, 26, 13);
   drawImageCentered(
     icones.clear,
@@ -247,6 +283,10 @@ function getFilterCategoryOptions(dimension) {
 function drawCategorySelector(listY, listBottom) {
   const options = getFilterCategoryOptions(activeDimension);
   const rowH = 34;
+  const scl = filterPanelScale();
+  const mx = mouseX / scl - LAYOUT_NAV_W;
+  const my = mouseY / scl;
+
   noStroke();
   fill(lightMode ? "#FFFFFF" : "#D9D9D9");
   rect(0, listY - 6, LAYOUT_FILTRO_W, Math.max(0, listBottom - listY + 6));
@@ -255,6 +295,18 @@ function drawCategorySelector(listY, listBottom) {
     if (y > listBottom) break;
     const option = options[i];
     const active = activeCategoryByDimension[activeDimension] === option.value;
+    const isHover = mx >= 0 && mx <= LAYOUT_FILTRO_W && my >= y && my <= y + rowH;
+
+    if (isHover && typeof requestCursor === "function") {
+      requestCursor(HAND);
+    }
+
+    if (isHover && !active) {
+      noStroke();
+      fill(0, 0, 0, 12);
+      rect(0, y, LAYOUT_FILTRO_W, rowH);
+    }
+
     if (active) {
       noStroke();
       fill("#959fff");
@@ -311,27 +363,63 @@ function drawTagList(listY, listBottom) {
 
 function drawFilterTag(tag, y, rowH) {
   const selected = selectedTagKeys.has(tag.key);
-
   const dimColor = getDimensionPastelColor(tag.dimension);
 
+  const scl = filterPanelScale();
+  const mx = mouseX / scl - LAYOUT_NAV_W;
+  const my = mouseY / scl;
+  const listY = filterListY();
+  const listBottom = height / scl - 10;
+  const isHovered = mx >= 0 && mx <= LAYOUT_FILTRO_W && my >= y && my <= y + rowH && my >= listY && my <= listBottom && !categorySelectorOpen;
+
+  if (isHovered && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+
+  // Base background
   if (selected) {
-    // Full row colored background
     noStroke();
     fill(dimColor);
     rect(0, y, LAYOUT_FILTRO_W, rowH);
     
-    // Use black text for all light pastel backgrounds
+    // Hover highlight overlay on selected tag
+    if (isHovered) {
+      fill(255, 255, 255, 45);
+      rect(0, y, LAYOUT_FILTRO_W, rowH);
+    }
     fill("#000000");
   } else {
     noStroke();
-    fill("#FFFFFF");
+    fill(isHovered ? "#F0F2F7" : "#FFFFFF");
     rect(0, y, LAYOUT_FILTRO_W, rowH);
-    // Subtle alternating stripe
-    if (tag._index % 2 === 1) {
+    // Subtle alternating stripe if not hovered
+    if (!isHovered && tag._index % 2 === 1) {
       fill(0, 0, 0, 8);
       rect(0, y, LAYOUT_FILTRO_W, rowH);
     }
     fill("#000000");
+  }
+
+  // Click animation effect (if recently clicked)
+  if (tagClickAnim.has(tag.key)) {
+    const animStart = tagClickAnim.get(tag.key);
+    const now = typeof millis === "function" ? millis() : Date.now();
+    const elapsed = now - animStart;
+    const duration = 240;
+    if (elapsed < duration) {
+      const progress = elapsed / duration;
+      // Soft flash across row
+      noStroke();
+      fill(255, 255, 255, Math.round(180 * (1 - progress)));
+      rect(0, y, LAYOUT_FILTRO_W, rowH);
+
+      // Accent color wave on left edge
+      const barW = Math.round(4 + Math.sin(progress * Math.PI) * 8);
+      fill(getDimensionColor(tag.dimension));
+      rect(0, y, barW, rowH);
+    } else {
+      tagClickAnim.delete(tag.key);
+    }
   }
 
   noStroke();
@@ -352,9 +440,9 @@ function drawFilterTag(tag, y, rowH) {
   // Badge pill
   if (badgeText) {
     noStroke();
-    fill(selected ? color(255, 255, 255, 120) : color(217, 217, 217, 210));
+    fill(selected ? color(255, 255, 255, 130) : (isHovered ? color(200, 200, 205, 240) : color(217, 217, 217, 210)));
     rect(badgeX, y + rowH / 2 - 11, badgeW, 22, 11);
-    fill(selected ? "#000000" : color(80));
+    fill(selected ? "#000000" : (isHovered ? "#111111" : color(80)));
     textSize(12);
     textAlign(CENTER, CENTER);
     text(badgeText, badgeX + badgeW / 2, y + rowH / 2);
@@ -476,6 +564,7 @@ function filterMousePressed(mxRaw, myRaw) {
         if (!selectedTagKeys.has(focusedCircularTagKey))
           focusedCircularTagKey = "";
         ensureSelectedVisible();
+        tagClickAnim.set(tag.key, typeof millis === "function" ? millis() : Date.now());
         return true;
       }
     }
@@ -489,17 +578,19 @@ function filterMousePressed(mxRaw, myRaw) {
       }
     }
 
-    if (my >= 310 && my <= 336) {
+    if (my >= 310 && my <= 336 && mx >= 24 && mx <= 168) {
       exportFormatDropdownOpen = !exportFormatDropdownOpen;
       return true;
     }
 
     const availableFormats = typeof EXPORT_FORMATS !== "undefined" ? EXPORT_FORMATS : ["PDF", "JPG", "SVG"];
     const formats = availableFormats.filter(f => f !== exportFormatSelected);
-    if (exportFormatDropdownOpen) {
+    const totalMenuH = formats.length * 26;
+
+    if (exportFormatDropdownOpen && exportDropdownAnim > 0.3) {
       for (let i = 0; i < formats.length; i++) {
         const oy = 310 + 26 + i * 26;
-        if (my >= oy && my <= oy + 26) {
+        if (my >= oy && my <= oy + 26 && mx >= 24 && mx <= 168) {
           exportFormatSelected = formats[i];
           exportFormatDropdownOpen = false;
           return true;
@@ -508,12 +599,11 @@ function filterMousePressed(mxRaw, myRaw) {
     }
 
     // Export button click
-    const btnY = exportFormatDropdownOpen ? 310 + 26 + formats.length * 26 + 20 : 310 + 46;
+    const btnY = Math.round(310 + 46 + (totalMenuH + 10) * exportDropdownAnim);
     if (mx >= 24 && mx <= 168 && my >= btnY && my <= btnY + 30) {
       if (exportFormatSelected === "JPG") {
         saveCanvas("tagrafia-visualizacao", "jpg");
       } else {
-        // Mock PDF/SVG export or implement if available
         console.log("Exporting to " + exportFormatSelected);
       }
       exportFormatDropdownOpen = false;
@@ -532,6 +622,10 @@ function filterMousePressed(mxRaw, myRaw) {
 // -- NEW TABS --
 
 function drawExportTab() {
+  const scl = filterPanelScale();
+  const mx = mouseX / scl - LAYOUT_NAV_W;
+  const my = mouseY / scl;
+
   fill(0);
   noStroke();
   textFont(fontes.roboto);
@@ -546,12 +640,17 @@ function drawExportTab() {
   }));
 
   for (const v of views) {
+    const isViewHover = mx >= 20 && mx <= 180 && my >= v.y - 4 && my <= v.y + 24;
+    if (isViewHover && typeof requestCursor === "function") {
+      requestCursor(HAND);
+    }
+
     stroke("#6750a4");
     strokeWeight(2);
     if (v.selected) {
       fill("#6750a4");
     } else {
-      noFill();
+      fill(isViewHover ? "#F2EFF9" : "#FFFFFF");
     }
     rect(24, v.y, 18, 18, 4);
 
@@ -579,56 +678,81 @@ function drawExportTab() {
   noStroke();
   text("Exportar em:", 24, 280);
 
+  // Smooth dropdown animation
+  const targetAnim = exportFormatDropdownOpen ? 1 : 0;
+  exportDropdownAnim = lerp(exportDropdownAnim, targetAnim, 0.22);
+  if (Math.abs(exportDropdownAnim - targetAnim) < 0.005) {
+    exportDropdownAnim = targetAnim;
+  }
+
   const dy = 310;
-  
+  const isTriggerHover = mx >= 24 && mx <= 168 && my >= dy && my <= dy + 26;
+  if (isTriggerHover && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+
   stroke("#959fff");
   strokeWeight(1.5);
-  fill("#FFFFFF");
+  fill(isTriggerHover ? "#F6F7FF" : "#FFFFFF");
   rect(24, dy, 144, 26, 4);
-  
+
   fill(0);
   noStroke();
   text(exportFormatSelected, 30, dy + 5);
-  
-  // Chevron
+
+  // Animated rotating chevron
+  push();
+  translate(155, dy + 13);
+  rotate(radians(exportDropdownAnim * 180));
   stroke("#959fff");
   strokeWeight(2);
   noFill();
   beginShape();
-  if (exportFormatDropdownOpen) {
-    vertex(150, dy + 15);
-    vertex(155, dy + 10);
-    vertex(160, dy + 15);
-  } else {
-    vertex(150, dy + 10);
-    vertex(155, dy + 15);
-    vertex(160, dy + 10);
-  }
+  vertex(-4.5, -2.5);
+  vertex(0, 2.5);
+  vertex(4.5, -2.5);
   endShape();
-  
+  pop();
+
   const availableFormats = typeof EXPORT_FORMATS !== "undefined" ? EXPORT_FORMATS : ["PDF", "JPG", "SVG"];
   const formats = availableFormats.filter(f => f !== exportFormatSelected);
-  
-  if (exportFormatDropdownOpen) {
+  const totalMenuH = formats.length * 26;
+  const currentMenuH = totalMenuH * exportDropdownAnim;
+
+  if (currentMenuH > 0.5) {
+    drawingContext.save();
+    drawingContext.beginPath();
+    drawingContext.rect(24, dy + 26, 144, currentMenuH);
+    drawingContext.clip();
+
     for (let i = 0; i < formats.length; i++) {
       const oy = dy + 26 + i * 26;
+      const isOptHover = mx >= 24 && mx <= 168 && my >= oy && my <= oy + 26 && exportDropdownAnim > 0.3;
+      if (isOptHover && typeof requestCursor === "function") {
+        requestCursor(HAND);
+      }
       stroke("#959fff");
       strokeWeight(1.5);
-      fill("#FFFFFF");
+      fill(isOptHover ? "#EFF2FF" : "#FFFFFF");
       rect(24, oy, 144, 26, 4);
-      
-      fill(0);
+
+      fill(0, 0, 0, Math.round(exportDropdownAnim * 255));
       noStroke();
       text(formats[i], 30, oy + 5);
     }
+    drawingContext.restore();
   }
-  
-  // Export button
-  const btnY = exportFormatDropdownOpen ? dy + 26 + formats.length * 26 + 20 : dy + 46;
-  fill("#959fff");
+
+  // Smoothly animated "Baixar" button position
+  const btnY = Math.round(dy + 46 + (totalMenuH + 10) * exportDropdownAnim);
+  const isBtnHover = mx >= 24 && mx <= 168 && my >= btnY && my <= btnY + 30;
+  if (isBtnHover && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+  fill(isBtnHover ? "#808bf5" : "#959fff");
   noStroke();
   rect(24, btnY, 144, 30, 15);
-  
+
   fill(255);
   textAlign(CENTER, CENTER);
   text("Baixar", 24 + 72, btnY + 15);

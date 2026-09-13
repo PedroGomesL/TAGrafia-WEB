@@ -34,7 +34,57 @@ function setup() {
   selectedProduct = null;
 }
 
+function requestCursor(type) {
+  const isText = type === "text" || (typeof TEXT !== "undefined" && type === TEXT);
+  const isHand = type === "hand" || type === "pointer" || (typeof HAND !== "undefined" && type === HAND);
+  const textVal = typeof TEXT !== "undefined" ? TEXT : "text";
+  const handVal = typeof HAND !== "undefined" ? HAND : "pointer";
+  if (isText) {
+    currentFrameCursor = textVal;
+  } else if (isHand) {
+    if (currentFrameCursor !== textVal) {
+      currentFrameCursor = handVal;
+    }
+  }
+}
+
+function triggerClickRipple(x, y, color) {
+  const now = typeof millis === "function" ? millis() : Date.now();
+  clickRipples.push({
+    x,
+    y,
+    startTime: now,
+    duration: 250,
+    maxR: 28,
+    color: color || "#959fff",
+  });
+}
+
+function drawClickRipples() {
+  if (!clickRipples || clickRipples.length === 0) return;
+  const now = typeof millis === "function" ? millis() : Date.now();
+  push();
+  noFill();
+  for (let i = clickRipples.length - 1; i >= 0; i--) {
+    const rip = clickRipples[i];
+    const elapsed = now - rip.startTime;
+    if (elapsed > rip.duration) {
+      clickRipples.splice(i, 1);
+      continue;
+    }
+    const t = elapsed / rip.duration;
+    const ease = 1 - Math.pow(1 - t, 2);
+    const r = rip.maxR * ease;
+    const alphaVal = Math.round(180 * (1 - ease));
+    stroke(149, 159, 255, alphaVal);
+    strokeWeight(1.8 * (1 - ease * 0.4));
+    circle(rip.x, rip.y, r * 2);
+  }
+  pop();
+}
+
 function draw() {
+  currentFrameCursor = typeof ARROW !== "undefined" ? ARROW : "default";
   hitAreas = [];
   _cacheFrame = frameCount;
   _cachedSelectedTags = null;
@@ -47,6 +97,16 @@ function draw() {
   drawProductPanel();
   drawFilterPanel();
   drawLayoutSeparators();
+
+  if (hitAreaAt(mouseX, mouseY)) {
+    requestCursor(HAND);
+  }
+
+  drawClickRipples();
+
+  if (typeof cursor === "function") {
+    cursor(currentFrameCursor);
+  }
 }
 
 function windowResized() {
@@ -131,6 +191,7 @@ function themeLineColor() {
 
 function mousePressed() {
   if (mouseButton !== LEFT) return;
+  triggerClickRipple(mouseX, mouseY);
   if (filterMousePressed(mouseX, mouseY)) return false;
   if (productPanelMousePressed(mouseX, mouseY)) return false;
   if (visualMousePressed(mouseX, mouseY)) return false;
@@ -138,6 +199,7 @@ function mousePressed() {
 
 function mouseDragged() {
   if (draggedYearHandle) {
+    requestCursor(HAND);
     const newYear = xToYear(mouseX);
     if (draggedYearHandle === "start")
       yearStart = constrain(newYear, YEAR_MIN, yearEnd);
@@ -145,6 +207,7 @@ function mouseDragged() {
     return false;
   }
   if (mapState.dragging) {
+    requestCursor(HAND);
     mapState.panX += mouseX - mapState.previousX;
     mapState.panY += mouseY - mapState.previousY;
     mapState.previousX = mouseX;

@@ -62,12 +62,22 @@ function drawProductSidebar(x, y, w, h, scale) {
   let currentY = y + 25 * scale;
   for (const item of items) {
     const active = rightPanelTab === item.id || (item.id === "material" && rightPanelTab === "materiais");
+    const isHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 15 * scale && mouseY <= currentY + 70 * scale;
+
+    if (isHover && typeof requestCursor === "function") {
+      requestCursor(HAND);
+    }
+
     if (active) {
       fill(item.color);
       noStroke();
-      // Draw circular background (elipse) behind the active icon
+      circle(x + w / 2, currentY + 15 * scale, 48 * scale);
+    } else if (isHover) {
+      fill(item.color + "44");
+      noStroke();
       circle(x + w / 2, currentY + 15 * scale, 48 * scale);
     }
+
     if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 15 * scale, 35 * scale, 35 * scale);
     fill("#000000");
     noStroke();
@@ -88,12 +98,21 @@ function drawProductSidebar(x, y, w, h, scale) {
 
   // Draw "Salvos" button right below the separator
   const salvosActive = rightPanelTab === "salvos";
+  const salvosHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 15 * scale && mouseY <= currentY + 70 * scale;
+  if (salvosHover && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+
   if (salvosActive) {
     fill("#959fff");
     noStroke();
-    // Draw circular background (elipse) behind the active icon
+    circle(x + w / 2, currentY + 15 * scale, 48 * scale);
+  } else if (salvosHover) {
+    fill("#959fff44");
+    noStroke();
     circle(x + w / 2, currentY + 15 * scale, 48 * scale);
   }
+
   if (icones.save) drawImageCentered(icones.save, x + w / 2, currentY + 15 * scale, 35 * scale, 35 * scale);
   fill("#000000");
   noStroke();
@@ -127,9 +146,16 @@ function drawProductImage(x, y, w, h, scale) {
   if (selectedProduct) {
     const images = productImages(selectedProduct);
     if (images.length > 1) {
-      fill(255, 255, 255, 200);
+      const leftBtnHover = dist(mouseX, mouseY, x + 45 * scale, y + h - 64 * scale) <= 15 * scale;
+      const rightBtnHover = dist(mouseX, mouseY, x + w - 45 * scale, y + h - 64 * scale) <= 15 * scale;
+      if ((leftBtnHover || rightBtnHover) && typeof requestCursor === "function") {
+        requestCursor(HAND);
+      }
+
+      fill(leftBtnHover ? 255 : color(255, 255, 255, 200));
       noStroke();
       circle(x + 45 * scale, y + h - 64 * scale, 30 * scale);
+      fill(rightBtnHover ? 255 : color(255, 255, 255, 200));
       circle(x + w - 45 * scale, y + h - 64 * scale, 30 * scale);
       if (icones.left) drawImageCentered(icones.left, x + 45 * scale, y + h - 64 * scale, 24 * scale, 24 * scale);
       if (icones.right) drawImageCentered(icones.right, x + w - 45 * scale, y + h - 64 * scale, 24 * scale, 24 * scale);
@@ -445,18 +471,23 @@ function calculateNewDetailsHeight(w, scale) {
     if (cursorX + chipW > maxX) {
       cursorX = 20 * scale;
       h += chipH + 8 * scale;
+      h += chipH + 6 * scale;
     }
-    cursorX += chipW + 7 * scale;
+    cursorX += chipW + 6 * scale;
   }
-  if (tags.length > 0) h += chipH + 20 * scale;
+  if (tags.length > 0) h += chipH + 10 * scale;
   
-  h += 40 * scale; // "Detalhes:"
+  h += 25 * scale; // Separator & spacing
+  h += 25 * scale; // "Detalhes:"
   
   const textValue = getProductDetailsForDimension(selectedProduct, dim);
-  
-  const charsPerLine = Math.floor((w - 40 * scale) / (8 * scale));
-  const lines = Math.ceil(textValue.length / charsPerLine);
-  h += lines * 20 * scale + 50 * scale;
+  if (textValue) {
+    const contentW = w - 26 * scale;
+    const charsPerLine = Math.max(20, Math.floor(contentW / (8 * scale)));
+    const estimatedLines = Math.ceil(textValue.length / charsPerLine) + (textValue.split('\n').length - 1);
+    h += estimatedLines * (22 * scale);
+  }
+  h += 40 * scale; // Bottom padding
   
   return h;
 }
@@ -476,9 +507,14 @@ function drawSavedProducts(x, y, w, scale) {
   const searchY = y + 18 * scale;
   const searchW = Math.min(240 * scale, w - 150 * scale);
   
+  const isSearchHover = insideRect(mouseX, mouseY, searchX, searchY, searchW, searchH);
+  if (isSearchHover && typeof requestCursor === "function") {
+    requestCursor(TEXT);
+  }
+
   stroke("#D9D9D9");
   strokeWeight(1);
-  fill(lightMode ? "#FFFFFF" : "#D9D9D9");
+  fill(isSearchHover && !savedSearchActive ? (lightMode ? "#F7F7FA" : "#CCCCCC") : (lightMode ? "#FFFFFF" : "#D9D9D9"));
   rect(searchX, searchY, searchW, searchH, 5);
 
   fill(savedSearch.length ? "#000000" : color(120));
@@ -502,9 +538,14 @@ function drawSavedProducts(x, y, w, scale) {
 
   const buttonX = x + w - 88 * scale;
   const buttonW = 66 * scale;
+  const isSortHover = insideRect(mouseX, mouseY, buttonX, searchY, buttonW, searchH);
+  if (isSortHover && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+
   stroke("#D9D9D9");
   strokeWeight(1);
-  fill(lightMode ? "#FFFFFF" : "#D9D9D9");
+  fill(isSortHover ? (lightMode ? "#EFEFF4" : "#C4C4C4") : (lightMode ? "#FFFFFF" : "#D9D9D9"));
   rect(buttonX, searchY, buttonW, searchH, 5);
 
   fill("#000000");
@@ -572,11 +613,16 @@ function drawSavedProducts(x, y, w, scale) {
 }
 
 function drawSavedCard(product, x, y, w, h, scale) {
+  const isCardHover = insideRect(mouseX, mouseY, x, y, w, h);
+  if (isCardHover && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+
   const colorOrigin =
     product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta;
   const imgBoxH = Math.round(w * 0.95);
   const pillH = Math.round(26 * scale);
-  const strokeW = 2 * scale;
+  const strokeW = (isCardHover ? 2.5 : 2) * scale;
 
   // White card background
   noStroke();
@@ -595,9 +641,9 @@ function drawSavedCard(product, x, y, w, h, scale) {
     );
   }
 
-  // Stroke with origin color and 90% opacity
+  // Stroke with origin color and 90% opacity (or slightly more contrast on hover)
   noFill();
-  stroke(colorAlpha(colorOrigin, 230));
+  stroke(colorAlpha(colorOrigin, isCardHover ? 255 : 230));
   strokeWeight(strokeW);
   rect(
     x + strokeW / 2,
@@ -610,7 +656,7 @@ function drawSavedCard(product, x, y, w, h, scale) {
 
   // Pill for product name
   const pillY = y + imgBoxH + 8 * scale;
-  fill(lightMode ? "#F0F0F0" : "#222222");
+  fill(isCardHover ? (lightMode ? "#E8E8EE" : "#333333") : (lightMode ? "#F0F0F0" : "#222222"));
   rect(x, pillY, w, pillH, pillH / 2);
 
   fill(lightMode ? "#000000" : "#FFFFFF");

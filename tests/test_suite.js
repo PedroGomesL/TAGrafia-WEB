@@ -293,6 +293,29 @@ selectedTagKeys.clear();
 _cachedSelectedTags = null;
 _cachedTagCounts = null;
 
+console.log("\n=== 11. Validando Sistema de Interatividade, Animações e Cursores ===");
+// Carrega sketch.js
+global.HAND = "pointer";
+global.TEXT = "text";
+global.ARROW = "default";
+const sketchContent = fs.readFileSync(path.join(ROOT_DIR, "sketch.js"), "utf8");
+vm.runInThisContext(sketchContent);
+assert(typeof requestCursor === "function", "requestCursor está definida");
+currentFrameCursor = global.ARROW;
+requestCursor("pointer");
+assert(currentFrameCursor === global.HAND, "requestCursor('pointer') define cursor para HAND");
+requestCursor("text");
+assert(currentFrameCursor === global.TEXT, "requestCursor('text') define cursor para TEXT");
+assert(typeof triggerClickRipple === "function", "triggerClickRipple está definida");
+assert(typeof drawClickRipples === "function", "drawClickRipples está definida");
+assert(typeof exportDropdownAnim === "number", "exportDropdownAnim está definida no state");
+assert(tagClickAnim instanceof Map, "tagClickAnim é uma instância de Map");
+assert(Array.isArray(clickRipples), "clickRipples é um array");
+const initialRipplesCount = clickRipples.length;
+triggerClickRipple(150, 200);
+assert(clickRipples.length === initialRipplesCount + 1, "triggerClickRipple registra novo efeito de ripple");
+
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {
