@@ -266,13 +266,19 @@ function drawBubbleView(productsVisible) {
     fill("#D9D9D9");
     circle(group.x, group.y, group.r * 2);
     drawProductsInBubble(group);
+
     fill("#000000");
     noStroke();
     textFont(fontes.afacad);
     textStyle(BOLD);
-    textSize(fitTextSize(group.name, group.r * 1.52, 16, 10));
+    const textW = group.r * 1.55;
+    const hasProds = group.products.length > 0;
+    const textH = hasProds ? group.r * 0.52 : group.r * 1.2;
+    const textCenterY = hasProds ? group.y - group.r * 0.38 : group.y;
+    const tSize = fitTextSize(group.name, textW, 14, 9);
+    textSize(tSize);
     textAlign(CENTER, CENTER);
-    text(group.name, group.x - group.r * 0.75, group.y - 15, group.r * 1.5, 32);
+    text(group.name, group.x - textW / 2, textCenterY - textH / 2, textW, textH);
     textStyle(NORMAL);
   }
 
@@ -297,45 +303,88 @@ function buildBubbleGroups(productsVisible, cx, cy, outerR) {
   }
   const groups = Array.from(byName.values()).sort(
     (a, b) =>
+      (a.name === "Obras brasileiras" ? -1 : b.name === "Obras brasileiras" ? 1 : 0) ||
       b.products.length - a.products.length ||
       a.name.localeCompare(b.name, "pt-BR"),
   );
-  let area = 0;
-  for (const group of groups) {
-    group.products.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-    group.r = constrain(45 + Math.sqrt(group.products.length) * 24, 55, 150);
-    area += PI * group.r * group.r;
+
+  if (!groups.length) return [];
+  if (groups.length === 1) {
+    groups[0].x = cx;
+    groups[0].y = cy;
+    groups[0].r = Math.min(outerR * 0.65, 140);
+    return groups;
   }
-  const available = PI * outerR * outerR * 0.85; // Allow more density
-  const scale = area > available ? Math.sqrt(available / area) : 1;
-  for (let i = 0; i < groups.length; i++) {
-    const group = groups[i];
-    group.r = constrain(group.r * scale, 45, 150);
-    if (i === 0) {
-      group.x = cx;
-      group.y = cy;
-    } else {
-      const angle = -HALF_PI + i * GOLDEN_ANGLE;
-      const distance = Math.min(outerR - group.r - 10, 42 + Math.sqrt(i) * 72);
-      group.x = cx + cos(angle) * distance;
-      group.y = cy + sin(angle) * distance;
+
+  const gap = 8;
+  const boundaryGap = 6;
+  const maxOuterD = outerR - boundaryGap;
+
+  // Sizing of center bubble (Obras brasileiras)
+  const centerGroup = groups[0];
+  centerGroup.x = cx;
+  centerGroup.y = cy;
+  centerGroup.r = constrain(38 + Math.sqrt(centerGroup.products.length) * 12, 48, outerR * 0.38);
+
+  // Sizing of satellite bubbles
+  const satellites = groups.slice(1);
+  const satCount = satellites.length;
+
+  for (const g of satellites) {
+    g.products.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    g.r = constrain(26 + Math.sqrt(g.products.length) * 10, 30, outerR * 0.28);
+  }
+
+  // Calculate area constraint and scale proportionally
+  let totalSatArea = 0;
+  for (const g of satellites) totalSatArea += PI * (g.r + gap / 2) ** 2;
+  const availableArea = PI * (maxOuterD ** 2 - (centerGroup.r + gap) ** 2) * 0.62;
+  if (totalSatArea > availableArea) {
+    const scale = Math.sqrt(availableArea / totalSatArea);
+    centerGroup.r = Math.max(36, centerGroup.r * Math.max(0.75, scale));
+    for (const g of satellites) {
+      g.r = Math.max(22, g.r * scale);
     }
   }
-  for (let iter = 0; iter < 220; iter++) {
-    for (const group of groups) {
-      group.x += (cx - group.x) * 0.0035;
-      group.y += (cy - group.y) * 0.0035;
+
+  // Initial circular distribution around center
+  for (let i = 0; i < satCount; i++) {
+    const g = satellites[i];
+    const angle = -HALF_PI + (i * TWO_PI) / satCount;
+    const d = Math.min(maxOuterD - g.r, centerGroup.r + g.r + gap);
+    g.x = cx + cos(angle) * d;
+    g.y = cy + sin(angle) * d;
+  }
+
+  // Force relaxation iterations to guarantee non-overlapping layout
+  const totalIters = 350;
+  for (let iter = 0; iter < totalIters; iter++) {
+    for (const g of satellites) {
+      g.x += (cx - g.x) * 0.005;
+      g.y += (cy - g.y) * 0.005;
     }
-    for (let i = 0; i < groups.length; i++) {
-      for (let j = i + 1; j < groups.length; j++) {
-        const a = groups[i];
-        const b = groups[j];
+
+    for (const g of satellites) {
+      const dx = g.x - cx;
+      const dy = g.y - cy;
+      const d = Math.max(0.001, Math.hypot(dx, dy));
+      const minCenterD = centerGroup.r + g.r + gap;
+      if (d < minCenterD) {
+        g.x = cx + (dx / d) * minCenterD;
+        g.y = cy + (dy / d) * minCenterD;
+      }
+    }
+
+    for (let i = 0; i < satCount; i++) {
+      for (let j = i + 1; j < satCount; j++) {
+        const a = satellites[i];
+        const b = satellites[j];
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const d = Math.max(0.001, Math.hypot(dx, dy));
-        const minD = a.r + b.r + 4;
+        const minD = a.r + b.r + gap;
         if (d < minD) {
-          const push = (minD - d) * 0.5;
+          const push = (minD - d) * 0.52;
           a.x -= (dx / d) * push;
           a.y -= (dy / d) * push;
           b.x += (dx / d) * push;
@@ -343,31 +392,108 @@ function buildBubbleGroups(productsVisible, cx, cy, outerR) {
         }
       }
     }
-    for (const group of groups) {
-      const dx = group.x - cx;
-      const dy = group.y - cy;
+
+    for (const g of satellites) {
+      const dx = g.x - cx;
+      const dy = g.y - cy;
       const d = Math.hypot(dx, dy);
-      const maxD = outerR - group.r - 3;
-      if (d > maxD) {
-        group.x = cx + (dx / d) * maxD;
-        group.y = cy + (dy / d) * maxD;
+      const limit = maxOuterD - g.r;
+      if (d > limit) {
+        g.x = cx + (dx / d) * limit;
+        g.y = cy + (dy / d) * limit;
+      }
+    }
+
+    if (iter > 180 && iter % 10 === 0) {
+      let maxOverlap = 0;
+      for (let i = 0; i < satCount; i++) {
+        for (let j = i + 1; j < satCount; j++) {
+          const d = Math.hypot(satellites[i].x - satellites[j].x, satellites[i].y - satellites[j].y);
+          const minD = satellites[i].r + satellites[j].r + gap;
+          if (d < minD) {
+            maxOverlap = Math.max(maxOverlap, minD - d);
+          }
+        }
+      }
+      if (maxOverlap > 0.5) {
+        for (const g of satellites) {
+          g.r = Math.max(18, g.r * 0.98);
+        }
+        centerGroup.r = Math.max(32, centerGroup.r * 0.99);
       }
     }
   }
+
+  for (const g of satellites) {
+    const dx = g.x - cx;
+    const dy = g.y - cy;
+    const d = Math.max(0.001, Math.hypot(dx, dy));
+    const minCenterD = centerGroup.r + g.r + gap;
+    if (d < minCenterD) {
+      g.x = cx + (dx / d) * minCenterD;
+      g.y = cy + (dy / d) * minCenterD;
+    }
+    const curD = Math.hypot(g.x - cx, g.y - cy);
+    const limit = maxOuterD - g.r;
+    if (curD > limit) {
+      g.x = cx + ((g.x - cx) / curD) * limit;
+      g.y = cy + ((g.y - cy) / curD) * limit;
+    }
+  }
+
   return groups;
 }
 
 function drawProductsInBubble(group) {
   const total = group.products.length;
   if (!total) return;
-  const usable = Math.max(6, group.r - Math.max(18, group.r * 0.25));
-  const dotR = constrain(usable / Math.max(2.2, Math.sqrt(total) * 2.2), 5, 9);
+
+  const positions = [];
+  if (total === 1) {
+    const dotR = constrain(group.r * 0.15, 6, 9);
+    positions.push({ x: group.x, y: group.y + group.r * 0.38, r: dotR });
+  } else if (total === 2) {
+    const dotR = constrain(group.r * 0.14, 5.5, 8.5);
+    const spacing = dotR + 6;
+    positions.push({ x: group.x - spacing, y: group.y + group.r * 0.38, r: dotR });
+    positions.push({ x: group.x + spacing, y: group.y + group.r * 0.38, r: dotR });
+  } else if (total === 3) {
+    const dotR = constrain(group.r * 0.13, 5, 8);
+    positions.push({ x: group.x, y: group.y + group.r * 0.18, r: dotR });
+    positions.push({ x: group.x - (dotR + 6), y: group.y + group.r * 0.46, r: dotR });
+    positions.push({ x: group.x + (dotR + 6), y: group.y + group.r * 0.46, r: dotR });
+  } else if (total === 4) {
+    const dotR = constrain(group.r * 0.12, 5, 7.5);
+    const sp = dotR + 5;
+    positions.push({ x: group.x - sp, y: group.y + group.r * 0.18, r: dotR });
+    positions.push({ x: group.x + sp, y: group.y + group.r * 0.18, r: dotR });
+    positions.push({ x: group.x - sp, y: group.y + group.r * 0.48, r: dotR });
+    positions.push({ x: group.x + sp, y: group.y + group.r * 0.48, r: dotR });
+  } else {
+    const fieldR = group.r * 0.48;
+    const dotR = constrain(fieldR / Math.max(2.0, Math.sqrt(total) * 1.8), 4.5, 7.5);
+    const centerY = group.y + group.r * 0.36;
+    for (let i = 0; i < total; i++) {
+      const angle = i * GOLDEN_ANGLE - HALF_PI;
+      const d = Math.sqrt((i + 0.5) / total) * (fieldR - dotR);
+      let x = group.x + cos(angle) * d;
+      let y = centerY + sin(angle) * (d * 0.78);
+      if (y < group.y + group.r * 0.04) {
+        y = group.y + group.r * 0.04 + (group.y + group.r * 0.04 - y) * 0.5;
+      }
+      const distCenter = Math.hypot(x - group.x, y - group.y);
+      const maxDist = group.r - dotR - 4;
+      if (distCenter > maxDist) {
+        x = group.x + ((x - group.x) / distCenter) * maxDist;
+        y = group.y + ((y - group.y) / distCenter) * maxDist;
+      }
+      positions.push({ x, y, r: dotR });
+    }
+  }
+
   for (let i = 0; i < total; i++) {
     const product = group.products[i];
-    const angle = i * GOLDEN_ANGLE - HALF_PI;
-    const d = Math.sqrt((i + 0.5) / total) * usable;
-    const x = total === 1 ? group.x : group.x + cos(angle) * d;
-    const y = total === 1 ? group.y + group.r * 0.28 : group.y + sin(angle) * d;
+    const pos = positions[i];
     const selected = selectedProduct && selectedProduct.key === product.key;
     if (selected) {
       stroke(themeLineColor());
@@ -376,14 +502,14 @@ function drawProductsInBubble(group) {
       noStroke();
     }
     fill(product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
-    circle(x, y, (dotR + (selected ? 1.5 : 0)) * 2);
+    circle(pos.x, pos.y, (pos.r + (selected ? 1.5 : 0)) * 2);
     hitAreas.push({
       kind: "product",
       product,
       shape: "circle",
-      cx: x,
-      cy: y,
-      r: dotR + 7,
+      cx: pos.x,
+      cy: pos.y,
+      r: pos.r + 7,
     });
   }
 }

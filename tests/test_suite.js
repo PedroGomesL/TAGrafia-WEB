@@ -635,6 +635,138 @@ const sidebarCircleD = 42;
 const sidebarMargin = (PRODUCT_SIDEBAR_W - sidebarCircleD) / 2;
 assert(sidebarMargin === 14, "Círculos das abas do produto possuem margens laterais confortáveis de 14px na sidebar de 70px");
 
+console.log("\n=== 17. Validando Layout das Bolhas e Separação entre Nomes de Escolas e Obras ===");
+global.visualX = () => 280;
+global.visualW = () => 1280;
+global.height = 1080;
+global.TIMELINE_H = 120;
+yearStart = YEAR_MIN;
+yearEnd = YEAR_MAX;
+global.selectedProduct = null;
+global.hitAreas = [];
+global.themeLineColor = () => "#000000";
+global.fontes = { afacad: {}, roboto: {}, robotoCondensed: {} };
+global.BOLD = "bold";
+global.NORMAL = "normal";
+global.CENTER = "center";
+global.textSize = () => {};
+global.textFont = () => {};
+global.textStyle = () => {};
+global.textAlign = () => {};
+global.noFill = () => {};
+global.noStroke = () => {};
+global.stroke = () => {};
+global.strokeWeight = () => {};
+global.circle = () => {};
+global.PI = Math.PI;
+global.TWO_PI = Math.PI * 2;
+global.HALF_PI = Math.PI / 2;
+global.GOLDEN_ANGLE = 2.39996323;
+global.cos = Math.cos;
+global.sin = Math.sin;
+global.constrain = (n, low, high) => Math.max(low, Math.min(high, n));
+
+assert(typeof buildBubbleGroups === "function", "buildBubbleGroups está definida");
+assert(typeof drawProductsInBubble === "function", "drawProductsInBubble está definida");
+
+const testCx = 280 + 1280 / 2;
+const testCy = (1080 - 120) / 2;
+const testOuterR = Math.max(130, Math.min(1280 * 0.46, (1080 - 120) * 0.46));
+
+// Testa com todos os produtos
+const fullGroups = buildBubbleGroups(products, testCx, testCy, testOuterR);
+assert(fullGroups.length > 0, `buildBubbleGroups construiu ${fullGroups.length} grupos com sucesso`);
+
+// 1. Valida que a bolha central é 'Obras brasileiras' e está perfeitamente centralizada
+const centerG = fullGroups[0];
+assert(centerG.name === "Obras brasileiras", "Grupo central é 'Obras brasileiras'");
+assert(centerG.x === testCx && centerG.y === testCy, `Bolha central está exatamente em (${testCx}, ${testCy})`);
+
+// 2. Valida ausência de sobreposição entre QUALQUER par de bolhas
+let bubbleOverlapCount = 0;
+for (let i = 0; i < fullGroups.length; i++) {
+  for (let j = i + 1; j < fullGroups.length; j++) {
+    const dist = Math.hypot(fullGroups[i].x - fullGroups[j].x, fullGroups[i].y - fullGroups[j].y);
+    const minD = fullGroups[i].r + fullGroups[j].r;
+    if (dist < minD) {
+      bubbleOverlapCount++;
+    }
+  }
+}
+assert(bubbleOverlapCount === 0, `Nenhuma bolha se sobrepõe a outra na visualização (sobreposições: ${bubbleOverlapCount})`);
+
+// 3. Valida que todas as bolhas ficam contidas dentro do círculo delimitador exterior
+let outsideCount = 0;
+for (const g of fullGroups) {
+  const distFromCenter = Math.hypot(g.x - testCx, g.y - testCy) + g.r;
+  if (distFromCenter > testOuterR) {
+    outsideCount++;
+  }
+}
+assert(outsideCount === 0, `Todas as bolhas respeitam o círculo exterior delimitador (fora dos limites: ${outsideCount})`);
+
+// 4. Valida posicionamento dos produtos na porção inferior (evitando colisão com os títulos das escolas)
+let textCollisionCount = 0;
+const drawnDots = [];
+global.circle = (x, y, d) => {
+  drawnDots.push({ x, y, d });
+};
+
+for (const g of fullGroups) {
+  drawnDots.length = 0;
+  hitAreas.length = 0;
+  drawProductsInBubble(g);
+  
+  // Limite inferior estimado para o texto (área superior da bolha)
+  const textBottom = g.y - g.r * 0.05;
+  for (const dot of drawnDots) {
+    const dotTop = dot.y - dot.d / 2;
+    if (dotTop < textBottom) {
+      textCollisionCount++;
+    }
+  }
+}
+assert(textCollisionCount === 0, `Nenhum círculo de obra colide com a área superior do nome da escola (colisões: ${textCollisionCount})`);
+
+// 5. Validação específica com o subconjunto de 10 escolas do screenshot
+const targetSubset = new Set([
+  "Obras brasileiras", "Bauhaus", "Memphis", "Streamlining",
+  "Cranbrook Academy of Art", "Art Nouveau", "Modernismo Norte-Americano",
+  "Deutscher Werkbund", "Jugendstil", "Estilo Internacional"
+]);
+const subsetProds = products.filter(p => {
+  const name = p.origin === "brasileiro" ? "Obras brasileiras" : movementName(p.movementRaw);
+  return targetSubset.has(name);
+});
+const subsetGroups = buildBubbleGroups(subsetProds, testCx, testCy, testOuterR);
+assert(subsetGroups.length === 10, `buildBubbleGroups com 10 escolas gerou 10 grupos (obtido: ${subsetGroups.length})`);
+
+let subsetOverlaps = 0;
+for (let i = 0; i < subsetGroups.length; i++) {
+  for (let j = i + 1; j < subsetGroups.length; j++) {
+    const dist = Math.hypot(subsetGroups[i].x - subsetGroups[j].x, subsetGroups[i].y - subsetGroups[j].y);
+    const minD = subsetGroups[i].r + subsetGroups[j].r;
+    if (dist < minD) {
+      subsetOverlaps++;
+    }
+  }
+}
+assert(subsetOverlaps === 0, `Nenhuma bolha se sobrepõe no cenário de 10 escolas (sobreposições: ${subsetOverlaps})`);
+
+let subsetTextCollisions = 0;
+for (const g of subsetGroups) {
+  drawnDots.length = 0;
+  drawProductsInBubble(g);
+  const textBottom = g.y - g.r * 0.05;
+  for (const dot of drawnDots) {
+    const dotTop = dot.y - dot.d / 2;
+    if (dotTop < textBottom) {
+      subsetTextCollisions++;
+    }
+  }
+}
+assert(subsetTextCollisions === 0, `Nenhum círculo de obra colide com os nomes das 10 escolas (colisões: ${subsetTextCollisions})`);
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {
