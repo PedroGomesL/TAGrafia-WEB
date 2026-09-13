@@ -705,9 +705,11 @@ for (const g of fullGroups) {
 }
 assert(outsideCount === 0, `Todas as bolhas respeitam o círculo exterior delimitador (fora dos limites: ${outsideCount})`);
 
-// 4. Valida posicionamento dos produtos na porção inferior (evitando colisão com os títulos das escolas)
+// 4. Valida que nenhum dot invade a zona do label (borda superior do dot >= g.y - g.r * 0.08)
+// O código garante isso para TODOS os grupos (independente de label interno ou externo)
 let textCollisionCount = 0;
 const drawnDots = [];
+global.BOTTOM = "bottom";
 global.circle = (x, y, d) => {
   drawnDots.push({ x, y, d });
 };
@@ -717,11 +719,10 @@ for (const g of fullGroups) {
   hitAreas.length = 0;
   drawProductsInBubble(g);
   
-  // Limite inferior estimado para o texto (área superior da bolha)
-  const textBottom = g.y - g.r * 0.05;
+  const minDotTopY = g.y - g.r * 0.08;
   for (const dot of drawnDots) {
     const dotTop = dot.y - dot.d / 2;
-    if (dotTop < textBottom) {
+    if (dotTop < minDotTopY - 0.5) { // tolerância de 0.5px para arredondamento
       textCollisionCount++;
     }
   }
@@ -757,10 +758,10 @@ let subsetTextCollisions = 0;
 for (const g of subsetGroups) {
   drawnDots.length = 0;
   drawProductsInBubble(g);
-  const textBottom = g.y - g.r * 0.05;
+  const minDotTopY = g.y - g.r * 0.08;
   for (const dot of drawnDots) {
     const dotTop = dot.y - dot.d / 2;
-    if (dotTop < textBottom) {
+    if (dotTop < minDotTopY - 0.5) {
       subsetTextCollisions++;
     }
   }

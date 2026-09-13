@@ -267,18 +267,37 @@ function drawBubbleView(productsVisible) {
     circle(group.x, group.y, group.r * 2);
     drawProductsInBubble(group);
 
+    // Renderiza o nome do grupo dentro do círculo (terço superior) ou acima dele
+    // quando o raio é pequeno demais para o texto ficar legível dentro
     fill("#000000");
     noStroke();
     textFont(fontes.afacad);
     textStyle(BOLD);
-    const textW = group.r * 1.55;
     const hasProds = group.products.length > 0;
-    const textH = hasProds ? group.r * 0.52 : group.r * 1.2;
-    const textCenterY = hasProds ? group.y - group.r * 0.38 : group.y;
-    const tSize = fitTextSize(group.name, textW, 14, 9);
-    textSize(tSize);
-    textAlign(CENTER, CENTER);
-    text(group.name, group.x - textW / 2, textCenterY - textH / 2, textW, textH);
+
+    // Largura mínima necessária para o texto não ser clipado pelo p5.js
+    const textWInside = group.r * 1.55;
+    const tSizeInside = fitTextSize(group.name, textWInside, 14, 9);
+    // Se o texto não cabe dentro (fonte reduzida ao mínimo e ainda muito grande),
+    // rende o label acima do círculo para evitar bolha sem nome visível
+    const nameWidthAtMin = group.r * 1.55; // largura disponível
+    const FONT_SIZE_THRESHOLD = 10; // se fitTextSize retornar >= este tamanho, fica dentro
+    if (tSizeInside >= FONT_SIZE_THRESHOLD) {
+      // Texto cabe dentro: posição no terço superior da bolha
+      const textH = hasProds ? group.r * 0.52 : group.r * 1.2;
+      const textCenterY = hasProds ? group.y - group.r * 0.38 : group.y;
+      textSize(tSizeInside);
+      textAlign(CENTER, CENTER);
+      text(group.name, group.x - textWInside / 2, textCenterY - textH / 2, textWInside, textH);
+    } else {
+      // Bolha pequena demais: renderiza o nome acima do círculo com largura generosa
+      const externalTextW = Math.max(group.r * 2.8, 90);
+      const tSizeExternal = fitTextSize(group.name, externalTextW, 12, 8);
+      const labelY = group.y - group.r - 14;
+      textSize(tSizeExternal);
+      textAlign(CENTER, BOTTOM);
+      text(group.name, group.x, labelY);
+    }
     textStyle(NORMAL);
   }
 
@@ -448,45 +467,56 @@ function drawProductsInBubble(group) {
   const total = group.products.length;
   if (!total) return;
 
+  // Zona reservada para o nome: terço superior (y < group.y - group.r * 0.06)
+  // Dots ficam distribuídos na área abaixo dessa zona
+  const labelClearance = group.r * 0.26; // espaço livre acima do centro para o label
+
   const positions = [];
   if (total === 1) {
     const dotR = constrain(group.r * 0.15, 6, 9);
-    positions.push({ x: group.x, y: group.y + group.r * 0.38, r: dotR });
+    positions.push({ x: group.x, y: group.y + labelClearance * 0.5, r: dotR });
   } else if (total === 2) {
     const dotR = constrain(group.r * 0.14, 5.5, 8.5);
     const spacing = dotR + 6;
-    positions.push({ x: group.x - spacing, y: group.y + group.r * 0.38, r: dotR });
-    positions.push({ x: group.x + spacing, y: group.y + group.r * 0.38, r: dotR });
+    positions.push({ x: group.x - spacing, y: group.y + labelClearance * 0.5, r: dotR });
+    positions.push({ x: group.x + spacing, y: group.y + labelClearance * 0.5, r: dotR });
   } else if (total === 3) {
     const dotR = constrain(group.r * 0.13, 5, 8);
-    positions.push({ x: group.x, y: group.y + group.r * 0.18, r: dotR });
-    positions.push({ x: group.x - (dotR + 6), y: group.y + group.r * 0.46, r: dotR });
-    positions.push({ x: group.x + (dotR + 6), y: group.y + group.r * 0.46, r: dotR });
+    const sp = dotR + 5;
+    positions.push({ x: group.x, y: group.y + labelClearance * 0.1, r: dotR });
+    positions.push({ x: group.x - sp, y: group.y + labelClearance * 0.6, r: dotR });
+    positions.push({ x: group.x + sp, y: group.y + labelClearance * 0.6, r: dotR });
   } else if (total === 4) {
     const dotR = constrain(group.r * 0.12, 5, 7.5);
     const sp = dotR + 5;
-    positions.push({ x: group.x - sp, y: group.y + group.r * 0.18, r: dotR });
-    positions.push({ x: group.x + sp, y: group.y + group.r * 0.18, r: dotR });
-    positions.push({ x: group.x - sp, y: group.y + group.r * 0.48, r: dotR });
-    positions.push({ x: group.x + sp, y: group.y + group.r * 0.48, r: dotR });
+    positions.push({ x: group.x - sp, y: group.y + labelClearance * 0.1, r: dotR });
+    positions.push({ x: group.x + sp, y: group.y + labelClearance * 0.1, r: dotR });
+    positions.push({ x: group.x - sp, y: group.y + labelClearance * 0.65, r: dotR });
+    positions.push({ x: group.x + sp, y: group.y + labelClearance * 0.65, r: dotR });
   } else {
-    const fieldR = group.r * 0.48;
-    const dotR = constrain(fieldR / Math.max(2.0, Math.sqrt(total) * 1.8), 4.5, 7.5);
-    const centerY = group.y + group.r * 0.36;
+    // Distribuição sunflower (phyllotaxis) pelo círculo disponível abaixo do label
+    // fieldR: raio do campo de dots; centro deslocado para baixo para dar espaço ao label no topo
+    const fieldR = group.r * 0.52;
+    const dotR = constrain(fieldR / Math.max(2.2, Math.sqrt(total) * 1.75), 4.0, 7.5);
+    // Limite superior para a borda do dot (não pode subir além daqui)
+    const minDotTopY = group.y - group.r * 0.08;
+    // Centro dos dots deslocado para baixo para afastar da zona do label
+    const offsetY = group.r * 0.16;
     for (let i = 0; i < total; i++) {
-      const angle = i * GOLDEN_ANGLE - HALF_PI;
+      const angle = i * GOLDEN_ANGLE;
+      // Raio crescente de forma uniforme (sunflower)
       const d = Math.sqrt((i + 0.5) / total) * (fieldR - dotR);
       let x = group.x + cos(angle) * d;
-      let y = centerY + sin(angle) * (d * 0.78);
-      if (y < group.y + group.r * 0.04) {
-        y = group.y + group.r * 0.04 + (group.y + group.r * 0.04 - y) * 0.5;
+      let y = (group.y + offsetY) + sin(angle) * d;
+      // Garante que dot fica dentro do círculo da bolha
+      const distFromCenter = Math.hypot(x - group.x, y - group.y);
+      const maxDist = group.r - dotR - 3;
+      if (distFromCenter > maxDist) {
+        x = group.x + ((x - group.x) / distFromCenter) * maxDist;
+        y = group.y + ((y - group.y) / distFromCenter) * maxDist;
       }
-      const distCenter = Math.hypot(x - group.x, y - group.y);
-      const maxDist = group.r - dotR - 4;
-      if (distCenter > maxDist) {
-        x = group.x + ((x - group.x) / distCenter) * maxDist;
-        y = group.y + ((y - group.y) / distCenter) * maxDist;
-      }
+      // Garante que a BORDA SUPERIOR do dot não invade a zona do label
+      if (y - dotR < minDotTopY) y = minDotTopY + dotR;
       positions.push({ x, y, r: dotR });
     }
   }
@@ -693,11 +723,16 @@ function makeMapClusters(points, box) {
     const index = perLocation.get(key) || 0;
     perLocation.set(key, index + 1);
     const pos = project(point.location.lon, point.location.lat, box);
-    if (index > 0 && mapState.zoom > 2.6) {
+    if (index > 0) {
+      // Jitter sempre ativo: afasta pontos sobrepostos com ângulo dourado
+      // Raio maior em zoom alto (mais espaço disponível); suficiente p/ separar em zoom 1x
+      const jitterRadius = Math.min(
+        10 + 13 * Math.sqrt(index) * Math.sqrt(mapState.zoom),
+        48
+      );
       const angle = index * GOLDEN_ANGLE;
-      const radius = Math.min(14 * Math.sqrt(index), 44);
-      pos.x += cos(angle) * radius;
-      pos.y += sin(angle) * radius;
+      pos.x += cos(angle) * jitterRadius;
+      pos.y += sin(angle) * jitterRadius;
     }
     expanded.push({ ...point, x: pos.x, y: pos.y });
   }
