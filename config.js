@@ -69,6 +69,7 @@ const ICONS_CONFIG = {
   filtros: "data/Icones/filtros.svg",
   sobre: "data/Icones/sobre.svg",
   export: "data/Icones/exportar.svg",
+  collapse_panel: "data/Icones/collapse_panel.png",
   clear: "data/Icones/filter_alt_off.png",
   left: "data/Icones/keyboard_arrow_left.png",
   right: "data/Icones/keyboard_arrow_right.png",

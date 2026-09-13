@@ -124,6 +124,9 @@ function filterPanelScale() {
 }
 
 function filterPanelW() {
+  if (typeof leftPanelExtendedOpen !== "undefined" && !leftPanelExtendedOpen) {
+    return LAYOUT_NAV_W * filterPanelScale();
+  }
   return (LAYOUT_NAV_W + LAYOUT_FILTRO_W) * filterPanelScale();
 }
 

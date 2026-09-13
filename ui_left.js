@@ -4,26 +4,31 @@ function drawFilterPanel() {
   scale(scl);
   noStroke();
   fill(255);
-  rect(0, 0, LAYOUT_NAV_W + LAYOUT_FILTRO_W, height / scl);
+  const isExtended = typeof leftPanelExtendedOpen === "undefined" || leftPanelExtendedOpen;
+  const panelW = isExtended ? LAYOUT_NAV_W + LAYOUT_FILTRO_W : LAYOUT_NAV_W;
+  rect(0, 0, panelW, height / scl);
 
   drawNavSidebar();
 
-  push();
-  translate(LAYOUT_NAV_W, 0);
-  if (leftPanelTab === "filtros") {
-    drawFilterCards();
-    drawFilterBody();
-  } else if (leftPanelTab === "exportar") {
-    drawExportTab();
-  } else if (leftPanelTab === "sobre") {
-    drawSobreTab();
-  }
-  pop();
+  if (isExtended) {
+    push();
+    translate(LAYOUT_NAV_W, 0);
+    if (leftPanelTab === "filtros") {
+      drawFilterCards();
+      drawFilterBody();
+    } else if (leftPanelTab === "exportar") {
+      drawExportTab();
+    } else if (leftPanelTab === "sobre") {
+      drawSobreTab();
+    }
+    drawCollapseButton();
+    pop();
 
-  // Draw separator line over everything to ensure uniform thickness
-  stroke("#959fff");
-  strokeWeight(1.5);
-  line(LAYOUT_NAV_W, 0, LAYOUT_NAV_W, height / scl);
+    // Draw separator line over everything to ensure uniform thickness
+    stroke("#959fff");
+    strokeWeight(1.5);
+    line(LAYOUT_NAV_W, 0, LAYOUT_NAV_W, height / scl);
+  }
 
   pop();
 }
@@ -57,8 +62,10 @@ function drawNavSidebar() {
   const mx = mouseX / scl;
   const my = mouseY / scl;
 
+  const isExtended = typeof leftPanelExtendedOpen === "undefined" || leftPanelExtendedOpen;
+
   for (const item of NAV_CONFIG) {
-    const active = leftPanelTab === item.id;
+    const active = isExtended && leftPanelTab === item.id;
     const icon = item.iconKey ? icones[item.iconKey] : dynamicViewIcon;
     const hover = mx >= 0 && mx <= LAYOUT_NAV_W && my >= item.y - 30 && my <= item.y + 30;
 
@@ -478,9 +485,12 @@ function filterMousePressed(mxRaw, myRaw) {
   let mx = mxRaw / scale;
   const my = myRaw / scale;
 
+  const isExtended = typeof leftPanelExtendedOpen === "undefined" || leftPanelExtendedOpen;
+  const currentPanelW = isExtended ? LAYOUT_NAV_W + LAYOUT_FILTRO_W : LAYOUT_NAV_W;
+
   if (
     mx < 0 ||
-    mx > LAYOUT_NAV_W + LAYOUT_FILTRO_W ||
+    mx > currentPanelW ||
     my < 0 ||
     my > height / scale
   ) {
@@ -494,7 +504,12 @@ function filterMousePressed(mxRaw, myRaw) {
         if (item.id === "trocar") {
           activeView = (activeView + 1) % VIEWS_CONFIG.length;
         } else {
-          leftPanelTab = item.id;
+          if (isExtended && leftPanelTab === item.id) {
+            leftPanelExtendedOpen = false;
+          } else {
+            leftPanelTab = item.id;
+            leftPanelExtendedOpen = true;
+          }
         }
         return true;
       }
@@ -502,8 +517,28 @@ function filterMousePressed(mxRaw, myRaw) {
     return true;
   }
 
+  // If extended panel is collapsed, do not process extended panel clicks
+  if (!isExtended) {
+    return false;
+  }
+
   // Adjust mx for the Filter area
   mx -= LAYOUT_NAV_W;
+
+  // Check collapse button click at top right of extended panel
+  const btnW = 28;
+  const btnH = 28;
+  const btnX = LAYOUT_FILTRO_W - btnW - 12;
+  const btnY = 16;
+  if (
+    mx >= btnX - 4 &&
+    mx <= btnX + btnW + 4 &&
+    my >= btnY - 4 &&
+    my <= btnY + btnH + 4
+  ) {
+    leftPanelExtendedOpen = false;
+    return true;
+  }
 
   if (leftPanelTab === "filtros") {
     for (const dimKey of Object.keys(DIMENSIONS)) {
@@ -776,5 +811,75 @@ function drawSobreTab() {
     "Outro passo igualmente importante foi a produção das visualizações, integrando-as aos dados para representar correlações e semelhanças entre obras de design.\n\n" +
     "Disponibilizarei um link com o detalhamento da metodologia, a qual pode ser aplicada a qualquer outro projeto.";
 
-  text(txt, 20, 20, LAYOUT_FILTRO_W - 40, height);
+  text(txt, 20, 58, LAYOUT_FILTRO_W - 40, height);
+}
+
+function drawCollapseButton() {
+  const btnW = 28;
+  const btnH = 28;
+  const btnX = LAYOUT_FILTRO_W - btnW - 12;
+  const btnY = 16;
+  const scl = filterPanelScale();
+  const mx = mouseX / scl - LAYOUT_NAV_W;
+  const my = mouseY / scl;
+  const isHover =
+    mx >= btnX - 4 &&
+    mx <= btnX + btnW + 4 &&
+    my >= btnY - 4 &&
+    my <= btnY + btnH + 4;
+
+  if (isHover && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+
+  if (isHover) {
+    noStroke();
+    fill(0, 0, 0, 15);
+    rect(btnX - 2, btnY - 2, btnW + 4, btnH + 4, 6);
+  }
+
+  if (icones && icones.collapse_panel) {
+    drawImageCentered(
+      icones.collapse_panel,
+      btnX + btnW / 2,
+      btnY + btnH / 2,
+      22,
+      22,
+    );
+  } else {
+    // Vector fallback resembling panel collapse icon
+    stroke(60);
+    strokeWeight(1.8);
+    noFill();
+    rect(btnX, btnY, btnW, btnH, 5);
+    line(btnX + 8, btnY, btnX + 8, btnY + btnH);
+    beginShape();
+    vertex(btnX + 19, btnY + 8);
+    vertex(btnX + 13, btnY + 14);
+    vertex(btnX + 19, btnY + 20);
+    endShape();
+  }
+
+  if (isHover) {
+    push();
+    fill(20, 20, 24, 230);
+    noStroke();
+    if (fontes && fontes.roboto) textFont(fontes.roboto);
+    textSize(11);
+    const tipTxt = "Esconder menu";
+    const tw = textWidth(tipTxt);
+    const tipW = tw + 14;
+    const tipH = 22;
+    const tipX = constrain(
+      btnX + btnW / 2 - tipW / 2,
+      5,
+      LAYOUT_FILTRO_W - tipW - 5,
+    );
+    const tipY = btnY + btnH + 6;
+    rect(tipX, tipY, tipW, tipH, 4);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    text(tipTxt, tipX + tipW / 2, tipY + tipH / 2);
+    pop();
+  }
 }

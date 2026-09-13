@@ -277,6 +277,9 @@ assert(catOpts[0].value === -2 && catOpts[1].value === -1, "Opções incluem 'Ta
 // Teste de drawProductHeaderTooltip
 assert(typeof drawProductHeaderTooltip === "function", "drawProductHeaderTooltip está definida");
 
+// Teste de drawCollapseButton
+assert(typeof drawCollapseButton === "function", "drawCollapseButton está definida");
+
 console.log("\n=== 10. Validando getCircularVisualProducts e countProductsWithTagInCurrentType (data_manager.js) ===");
 vm.runInThisContext(dmContent);
 assert(typeof getCircularVisualProducts === "function", "getCircularVisualProducts está definida");
@@ -318,6 +321,19 @@ const initialRipplesCount = clickRipples.length;
 triggerClickRipple(150, 200);
 assert(clickRipples.length === initialRipplesCount + 1, "triggerClickRipple registra novo efeito de ripple");
 
+console.log("\n=== 12. Validando Controle de Visibilidade do Menu Estendido ===");
+assert(typeof leftPanelExtendedOpen === "boolean", "leftPanelExtendedOpen está definido no estado");
+assert(leftPanelExtendedOpen === true, "leftPanelExtendedOpen é inicialmente true (menu aberto)");
+
+global.width = 1200;
+leftPanelExtendedOpen = true;
+const fullW = filterPanelW();
+assert(fullW === LAYOUT_NAV_W + LAYOUT_FILTRO_W, `filterPanelW com menu aberto é ${LAYOUT_NAV_W + LAYOUT_FILTRO_W} (obtido: ${fullW})`);
+
+leftPanelExtendedOpen = false;
+const collapsedW = filterPanelW();
+assert(collapsedW === LAYOUT_NAV_W, `filterPanelW com menu recolhido é ${LAYOUT_NAV_W} (obtido: ${collapsedW})`);
+leftPanelExtendedOpen = true; // restaurar estado inicial
 
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);

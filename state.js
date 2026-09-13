@@ -15,6 +15,7 @@ let selectedImageIndex = 0;
 let savedProductKeys = new Set();
 let activeDimension = "tipo_obra";
 let leftPanelTab = "filtros"; // "filtros", "exportar", "sobre"
+let leftPanelExtendedOpen = true; // controls visibility of extended filter/export/sobre panel
 
 // Per-frame cache for expensive computations
 let _cacheFrame = -1;
