@@ -11,7 +11,7 @@ function drawProductPanel() {
 
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
-  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 190) * scale);
+  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 240) * scale);
 
   noStroke();
   fill("#FFFFFF");
@@ -786,7 +786,7 @@ function productPanelMousePressed(mx, my) {
   const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 70) * scale);
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
-  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 190) * scale);
+  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 240) * scale);
 
   if (mx < x || mx > x + w || my < 0 || my > height) return false;
 
@@ -892,7 +892,7 @@ function productPanelWheel(event) {
   const x = productPanelX();
   const w = productPanelW();
   const scale = layoutScale();
-  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 190) * scale);
+  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 240) * scale);
   const titleH = Math.round((typeof PRODUCT_TITLE_H !== "undefined" ? PRODUCT_TITLE_H : 56) * scale);
   const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 70) * scale);
   const contentY = imageH + titleH;

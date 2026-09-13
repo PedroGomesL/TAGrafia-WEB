@@ -103,7 +103,7 @@ assert(LAYOUT_NAV_W === 70, `LAYOUT_NAV_W está configurado como 70 (obtido: ${L
 assert(LAYOUT_FILTRO_W === 210, `LAYOUT_FILTRO_W está configurado como 210 (obtido: ${LAYOUT_FILTRO_W})`);
 assert(LAYOUT_PAINEL_PRODUTO_W === 360, `LAYOUT_PAINEL_PRODUTO_W está configurado como 360 (obtido: ${LAYOUT_PAINEL_PRODUTO_W})`);
 assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 280, `LAYOUT_PAINEL_PRODUTO_W_MIN está configurado como 280 (obtido: ${LAYOUT_PAINEL_PRODUTO_W_MIN})`);
-assert(PRODUCT_IMAGE_H === 190, `PRODUCT_IMAGE_H está configurado como 190 (obtido: ${PRODUCT_IMAGE_H})`);
+assert(PRODUCT_IMAGE_H === 240, `PRODUCT_IMAGE_H está configurado como 240 (obtido: ${PRODUCT_IMAGE_H})`);
 assert(PRODUCT_TITLE_H === 56, `PRODUCT_TITLE_H está configurado como 56 (obtido: ${PRODUCT_TITLE_H})`);
 assert(PRODUCT_SIDEBAR_W === 70, `PRODUCT_SIDEBAR_W está configurado como 70 (obtido: ${PRODUCT_SIDEBAR_W})`);
 
