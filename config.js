@@ -14,6 +14,64 @@ const LAYOUT_VISUAL_W_MIN = 320;
 
 const LAYOUT_PAINEL_PRODUTO_W_MIN = 300;
 
+// Breakpoints responsivos para mobile, tablet e desktop
+const BREAKPOINTS = {
+  mobile: 768,
+  tablet: 1024,
+  desktop: 1440,
+  ultrawide: 2160,
+};
+
+const MOBILE_SCREENS = {
+  VISUAL: "visual",
+  FILTROS: "filtros",
+  PRODUTO: "produto",
+  SOBRE: "sobre",
+  EXPORTAR: "exportar",
+};
+
+function isMobileMode() {
+  return typeof width !== "undefined" && width < BREAKPOINTS.mobile;
+}
+
+function isTabletMode() {
+  return (
+    typeof width !== "undefined" &&
+    width >= BREAKPOINTS.mobile &&
+    width < BREAKPOINTS.tablet
+  );
+}
+
+function isDesktopMode() {
+  return typeof width !== "undefined" && width >= BREAKPOINTS.tablet;
+}
+
+function getDeviceMode() {
+  if (typeof width === "undefined") return "desktop";
+  if (width < BREAKPOINTS.mobile) return "mobile";
+  if (width < BREAKPOINTS.tablet) return "tablet";
+  if (width >= BREAKPOINTS.ultrawide) return "ultrawide";
+  return "desktop";
+}
+
+function getOriginLabel(origin) {
+  return origin === "brasileiro" ? "Brasil" : "Internacional";
+}
+
+function getContrastTextColor(hexColor) {
+  if (!hexColor || typeof hexColor !== "string") return "#000000";
+  const hex = hexColor.replace("#", "");
+  if (hex.length !== 6) return "#000000";
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  const toLinear = (c) =>
+    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const lum =
+    0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+  return lum > 0.35 ? "#000000" : "#FFFFFF";
+}
+
 // Filter panel layout
 const FILTER_HEADER_H = 58;
 const FILTER_CARD_H = 100;

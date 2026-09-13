@@ -210,7 +210,7 @@ function drawFilterBody() {
   textFont(fontes.roboto);
   textSize(14);
   textAlign(LEFT, CENTER);
-  fill(tagSearch.length ? "#000000" : color(160));
+  fill(tagSearch.length ? "#000000" : "#595959");
   text(
     tagSearch.length ? tagSearch : "Pesquisar tag",
     FILTER_BAR_X + 10,
@@ -450,7 +450,7 @@ function drawFilterTag(tag, y, rowH) {
     noStroke();
     fill(selected ? color(255, 255, 255, 130) : (isHovered ? color(200, 200, 205, 240) : color(217, 217, 217, 210)));
     rect(badgeX, y + rowH / 2 - 11, badgeW, 22, 11);
-    fill(selected ? "#000000" : (isHovered ? "#111111" : color(80)));
+    fill(selected ? "#000000" : (isHovered ? "#111111" : "#333333"));
     textSize(12);
     textAlign(CENTER, CENTER);
     text(badgeText, badgeX + badgeW / 2, y + rowH / 2);
@@ -503,12 +503,15 @@ function filterMousePressed(mxRaw, myRaw) {
       if (my >= item.y - 30 && my <= item.y + 30) {
         if (item.id === "trocar") {
           activeView = (activeView + 1) % VIEWS_CONFIG.length;
+          if (typeof mapState !== "undefined") mapState.dragging = false;
+          draggedYearHandle = null;
         } else {
           if (isExtended && leftPanelTab === item.id) {
             leftPanelExtendedOpen = false;
           } else {
             leftPanelTab = item.id;
             leftPanelExtendedOpen = true;
+            sobreScroll = 0;
           }
         }
         return true;
@@ -797,6 +800,9 @@ function drawExportTab() {
 }
 
 function drawSobreTab() {
+  const scl = filterPanelScale();
+  const availableH = height / scl - 70;
+
   fill(0);
   noStroke();
   textFont(fontes.roboto);
@@ -812,7 +818,20 @@ function drawSobreTab() {
     "Outro passo igualmente importante foi a produção das visualizações, integrando-as aos dados para representar correlações e semelhanças entre obras de design.\n\n" +
     "Disponibilizarei um link com o detalhamento da metodologia, a qual pode ser aplicada a qualquer outro projeto.";
 
-  text(txt, 20, 58, LAYOUT_FILTRO_W - 40, height);
+  const contentH = 460;
+  sobreScroll = constrain(sobreScroll, 0, Math.max(0, contentH - availableH));
+
+  drawingContext.save();
+  drawingContext.beginPath();
+  drawingContext.rect(0, 58, LAYOUT_FILTRO_W, availableH);
+  drawingContext.clip();
+
+  push();
+  translate(0, -sobreScroll);
+  text(txt, 20, 58, LAYOUT_FILTRO_W - 40, contentH + 100);
+  pop();
+
+  drawingContext.restore();
 }
 
 function drawCollapseButton() {

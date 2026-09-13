@@ -18,11 +18,22 @@ function preload() {
   }
 }
 
+function getOptimalCanvasDimensions() {
+  if (typeof isMobileMode === "function" && isMobileMode()) {
+    return {
+      w: Math.max(320, windowWidth),
+      h: Math.max(480, windowHeight),
+    };
+  }
+  return {
+    w: Math.max(1024, windowWidth),
+    h: Math.max(640, windowHeight),
+  };
+}
+
 function setup() {
-  const canvas = createCanvas(
-    Math.max(1024, windowWidth),
-    Math.max(640, windowHeight),
-  );
+  const dims = getOptimalCanvasDimensions();
+  const canvas = createCanvas(dims.w, dims.h);
   canvas.parent("canvasMount");
   pixelDensity(Math.min(2, displayDensity()));
   textFont(fontes.robotoCondensed);
@@ -92,11 +103,12 @@ function draw() {
   _cachedVisibleProductsNoYear = null;
   _cachedTagCounts = null;
   background(240);
-  drawCurrentVisualization();
-  drawVisualizationSummary();
-  drawProductPanel();
-  drawFilterPanel();
-  drawLayoutSeparators();
+
+  if (typeof isMobileMode === "function" && isMobileMode()) {
+    drawMobileLayout();
+  } else {
+    drawDesktopLayout();
+  }
 
   if (hitAreaAt(mouseX, mouseY)) {
     requestCursor(HAND);
@@ -109,9 +121,88 @@ function draw() {
   }
 }
 
+function drawDesktopLayout() {
+  drawCurrentVisualization();
+  drawVisualizationSummary();
+  drawProductPanel();
+  drawFilterPanel();
+  drawLayoutSeparators();
+}
+
+/**
+ * Scaffold de layout mobile que prepara a arquitetura para telas responsivas.
+ * O usuário adicionará e customizará os componentes específicos das telas.
+ */
+function drawMobileLayout() {
+  const activeScreen = typeof mobileState !== "undefined" ? mobileState.activeScreen : "visual";
+  switch (activeScreen) {
+    case "filtros":
+      drawMobileFiltrosScreen();
+      break;
+    case "produto":
+      drawMobileProdutoScreen();
+      break;
+    case "sobre":
+      drawMobileSobreScreen();
+      break;
+    case "exportar":
+      drawMobileExportarScreen();
+      break;
+    case "visual":
+    default:
+      drawMobileVisualScreen();
+      break;
+  }
+}
+
+function drawMobileVisualScreen() {
+  drawCurrentVisualization();
+  drawVisualizationSummary();
+}
+
+function drawMobileFiltrosScreen() {
+  drawFilterPanel();
+}
+
+function drawMobileProdutoScreen() {
+  drawProductPanel();
+}
+
+function drawMobileSobreScreen() {
+  drawSobreTab();
+}
+
+function drawMobileExportarScreen() {
+  drawExportTab();
+}
+
+function touchStarted() {
+  if (typeof mobileState !== "undefined") {
+    mobileState.touchStartX = mouseX;
+    mobileState.touchStartY = mouseY;
+    mobileState.touchMoved = false;
+  }
+  return mousePressed();
+}
+
+function touchMoved() {
+  if (typeof mobileState !== "undefined") {
+    mobileState.touchMoved = true;
+  }
+  return mouseDragged();
+}
+
+function touchEnded() {
+  return mouseReleased();
+}
+
 function windowResized() {
-  resizeCanvas(Math.max(1024, windowWidth), Math.max(640, windowHeight));
+  const dims = getOptimalCanvasDimensions();
+  resizeCanvas(dims.w, dims.h);
   pixelDensity(Math.min(2, displayDensity()));
+  if (typeof limitMapPan === "function") {
+    limitMapPan();
+  }
 }
 
 function filterPanelScale() {
@@ -201,9 +292,23 @@ function mouseDragged() {
   if (draggedYearHandle) {
     requestCursor(HAND);
     const newYear = xToYear(mouseX);
-    if (draggedYearHandle === "start")
-      yearStart = constrain(newYear, YEAR_MIN, yearEnd);
-    else yearEnd = constrain(newYear, yearStart, YEAR_MAX);
+    if (draggedYearHandle === "start") {
+      if (newYear > yearEnd) {
+        yearStart = yearEnd;
+        yearEnd = constrain(newYear, yearStart, YEAR_MAX);
+        draggedYearHandle = "end";
+      } else {
+        yearStart = constrain(newYear, YEAR_MIN, yearEnd);
+      }
+    } else {
+      if (newYear < yearStart) {
+        yearEnd = yearStart;
+        yearStart = constrain(newYear, YEAR_MIN, yearEnd);
+        draggedYearHandle = "start";
+      } else {
+        yearEnd = constrain(newYear, yearStart, YEAR_MAX);
+      }
+    }
     return false;
   }
   if (mapState.dragging) {
@@ -254,21 +359,31 @@ function mouseWheel(event) {
   }
   if (
     mouseX >= 0 &&
-    mouseX <= filterPanelW() &&
-    mouseY >= filterListY() * filterPanelScale()
+    mouseX <= filterPanelW()
   ) {
-    const tags = tagsToDisplay();
-    const maxScroll = Math.max(
-      0,
-      tags.length * FILTER_TAG_ROW_H -
-        (height / filterPanelScale() - 10 - filterListY()),
-    );
-    tagScroll = constrain(
-      tagScroll + (event.delta * 0.45) / filterPanelScale(),
-      0,
-      maxScroll,
-    );
-    return false;
+    if (leftPanelTab === "sobre" && mouseY >= 58 * filterPanelScale()) {
+      const maxScroll = Math.max(0, 460 - (height / filterPanelScale() - 70));
+      sobreScroll = constrain(
+        sobreScroll + (event.delta * 0.45) / filterPanelScale(),
+        0,
+        maxScroll,
+      );
+      return false;
+    }
+    if (mouseY >= filterListY() * filterPanelScale()) {
+      const tags = tagsToDisplay();
+      const maxScroll = Math.max(
+        0,
+        tags.length * FILTER_TAG_ROW_H -
+          (height / filterPanelScale() - 10 - filterListY()),
+      );
+      tagScroll = constrain(
+        tagScroll + (event.delta * 0.45) / filterPanelScale(),
+        0,
+        maxScroll,
+      );
+      return false;
+    }
   }
 }
 
@@ -294,6 +409,14 @@ function keyPressed() {
 }
 
 function hitAreaAt(mx, my) {
+  // Limita hit testing visual a área de visualização visível (evita cursor fantasma fora do centro)
+  if (
+    typeof visualX === "function" &&
+    typeof visualW === "function" &&
+    !insideRect(mx, my, visualX(), 0, visualW(), height - (typeof TIMELINE_H !== "undefined" ? TIMELINE_H : 74))
+  ) {
+    return null;
+  }
   for (let i = hitAreas.length - 1; i >= 0; i--) {
     const area = hitAreas[i];
     if (area.shape === "circle" || area.kind === "tag") {

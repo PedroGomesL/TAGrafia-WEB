@@ -53,12 +53,16 @@ function drawCircularView(visible) {
     const active = !focusedCircularTagKey || focusedCircularTagKey === tag.key;
     noStroke();
     fill(colorAlpha(tag.color, active ? 255 : 75));
-    circle(pos.x, pos.y, active ? 11 : 8);
+    const hitX = cx + (pos.x - cx) * scaleRatio;
+    const hitY = cy + (pos.y - cy) * scaleRatio;
+    if (dist(mouseX, mouseY, hitX, hitY) <= 13 * scaleRatio) {
+      hoveredCircularTag = tag;
+    }
     hitAreas.push({
       kind: "tag",
       tag,
-      cx: cx + (pos.x - cx) * scaleRatio,
-      cy: cy + (pos.y - cy) * scaleRatio,
+      cx: hitX,
+      cy: hitY,
       r: 13 * scaleRatio,
     });
   }
@@ -113,14 +117,19 @@ function drawCircularView(visible) {
     );
   }
 
-  const focused = tagsByKey.get(focusedCircularTagKey);
-  if (focused) {
+  const displayTag = hoveredCircularTag || tagsByKey.get(focusedCircularTagKey);
+  if (displayTag) {
+    const dim = getDimension(displayTag.dimension);
+    const dimLabel = dim ? dim.label : "";
+    const tooltipText = dimLabel
+      ? `${displayTag.label} (${dimLabel})`
+      : displayTag.label;
     fill(themeLineColor());
     noStroke();
     textFont(fontes.robotoCondensed);
     textSize(13);
     textAlign(CENTER, TOP);
-    text(focused.label, cx, cy + radius + 28);
+    text(tooltipText, cx, cy + radius * scaleRatio + 28);
   }
 }
 
@@ -159,7 +168,7 @@ function drawProductCard(product, cx, cy, w, h, rotation) {
     strokeWeight(0.9);
     rect(0, 0, w - 4, h - 4);
   }
-  fill("#000000");
+  fill(product.origin === "brasileiro" ? "#000000" : "#FFFFFF");
   noStroke();
   textFont(fontes.afacad);
   textStyle(BOLD);

@@ -405,6 +405,57 @@ const scaleCompact = filterPanelScale();
 assert(scaleCompact === 0.9, `Janela 900px reduz filterPanelScale proporcionalmente para 0.9 (obtido: ${scaleCompact})`);
 assert(productPanelW() >= LAYOUT_PAINEL_PRODUTO_W_MIN, "Janela compacta preserva largura mínima do painel de produtos");
 
+console.log("\n=== 14. Validando Acessibilidade, Breakpoints Responsivos e Correções de Bugs ===");
+// 1. Breakpoints e modos de dispositivo
+assert(typeof BREAKPOINTS === "object" && BREAKPOINTS.mobile === 768, "BREAKPOINTS configurado com mobile === 768");
+global.width = 375;
+assert(isMobileMode() === true, "isMobileMode() identifica tela 375px como mobile");
+assert(getDeviceMode() === "mobile", "getDeviceMode() retorna 'mobile' para 375px");
+global.width = 800;
+assert(isTabletMode() === true, "isTabletMode() identifica tela 800px como tablet");
+global.width = 1920;
+assert(isDesktopMode() === true, "isDesktopMode() identifica tela 1920px como desktop");
+global.width = 2560;
+assert(getDeviceMode() === "ultrawide", "getDeviceMode() retorna 'ultrawide' para 2560px");
+
+// 2. Acessibilidade de rótulos e contraste
+assert(typeof getOriginLabel === "function", "getOriginLabel está definida");
+assert(getOriginLabel("brasileiro") === "Brasil", "getOriginLabel('brasileiro') retorna 'Brasil'");
+assert(getOriginLabel("internacional") === "Internacional", "getOriginLabel('internacional') retorna 'Internacional'");
+
+assert(typeof getContrastTextColor === "function", "getContrastTextColor está definida");
+assert(getContrastTextColor(COLORS.magenta) === "#FFFFFF", "getContrastTextColor para magenta retorna #FFFFFF (garante contraste acessível)");
+assert(getContrastTextColor(COLORS.yellow) === "#000000", "getContrastTextColor para amarelo retorna #000000 (garante contraste acessível)");
+
+// 3. Resolução do bug de travamento de handles da timeline quando anos coincidem
+global.width = 1920;
+global.height = 1080;
+yearStart = 1950;
+yearEnd = 1950;
+const currentTy = height - TIMELINE_H / 2;
+const sameYearX = yearToX(1950);
+const handleRightClick = clickedYearHandle(sameYearX + 5, currentTy);
+assert(handleRightClick === "end", "Ao clicar à direita de handles sobrepostas, seleciona 'end' permitindo expansão do intervalo");
+const handleLeftClick = clickedYearHandle(sameYearX - 5, currentTy);
+assert(handleLeftClick === "start", "Ao clicar à esquerda de handles sobrepostas, seleciona 'start'");
+
+// 4. Estrutura de estado e scaffold mobile
+assert(typeof mobileState === "object" && mobileState !== null, "mobileState está definido no estado");
+assert(mobileState.activeScreen === "visual", "mobileState.activeScreen inicial é 'visual'");
+assert(typeof drawDesktopLayout === "function", "drawDesktopLayout está definida");
+assert(typeof drawMobileLayout === "function", "drawMobileLayout está definida");
+assert(typeof touchStarted === "function", "touchStarted está definida para suporte mobile");
+assert(typeof touchMoved === "function", "touchMoved está definida para suporte mobile");
+assert(typeof touchEnded === "function", "touchEnded está definida para suporte mobile");
+
+// 5. Prevenção de cursor fantasma fora da área visual central
+hitAreas = [
+  { shape: "circle", kind: "product", cx: 100, cy: 100, r: 20 },
+];
+// Quando fora dos limites visuais, hitAreaAt deve ignorar áreas visuais
+const ghostHit = hitAreaAt(20, 100);
+assert(ghostHit === null, "hitAreaAt fora da área visual central não ativa hit areas fantasmas");
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {

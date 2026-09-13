@@ -63,4 +63,16 @@ let exportDropdownAnim = 0;
 let tagClickAnim = new Map();
 let clickRipples = [];
 let currentFrameCursor = null;
+let hoveredCircularTag = null;
+let sobreScroll = 0;
+
+// Estado para controle de responsividade mobile
+let mobileState = {
+  activeScreen: "visual", // "visual" | "filtros" | "produto" | "sobre" | "exportar"
+  menuOpen: false,
+  productSheetOpen: false,
+  touchStartX: 0,
+  touchStartY: 0,
+  touchMoved: false,
+};
 

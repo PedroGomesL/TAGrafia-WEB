@@ -134,10 +134,15 @@ function drawProductImage(x, y, w, h, scale) {
     textFont(fontes.roboto);
     textSize(15 * scale);
     textAlign(CENTER, CENTER);
+    const images = selectedProduct ? productImages(selectedProduct) : [];
+    const currentPath = images.length
+      ? images[constrain(selectedImageIndex, 0, images.length - 1)]
+      : null;
+    const isFailed = currentPath && imageCache.get(currentPath) === false;
     text(
-      selectedProduct && productImages(selectedProduct).length
-        ? "Carregando imagem..."
-        : "Imagem não encontrada",
+      isFailed || !selectedProduct || !images.length
+        ? "Imagem não encontrada"
+        : "Carregando imagem...",
       x + w / 2,
       y + h / 2,
     );
@@ -146,8 +151,8 @@ function drawProductImage(x, y, w, h, scale) {
   if (selectedProduct) {
     const images = productImages(selectedProduct);
     if (images.length > 1) {
-      const leftBtnHover = dist(mouseX, mouseY, x + 45 * scale, y + h - 64 * scale) <= 15 * scale;
-      const rightBtnHover = dist(mouseX, mouseY, x + w - 45 * scale, y + h - 64 * scale) <= 15 * scale;
+      const leftBtnHover = dist(mouseX, mouseY, x + 45 * scale, y + h - 64 * scale) <= 20 * scale;
+      const rightBtnHover = dist(mouseX, mouseY, x + w - 45 * scale, y + h - 64 * scale) <= 20 * scale;
       if ((leftBtnHover || rightBtnHover) && typeof requestCursor === "function") {
         requestCursor(HAND);
       }
@@ -177,10 +182,6 @@ function drawProductInfo(x, y, w, h, scale) {
   line(x, y + h, x + w, y + h);
 
   if (!selectedProduct) {
-    if (_headerHoverHandSet) {
-      cursor(ARROW);
-      _headerHoverHandSet = false;
-    }
     activeProductHeaderTooltip = null;
     noStroke();
     fill("#000000");
@@ -215,10 +216,12 @@ function drawProductInfo(x, y, w, h, scale) {
   text(titleWithYear, titleX + 0.5, titleY, titleW, 30 * scale);
   textStyle(NORMAL);
 
-  // Author (Regular, below product name)
-  const designerText = selectedProduct.author || "Designer desconhecido";
+  // Author & Origin label (Regular, below product name - accessible textual indicator)
+  const originText = typeof getOriginLabel === "function" ? getOriginLabel(selectedProduct.origin) : (selectedProduct.origin === "brasileiro" ? "Brasil" : "Internacional");
+  const authorName = selectedProduct.author || "Designer desconhecido";
+  const designerAndOrigin = `${authorName} • ${originText}`;
   textSize(14 * scale);
-  text(designerText, titleX, titleY + 22 * scale, titleW, 20 * scale);
+  text(designerAndOrigin, titleX, titleY + 22 * scale, titleW, 20 * scale);
 
   // Icons on the right
   const iconY = y + h / 2;
@@ -258,6 +261,7 @@ function drawProductInfo(x, y, w, h, scale) {
   activeProductHeaderTooltip = null;
   const hoverSave = dist(mouseX, mouseY, iconSaveX, iconY) <= iconRadius + 2 * scale;
   const hoverProd = prodIcon && dist(mouseX, mouseY, iconProdX, iconY) <= iconRadius + 2 * scale;
+  const hoverOrigin = insideRect(mouseX, mouseY, x + 7 * scale, titleY, 12 * scale, 38 * scale);
 
   if (hoverSave) {
     activeProductHeaderTooltip = {
@@ -278,14 +282,19 @@ function drawProductInfo(x, y, w, h, scale) {
       panelX: x,
       panelW: w,
     };
+  } else if (hoverOrigin) {
+    activeProductHeaderTooltip = {
+      text: `Origem: ${originText}`,
+      targetX: x + 12 * scale,
+      targetY: titleY + 19 * scale,
+      radius: 10 * scale,
+      panelX: x,
+      panelW: w,
+    };
   }
 
-  if (hoverSave || hoverProd) {
-    cursor(HAND);
-    _headerHoverHandSet = true;
-  } else if (_headerHoverHandSet) {
-    cursor(ARROW);
-    _headerHoverHandSet = false;
+  if ((hoverSave || hoverProd || hoverOrigin) && typeof requestCursor === "function") {
+    requestCursor(HAND);
   }
 }
 
@@ -517,7 +526,7 @@ function drawSavedProducts(x, y, w, scale) {
   fill(isSearchHover && !savedSearchActive ? (lightMode ? "#F7F7FA" : "#CCCCCC") : (lightMode ? "#FFFFFF" : "#D9D9D9"));
   rect(searchX, searchY, searchW, searchH, 5);
 
-  fill(savedSearch.length ? "#000000" : color(120));
+  fill(savedSearch.length ? "#000000" : "#595959");
   noStroke();
   textFont(fontes.roboto);
   textSize(12 * scale);
@@ -708,7 +717,7 @@ function getProductImage(product, index) {
   loadImage(
     asset(path),
     (img) => imageCache.set(path, img),
-    () => imageCache.set(path, null),
+    () => imageCache.set(path, false),
   );
   return null;
 }

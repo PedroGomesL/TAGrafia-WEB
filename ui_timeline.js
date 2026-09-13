@@ -65,7 +65,20 @@ function xToYear(x) {
 
 function clickedYearHandle(mx, my) {
   if (my < height - TIMELINE_H || my > height) return null;
-  if (Math.abs(mx - yearToX(yearStart)) < 18) return "start";
-  if (Math.abs(mx - yearToX(yearEnd)) < 18) return "end";
+  const xStart = yearToX(yearStart);
+  const xEnd = yearToX(yearEnd);
+  const distStart = Math.abs(mx - xStart);
+  const distEnd = Math.abs(mx - xEnd);
+
+  // Se as alças estão sobrepostas ou muito próximas (ex: mesmo ano selecionado)
+  if (Math.abs(xStart - xEnd) < 24) {
+    if (distStart < 24 || distEnd < 24) {
+      return mx >= (xStart + xEnd) / 2 ? "end" : "start";
+    }
+    return null;
+  }
+
+  if (distStart < 18) return "start";
+  if (distEnd < 18) return "end";
   return null;
 }
