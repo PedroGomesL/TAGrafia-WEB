@@ -336,6 +336,19 @@ assert(fullW === LAYOUT_NAV_W + LAYOUT_FILTRO_W, `filterPanelW com menu aberto �
 leftPanelExtendedOpen = false;
 const collapsedW = filterPanelW();
 assert(collapsedW === LAYOUT_NAV_W, `filterPanelW com menu recolhido é ${LAYOUT_NAV_W} (obtido: ${collapsedW})`);
+
+// Validação de estabilidade do menu direito
+leftPanelExtendedOpen = true;
+const scaleOpen = layoutScale();
+const rightWOpen = productPanelW();
+
+leftPanelExtendedOpen = false;
+const scaleClosed = layoutScale();
+const rightWClosed = productPanelW();
+
+assert(scaleOpen === scaleClosed, `layoutScale permanece estável ao abrir/fechar menu esquerdo (${scaleOpen} === ${scaleClosed})`);
+assert(rightWOpen === rightWClosed, `productPanelW permanece estável ao abrir/fechar menu esquerdo (${rightWOpen} === ${rightWClosed})`);
+
 leftPanelExtendedOpen = true; // restaurar estado inicial
 
 console.log("\n==========================================");

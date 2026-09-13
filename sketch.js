@@ -113,9 +113,13 @@ function windowResized() {
   resizeCanvas(Math.max(1024, windowWidth), Math.max(640, windowHeight));
 }
 
+function baseContentSpace() {
+  const baseFilterW = (LAYOUT_NAV_W + LAYOUT_FILTRO_W) * filterPanelScale();
+  return Math.max(1, width - baseFilterW);
+}
+
 function layoutScale() {
-  const space = Math.max(1, contentSpace());
-  return Math.min(1, space / (LAYOUT_VISUAL_W_BASE + LAYOUT_PAINEL_PRODUTO_W));
+  return Math.min(1, baseContentSpace() / (LAYOUT_VISUAL_W_BASE + LAYOUT_PAINEL_PRODUTO_W));
 }
 
 function filterPanelScale() {
