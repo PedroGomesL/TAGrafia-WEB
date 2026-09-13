@@ -240,6 +240,136 @@ function fitLineWithEllipsis(line, maxW) {
   return `${result}...`;
 }
 
+function getBubbleTextCandidates(name) {
+  const clean = cleanText(name);
+  if (!clean) return [[""]];
+
+  if (clean === "Modernismo Norte-Americano") {
+    return [
+      ["Modernismo", "Norte-Americano"],
+      ["Modernismo", "Norte-", "Americano"],
+      [clean],
+    ];
+  }
+  if (clean === "HfG Ulm / Good Design") {
+    return [
+      ["HfG Ulm /", "Good Design"],
+      ["HfG Ulm", "Good Design"],
+      [clean],
+    ];
+  }
+  if (clean === "Cranbrook Academy of Art") {
+    return [
+      ["Cranbrook", "Academy of Art"],
+      ["Cranbrook", "Academy", "of Art"],
+      [clean],
+    ];
+  }
+  if (clean === "California New Wave") {
+    return [
+      ["California", "New Wave"],
+      [clean],
+    ];
+  }
+  if (clean === "Deutscher Werkbund") {
+    return [
+      ["Deutscher", "Werkbund"],
+      [clean],
+    ];
+  }
+  if (clean === "Estilo Internacional") {
+    return [
+      ["Estilo", "Internacional"],
+      [clean],
+    ];
+  }
+  if (clean === "Art Nouveau") {
+    return [
+      [clean],
+      ["Art", "Nouveau"],
+    ];
+  }
+  if (clean === "Design Orgânico") {
+    return [
+      [clean],
+      ["Design", "Orgânico"],
+    ];
+  }
+  if (clean === "Obras brasileiras") {
+    return [
+      [clean],
+      ["Obras", "brasileiras"],
+    ];
+  }
+
+  const words = clean.split(/\s+/);
+  if (words.length === 1) {
+    if (clean.includes("-")) {
+      const parts = clean.split("-");
+      return [
+        [clean],
+        [parts[0] + "-", parts.slice(1).join("-")],
+      ];
+    }
+    return [[clean]];
+  }
+  if (words.length === 2) {
+    return [
+      [clean],
+      [words[0], words[1]],
+    ];
+  }
+  const mid = Math.ceil(words.length / 2);
+  return [
+    [words.slice(0, mid).join(" "), words.slice(mid).join(" ")],
+    [clean],
+    words,
+  ];
+}
+
+function fitBubbleText(group) {
+  const hasProds = group.products.length > 0;
+  const availW = group.r * (hasProds ? 1.55 : 1.72);
+  const availH = group.r * (hasProds ? 0.70 : 1.35);
+  const candidates = getBubbleTextCandidates(group.name);
+
+  const measureW = (str, s) => {
+    if (typeof textWidth === "function") {
+      textSize(s);
+      return textWidth(cleanText(str));
+    }
+    return cleanText(str).length * s * 0.55;
+  };
+
+  let bestCandidate = candidates[0];
+  let bestSize = 7.0;
+
+  for (const cand of candidates) {
+    let size = Math.min(13.5, Math.max(9, group.r * 0.24));
+    if (!hasProds) size = Math.min(15, Math.max(10, group.r * 0.28));
+    const minSize = 7.0;
+
+    const fits = (s) => {
+      for (const line of cand) {
+        if (measureW(line, s) > availW) return false;
+      }
+      const totalH = (cand.length - 1) * (s * 1.15) + s;
+      return totalH <= availH;
+    };
+
+    while (!fits(size) && size > minSize) {
+      size -= 0.5;
+    }
+
+    if (size > bestSize || (size === bestSize && cand.length < bestCandidate.length)) {
+      bestSize = size;
+      bestCandidate = cand;
+    }
+  }
+
+  return { lines: bestCandidate, size: bestSize };
+}
+
 function drawBubbleView(productsVisible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
@@ -267,36 +397,24 @@ function drawBubbleView(productsVisible) {
     circle(group.x, group.y, group.r * 2);
     drawProductsInBubble(group);
 
-    // Renderiza o nome do grupo dentro do círculo (terço superior) ou acima dele
-    // quando o raio é pequeno demais para o texto ficar legível dentro
+    // Renderiza o nome do grupo SEMPRE dentro do círculo (terço superior)
     fill("#000000");
     noStroke();
     textFont(fontes.afacad);
     textStyle(BOLD);
     const hasProds = group.products.length > 0;
 
-    // Largura mínima necessária para o texto não ser clipado pelo p5.js
-    const textWInside = group.r * 1.55;
-    const tSizeInside = fitTextSize(group.name, textWInside, 14, 9);
-    // Se o texto não cabe dentro (fonte reduzida ao mínimo e ainda muito grande),
-    // rende o label acima do círculo para evitar bolha sem nome visível
-    const nameWidthAtMin = group.r * 1.55; // largura disponível
-    const FONT_SIZE_THRESHOLD = 10; // se fitTextSize retornar >= este tamanho, fica dentro
-    if (tSizeInside >= FONT_SIZE_THRESHOLD) {
-      // Texto cabe dentro: posição no terço superior da bolha
-      const textH = hasProds ? group.r * 0.52 : group.r * 1.2;
-      const textCenterY = hasProds ? group.y - group.r * 0.38 : group.y;
-      textSize(tSizeInside);
-      textAlign(CENTER, CENTER);
-      text(group.name, group.x - textWInside / 2, textCenterY - textH / 2, textWInside, textH);
-    } else {
-      // Bolha pequena demais: renderiza o nome acima do círculo com largura generosa
-      const externalTextW = Math.max(group.r * 2.8, 90);
-      const tSizeExternal = fitTextSize(group.name, externalTextW, 12, 8);
-      const labelY = group.y - group.r - 14;
-      textSize(tSizeExternal);
-      textAlign(CENTER, BOTTOM);
-      text(group.name, group.x, labelY);
+    const { lines, size } = fitBubbleText(group);
+    textSize(size);
+    textAlign(CENTER, CENTER);
+
+    const lineHeight = size * 1.15;
+    const centerY = hasProds ? group.y - group.r * 0.44 : group.y;
+    const totalHeight = (lines.length - 1) * lineHeight;
+    const startY = centerY - totalHeight / 2;
+
+    for (let i = 0; i < lines.length; i++) {
+      text(lines[i], group.x, startY + i * lineHeight);
     }
     textStyle(NORMAL);
   }
@@ -843,7 +961,7 @@ function getOrganicLocationOffsets(locPoints, locKey) {
     return res;
   }
 
-  const dotSep = 16.0;
+  const dotSep = 18.0;
   const maxR = Math.max(dotSep * 0.95, Math.sqrt(n) * dotSep * 0.68);
 
   let groupSeed = 0;
@@ -869,7 +987,7 @@ function getOrganicLocationOffsets(locPoints, locKey) {
     };
   });
 
-  const iters = 30;
+  const iters = 35;
   for (let iter = 0; iter < iters; iter++) {
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
@@ -893,13 +1011,13 @@ function getOrganicLocationOffsets(locPoints, locKey) {
     }
   }
 
-  for (let pass = 0; pass < 6; pass++) {
+  for (let pass = 0; pass < 8; pass++) {
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
         const dx = pts[j].dx - pts[i].dx;
         const dy = pts[j].dy - pts[i].dy;
         const d = Math.hypot(dx, dy) || 0.001;
-        const minReq = 14.0;
+        const minReq = 18.0;
         if (d < minReq) {
           const push = (minReq - d) * 0.5;
           const px = (dx / d) * push;
@@ -959,6 +1077,27 @@ function makeMapClusters(points, box) {
     locGroups.push({ key, basePos, points: distributed });
   }
 
+  // Anti-colisão global entre todas as obras para garantir margem de >= 4px entre círculos
+  const minPointSep = 18.0;
+  for (let iter = 0; iter < 45; iter++) {
+    for (let i = 0; i < expanded.length; i++) {
+      for (let j = i + 1; j < expanded.length; j++) {
+        const dx = expanded[j].x - expanded[i].x;
+        const dy = expanded[j].y - expanded[i].y;
+        const d = Math.hypot(dx, dy) || 0.001;
+        if (d < minPointSep) {
+          const push = (minPointSep - d) * 0.5;
+          const px = (dx / d) * push;
+          const py = (dy / d) * push;
+          expanded[i].x -= px;
+          expanded[i].y -= py;
+          expanded[j].x += px;
+          expanded[j].y += py;
+        }
+      }
+    }
+  }
+
   const threshold =
     mapState.zoom < 2
       ? 52
@@ -993,6 +1132,44 @@ function makeMapClusters(points, box) {
       cluster.points.reduce((sum, item) => sum + item.y, 0) /
       cluster.points.length;
   }
+
+  // Anti-colisão global entre clusters para garantir margem
+  const clusterMargin = 4.0;
+  for (let iter = 0; iter < 35; iter++) {
+    for (let i = 0; i < clusters.length; i++) {
+      for (let j = i + 1; j < clusters.length; j++) {
+        const rA =
+          clusters[i].points.length === 1
+            ? 7
+            : constrain(13 + Math.sqrt(clusters[i].points.length) * 7, 20, 58);
+        const rB =
+          clusters[j].points.length === 1
+            ? 7
+            : constrain(13 + Math.sqrt(clusters[j].points.length) * 7, 20, 58);
+        const minDist = rA + rB + clusterMargin;
+        const dx = clusters[j].x - clusters[i].x;
+        const dy = clusters[j].y - clusters[i].y;
+        const d = Math.hypot(dx, dy) || 0.001;
+        if (d < minDist) {
+          const push = (minDist - d) * 0.5;
+          const px = (dx / d) * push;
+          const py = (dy / d) * push;
+          clusters[i].x -= px;
+          clusters[i].y -= py;
+          clusters[j].x += px;
+          clusters[j].y += py;
+        }
+      }
+    }
+  }
+
+  for (const cluster of clusters) {
+    if (cluster.points.length === 1) {
+      cluster.points[0].x = cluster.x;
+      cluster.points[0].y = cluster.y;
+    }
+  }
+
   return clusters;
 }
 

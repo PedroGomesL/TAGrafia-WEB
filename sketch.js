@@ -510,7 +510,26 @@ function colorAlpha(hexOrColor, alpha) {
 function fitTextSize(textValue, maxWidth, start, minSize) {
   let size = start;
   textSize(size);
-  while (textWidth(cleanText(textValue)) > maxWidth && size > minSize) {
+  const textStr = cleanText(textValue);
+  const lines = textStr.split("\n");
+  const getWidth = (s) => {
+    if (typeof textWidth === "function") {
+      textSize(s);
+      let maxW = 0;
+      for (const line of lines) {
+        const w = textWidth(cleanText(line));
+        if (w > maxW) maxW = w;
+      }
+      return maxW;
+    }
+    let maxW = 0;
+    for (const line of lines) {
+      const w = cleanText(line).length * s * 0.55;
+      if (w > maxW) maxW = w;
+    }
+    return maxW;
+  };
+  while (getWidth(size) > maxWidth && size > minSize) {
     size -= 1;
     textSize(size);
   }

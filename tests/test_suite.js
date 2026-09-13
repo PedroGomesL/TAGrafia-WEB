@@ -897,6 +897,71 @@ const angle1 = Math.atan2(d2_1.y - d2_0.y, d2_1.x - d2_0.x);
 const angle2 = Math.atan2(drawnDots[1].y - drawnDots[0].y, drawnDots[1].x - drawnDots[0].x);
 assert(Math.abs(angle1 - angle2) > 0.1, "Diferentes escolas com 2 obras possuem orientações angulares distintas e orgânicas");
 
+console.log("\n=== 19. Validando Rótulos Internos das Bolhas e Margem Garantida no Mapa Mundi ===");
+// 1. Bolhas: validação de que o rótulo de Modernismo Norte-Americano está contido dentro da bolha
+assert(typeof fitBubbleText === "function", "fitBubbleText está definida");
+const modernismoGroup = fullGroups.find((g) => g.name === "Modernismo Norte-Americano");
+assert(modernismoGroup !== undefined, "Grupo Modernismo Norte-Americano encontrado");
+if (modernismoGroup) {
+  const modResult = fitBubbleText(modernismoGroup);
+  assert(modResult.lines.length >= 2, `Modernismo Norte-Americano divide em múltiplas linhas (obtido: ${modResult.lines.length})`);
+  assert(modResult.size >= 7.0, `Modernismo Norte-Americano possui tamanho de fonte legível (obtido: ${modResult.size}px)`);
+
+  const lineHeight = modResult.size * 1.15;
+  const centerY = modernismoGroup.y - modernismoGroup.r * 0.44;
+  const totalH = (modResult.lines.length - 1) * lineHeight;
+  const topY = centerY - totalH / 2 - modResult.size / 2;
+  const bottomY = centerY + totalH / 2 + modResult.size / 2;
+
+  assert(topY >= modernismoGroup.y - modernismoGroup.r, "Topo do texto de Modernismo está dentro do círculo da bolha");
+  assert(bottomY <= modernismoGroup.y - modernismoGroup.r * 0.08, "Base do texto de Modernismo está acima da área das obras (sem colisão)");
+}
+
+// 2. Bolhas: valida que TODAS as bolhas de fullGroups e subsetGroups possuem texto visível e contido
+let invalidBubbleLabels = 0;
+for (const g of [...fullGroups, ...subsetGroups]) {
+  const res = fitBubbleText(g);
+  if (!res.lines || res.lines.length === 0 || res.size < 6.5) {
+    invalidBubbleLabels++;
+  }
+  const lineHeight = res.size * 1.15;
+  const centerY = g.products.length > 0 ? g.y - g.r * 0.44 : g.y;
+  const totalH = (res.lines.length - 1) * lineHeight;
+  const topY = centerY - totalH / 2 - res.size / 2;
+  const bottomY = centerY + totalH / 2 + res.size / 2;
+  if (topY < g.y - g.r - 0.5) invalidBubbleLabels++;
+  if (g.products.length > 0 && bottomY > g.y - g.r * 0.08 + 0.5) invalidBubbleLabels++;
+}
+assert(invalidBubbleLabels === 0, `Todos os nomes de escolas ficam perfeitamente dentro das bolhas e acima dos pontos (erros: ${invalidBubbleLabels})`);
+
+// 3. Mapa: valida que TODOS os pares de pontos do mapa em zoom 6.0 possuem margem garantida >= 3px (dist >= 17px)
+let globalOverlapCount = 0;
+const minSepRequired = 17.0; // r_a (7) + r_b (7) + margem mínima (3px)
+for (let i = 0; i < clustersZoom6.length; i++) {
+  for (let j = i + 1; j < clustersZoom6.length; j++) {
+    const d = Math.hypot(clustersZoom6[i].x - clustersZoom6[j].x, clustersZoom6[i].y - clustersZoom6[j].y);
+    if (d < minSepRequired) {
+      globalOverlapCount++;
+    }
+  }
+}
+assert(globalOverlapCount === 0, `Nenhum par de pontos no mapa mundi colide ou se sobrepõe (distâncias < 17px: ${globalOverlapCount})`);
+
+// 4. Mapa: valida que clusters em zoom intermediário (4.0) possuem margem garantida
+const clustersZ4 = makeMapClusters(mapPoints, mapBox);
+let clusterOverlapCount = 0;
+for (let i = 0; i < clustersZ4.length; i++) {
+  for (let j = i + 1; j < clustersZ4.length; j++) {
+    const rA = clustersZ4[i].points.length === 1 ? 7 : constrain(13 + Math.sqrt(clustersZ4[i].points.length) * 7, 20, 58);
+    const rB = clustersZ4[j].points.length === 1 ? 7 : constrain(13 + Math.sqrt(clustersZ4[j].points.length) * 7, 20, 58);
+    const d = Math.hypot(clustersZ4[i].x - clustersZ4[j].x, clustersZ4[i].y - clustersZ4[j].y);
+    if (d < rA + rB + 3.0) {
+      clusterOverlapCount++;
+    }
+  }
+}
+assert(clusterOverlapCount === 0, `Nenhum cluster do mapa se sobrepõe em zoom intermediário (sobreposições: ${clusterOverlapCount})`);
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {
