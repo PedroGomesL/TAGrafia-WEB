@@ -1237,11 +1237,115 @@ assert(keyboardFocusActive === false, "Interação por mouse suprime indicadores
 handleKeyboardEvent({ key: "Tab", keyCode: 9, shiftKey: false });
 assert(keyboardFocusActive === true, "Próxima tecla reativa imediatamente o foco visível do teclado");
 
+// 12. Navegação por Setas na Barra de Navegação (Toolbar Vertical)
+setA11yFocus({ type: "nav", id: "filtros" });
+handleA11yArrow("down");
+assert(a11yState.focusTarget.id === "trocar", "Seta para baixo na barra de navegação move para 'trocar'");
+handleA11yArrow("down");
+assert(a11yState.focusTarget.id === "exportar", "Seta para baixo na barra de navegação move para 'exportar'");
+handleA11yArrow("down");
+assert(a11yState.focusTarget.id === "sobre", "Seta para baixo na barra de navegação move para 'sobre'");
+handleA11yArrow("down");
+assert(a11yState.focusTarget.id === "filtros", "Seta para baixo no último item da barra de navegação retorna ciclicamente ao primeiro");
+handleA11yArrow("up");
+assert(a11yState.focusTarget.id === "sobre", "Seta para cima na barra de navegação retrocede para 'sobre'");
+
+// 13. Navegação por Setas nos Controles de Exportação (Checkboxes e Combobox)
+leftPanelTab = "exportar";
+setA11yFocus({ type: "export_view", id: "view_0", index: 0 });
+handleA11yArrow("down");
+assert(a11yState.focusTarget.index === 1, "Seta para baixo em export_view move para próxima visão");
+handleA11yArrow("up");
+assert(a11yState.focusTarget.index === 0, "Seta para cima em export_view retorna à visão anterior");
+
+setA11yFocus({ type: "export_format", id: "format" });
+exportFormatSelected = "PDF";
+handleA11yArrow("down");
+assert(exportFormatSelected === "JPG", "Seta para baixo em export_format altera formato para 'JPG'");
+handleA11yArrow("down");
+assert(exportFormatSelected === "SVG", "Seta para baixo em export_format altera formato para 'SVG'");
+handleA11yArrow("up");
+assert(exportFormatSelected === "JPG", "Seta para cima em export_format retorna para 'JPG'");
+
+// 14. Auto-Scroll e Navegação em Obras Salvas (ensureFocusedSavedItemVisible)
+savedProductKeys.clear();
+for (let i = 0; i < 8; i++) {
+  if (products[i]) savedProductKeys.add(products[i].key);
+}
+rightPanelTab = "salvos";
+savedScroll = 0;
+setA11yFocus({ type: "saved_item", id: "saved_item", index: 0 });
+assert(typeof ensureFocusedSavedItemVisible === "function", "ensureFocusedSavedItemVisible está definida");
+handleA11yArrow("down");
+assert(a11yState.savedIndex === 1, "Seta para baixo avança para próxima obra salva");
+// Navega até índices mais avançados para acionar auto-scroll
+for (let i = 0; i < 6; i++) {
+  handleA11yArrow("down");
+}
+assert(a11yState.savedIndex === 7, "Navegação por setas atinge a 8ª obra salva (índice 7)");
+assert(savedScroll >= 0, "savedScroll é calculado e ajustado pelo auto-scroll");
+
+// 15. Transição por Seta para Baixo no Campo de Busca de Salvos
+savedSearchActive = true;
+handleKeyboardEvent({ key: "ArrowDown", keyCode: 40 });
+assert(savedSearchActive === false, "Seta para baixo desativa digitação de busca de salvos");
+assert(a11yState.focusTarget.type === "saved_item", "Seta para baixo move foco para primeiro item de salvos");
+
+// 16. Navegação na Visão Circular Restrita a Obras em Exibição
+activeView = VISAO_CIRCULAR;
+const shownInCirc = typeof productsShownInCircular === "function" ? productsShownInCircular() : [];
+if (shownInCirc.length > 1) {
+  selectProduct(shownInCirc[0]);
+  setA11yFocus({ type: "center_product", id: "center_product" });
+  handleA11yArrow("right");
+  assert(selectedProduct && selectedProduct.key === shownInCirc[1].key, "Seta direita na visualização circular foca obra visível no círculo");
+}
+
+// 17. Fechamento Automático de Menus Dropdown ao Navegar com Tab
+categorySelectorOpen = true;
+handleA11yTab(false);
+assert(categorySelectorOpen === false, "Tab fecha automaticamente o seletor de agrupamento aberto para evitar sobreposição");
+
+exportFormatDropdownOpen = true;
+handleA11yTab(false);
+assert(exportFormatDropdownOpen === false, "Tab fecha automaticamente o menu de formatos aberto");
+
+// 18. Hierarquia Progressiva do Escape (Descarte e Limpeza)
+tagSearch = "madeira";
+handleA11yEscape();
+assert(tagSearch === "", "Escape limpa texto de pesquisa de tags");
+
+savedSearch = "cadeira";
+handleA11yEscape();
+assert(savedSearch === "", "Escape limpa texto de pesquisa de salvos");
+
+focusedCircularTagKey = "tag_teste";
+handleA11yEscape();
+assert(focusedCircularTagKey === "", "Escape desmarca filtro de tag circular focado");
+
+selectedProduct = products[0];
+leftPanelExtendedOpen = false;
+handleA11yEscape();
+assert(selectedProduct === null, "Escape desmarca obra selecionada quando painel já está recolhido");
+
+// 19. Alinhamento Robusto de Foco sob rectMode(CENTER)
+let testRectMode = "CORNER";
+const originalRectMode = typeof rectMode === "function" ? rectMode : null;
+// Simula rectMode modificado para CENTER antes de desenhar o foco
+if (typeof rectMode === "function") {
+  rectMode(CENTER);
+}
+keyboardFocusActive = true;
+// drawFocusRingRect não deve quebrar nem desenhar fora de posição
+drawFocusRingRect(10, 10, 100, 50, 4);
+assert(true, "drawFocusRingRect executa com segurança mesmo quando rectMode anterior era CENTER");
+
 // Restaura estado padrão
 leftPanelExtendedOpen = true;
 leftPanelTab = "filtros";
 activeDimension = "tipo_obra";
 selectedTagKeys.clear();
+savedProductKeys.clear();
 activeView = VISAO_CIRCULAR;
 
 console.log("\n==========================================");

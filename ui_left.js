@@ -371,6 +371,9 @@ function drawCategorySelector(listY, listBottom) {
       fill("#959fff");
       rect(FILTER_BAR_X, y + rowH - 4, FILTER_BAR_W, 2);
     }
+    if (active && typeof isFocusedElement === "function" && isFocusedElement("category_selector")) {
+      drawFocusRingRect(FILTER_BAR_X, y + 2, FILTER_BAR_W, rowH - 4, 4);
+    }
     stroke(lightMode ? color(0, 0, 0, 45) : color(0, 0, 0, 65));
     strokeWeight(0.5);
     line(FILTER_BAR_X, y + rowH - 1, FILTER_BAR_X + FILTER_BAR_W, y + rowH - 1);
@@ -509,7 +512,7 @@ function drawFilterTag(tag, y, rowH) {
 
   // Focus visible WCAG
   if (typeof isFocusedTag === "function" && isFocusedTag(tag, tag._index)) {
-    drawFocusRingRect(1, y + 1, LAYOUT_FILTRO_W - 2, rowH - 2, 3);
+    drawFocusRingRect(3, y + 2, LAYOUT_FILTRO_W - 6, rowH - 4, 3);
   }
 }
 

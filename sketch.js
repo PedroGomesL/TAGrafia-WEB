@@ -56,6 +56,16 @@ function setup() {
     canvas.elt.tabIndex = 0;
     canvas.elt.setAttribute("role", "application");
     canvas.elt.setAttribute("aria-label", "TAGrafia - visualização interativa de design e dados");
+    canvas.elt.addEventListener("focus", () => {
+      if (!a11yState.focusTarget) {
+        const list = getFocusableElements();
+        if (list.length) setA11yFocus(list[0]);
+      }
+      keyboardFocusActive = true;
+    });
+    canvas.elt.addEventListener("blur", () => {
+      keyboardFocusActive = false;
+    });
   }
 
   buildData();
@@ -671,9 +681,12 @@ function setA11yFocus(target) {
 
   if (target.type === "saved_item") {
     const items = typeof savedProductsFiltered === "function" ? savedProductsFiltered() : [];
-    if (items[a11yState.savedIndex]) {
+    if (items.length) {
+      a11yState.savedIndex = Math.min(Math.max(0, a11yState.savedIndex), items.length - 1);
+      target.index = a11yState.savedIndex;
+      ensureFocusedSavedItemVisible(a11yState.savedIndex);
       const it = items[a11yState.savedIndex];
-      announceToScreenReader(`Obra salva: ${it.name} (${it.year}). Pressione Enter para visualizar detalhes.`);
+      announceToScreenReader(`Obra salva ${a11yState.savedIndex + 1} de ${items.length}: ${it.name} (${it.year}). Pressione Enter para visualizar detalhes.`);
     }
     return;
   }
@@ -690,6 +703,13 @@ function setA11yFocus(target) {
 }
 
 function handleA11yTab(reverse = false) {
+  if (categorySelectorOpen) {
+    categorySelectorOpen = false;
+  }
+  if (exportFormatDropdownOpen) {
+    exportFormatDropdownOpen = false;
+  }
+
   const elements = getFocusableElements();
   if (!elements.length) return;
 
@@ -716,6 +736,33 @@ function handleA11yTab(reverse = false) {
   }
 
   setA11yFocus(elements[nextIndex]);
+}
+
+function ensureFocusedSavedItemVisible(index) {
+  if (typeof savedProductsFiltered !== "function") return;
+  const items = savedProductsFiltered();
+  if (!items.length || index < 0 || index >= items.length) return;
+  const scale = typeof layoutScale === "function" ? layoutScale() : 1;
+  const titleH = Math.round((typeof PRODUCT_TITLE_H !== "undefined" ? PRODUCT_TITLE_H : 56) * scale);
+  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 240) * scale);
+  const gridY = imageH + titleH + 46 * scale;
+  const cardH = 92 * scale;
+  const gapY = 12 * scale;
+  const availH = Math.max(50, height - gridY);
+  const row = Math.floor(index / 2);
+  const totalRows = Math.ceil(items.length / 2);
+  const totalH = totalRows * cardH + Math.max(0, totalRows - 1) * gapY;
+  const maxScroll = Math.max(0, totalH - availH);
+
+  const itemTop = row * (cardH + gapY);
+  const itemBottom = itemTop + cardH;
+
+  if (itemTop < savedScroll) {
+    savedScroll = itemTop;
+  } else if (itemBottom > savedScroll + availH) {
+    savedScroll = itemBottom - availH;
+  }
+  savedScroll = typeof constrain === "function" ? constrain(savedScroll, 0, maxScroll) : Math.min(Math.max(savedScroll, 0), maxScroll);
 }
 
 function ensureFocusedTagVisible(index) {
@@ -749,7 +796,22 @@ function handleA11yArrow(direction) {
 
   const target = a11yState.focusTarget;
 
-  // 1. Alça Inicial da Timeline
+  // 1. Barra de Navegação Esquerda (Menu vertical)
+  if (target.type === "nav") {
+    const navItems = typeof NAV_CONFIG !== "undefined" ? NAV_CONFIG : [];
+    let idx = navItems.findIndex((n) => n.id === target.id);
+    if (idx === -1) idx = 0;
+    if (direction === "down" || direction === "right") {
+      idx = (idx + 1) % navItems.length;
+    } else {
+      idx = (idx - 1 + navItems.length) % navItems.length;
+    }
+    const nextNav = navItems[idx];
+    setA11yFocus({ type: "nav", id: nextNav.id, label: nextNav.label });
+    return;
+  }
+
+  // 2. Alça Inicial da Timeline
   if (target.type === "timeline_start") {
     if (direction === "left" || direction === "down") {
       yearStart = constrain(yearStart - 1, YEAR_MIN, yearEnd);
@@ -765,7 +827,7 @@ function handleA11yArrow(direction) {
     return;
   }
 
-  // 2. Alça Final da Timeline
+  // 3. Alça Final da Timeline
   if (target.type === "timeline_end") {
     if (direction === "left" || direction === "down") {
       yearEnd = constrain(yearEnd - 1, yearStart, YEAR_MAX);
@@ -781,7 +843,7 @@ function handleA11yArrow(direction) {
     return;
   }
 
-  // 3. Lista de Tags do Filtro
+  // 4. Lista de Tags do Filtro
   if (target.type === "tag_item") {
     const tags = tagsToDisplay();
     if (!tags.length) return;
@@ -800,9 +862,12 @@ function handleA11yArrow(direction) {
     return;
   }
 
-  // 4. Obras da Visualização Central
+  // 5. Obras da Visualização Central
   if (target.type === "center_product") {
-    const prods = visibleProducts();
+    const prods =
+      activeView === VISAO_CIRCULAR && typeof productsShownInCircular === "function" && productsShownInCircular().length
+        ? productsShownInCircular()
+        : visibleProducts();
     if (!prods.length) return;
     let idx = prods.findIndex((p) => p.key === selectedProduct?.key);
     if (idx === -1) idx = 0;
@@ -816,7 +881,7 @@ function handleA11yArrow(direction) {
     return;
   }
 
-  // 5. Abas do Painel de Produto
+  // 6. Abas do Painel de Produto
   if (target.type === "product_tab") {
     const tabs = typeof DETAIL_TABS !== "undefined" ? [...DETAIL_TABS, "salvos"] : ["material", "estetico", "tecnicas", "salvos"];
     let idx = tabs.indexOf(rightPanelTab);
@@ -833,7 +898,7 @@ function handleA11yArrow(direction) {
     return;
   }
 
-  // 6. Cards de Dimensão (grid 2x2: tipo_obra, material / estetico, tecnicas)
+  // 7. Cards de Dimensão (grid 2x2: tipo_obra, material / estetico, tecnicas)
   if (target.type === "dimension") {
     const grid = [
       ["tipo_obra", "material"],
@@ -854,8 +919,9 @@ function handleA11yArrow(direction) {
     return;
   }
 
-  // 7. Seletor de Categoria (quando aberto)
-  if (target.type === "category_selector" && categorySelectorOpen) {
+  // 8. Seletor de Categoria
+  if (target.type === "category_selector") {
+    categorySelectorOpen = true;
     const options = getFilterCategoryOptions(activeDimension);
     let curVal = activeCategoryByDimension[activeDimension];
     let optIdx = options.findIndex((o) => o.value === curVal);
@@ -871,7 +937,39 @@ function handleA11yArrow(direction) {
     return;
   }
 
-  // 8. Obras Salvas
+  // 9. Opções de Visão na Exportação
+  if (target.type === "export_view") {
+    const totalViews = typeof VIEWS_CONFIG !== "undefined" ? VIEWS_CONFIG.length : 4;
+    let curIdx = target.index !== undefined ? target.index : 0;
+    if (direction === "down" || direction === "right") {
+      curIdx = (curIdx + 1) % totalViews;
+    } else {
+      curIdx = (curIdx - 1 + totalViews) % totalViews;
+    }
+    target.index = curIdx;
+    target.id = `view_${curIdx}`;
+    target.label = VIEWS_CONFIG[curIdx]?.label;
+    const isSel = exportViewsSelection[curIdx];
+    announceToScreenReader(`Exportar visão: ${target.label}. ${isSel ? "Marcada" : "Desmarcada"}. Espaço para alternar.`);
+    return;
+  }
+
+  // 10. Formato de Exportação (combobox/select)
+  if (target.type === "export_format") {
+    const formats = typeof EXPORT_FORMATS !== "undefined" ? EXPORT_FORMATS : ["PDF", "JPG", "SVG"];
+    let curIdx = formats.indexOf(exportFormatSelected);
+    if (curIdx === -1) curIdx = 0;
+    if (direction === "down" || direction === "right") {
+      curIdx = (curIdx + 1) % formats.length;
+    } else {
+      curIdx = (curIdx - 1 + formats.length) % formats.length;
+    }
+    exportFormatSelected = formats[curIdx];
+    announceToScreenReader(`Formato de exportação alterado para: ${exportFormatSelected}.`);
+    return;
+  }
+
+  // 11. Obras Salvas
   if (target.type === "saved_item") {
     const items = savedProductsFiltered();
     if (!items.length) return;
@@ -881,19 +979,20 @@ function handleA11yArrow(direction) {
       a11yState.savedIndex = Math.max(0, a11yState.savedIndex - 1);
     }
     target.index = a11yState.savedIndex;
+    ensureFocusedSavedItemVisible(a11yState.savedIndex);
     const it = items[a11yState.savedIndex];
     announceToScreenReader(`Obra salva ${a11yState.savedIndex + 1} de ${items.length}: ${it.name} (${it.year}).`);
     return;
   }
 
-  // 9. Conteúdo de detalhes
+  // 12. Conteúdo de detalhes
   if (target.type === "product_details") {
     if (direction === "down") detailScroll = Math.max(0, detailScroll + 30);
     else if (direction === "up") detailScroll = Math.max(0, detailScroll - 30);
     return;
   }
 
-  // 10. Conteúdo sobre
+  // 13. Conteúdo sobre
   if (target.type === "sobre_content") {
     if (direction === "down") sobreScroll = Math.max(0, sobreScroll + 30);
     else if (direction === "up") sobreScroll = Math.max(0, sobreScroll - 30);
@@ -1094,11 +1193,33 @@ function handleA11yEscape() {
     announceToScreenReader("Menu de formatos fechado.");
     return;
   }
+  if (tagSearch.length > 0) {
+    tagSearch = "";
+    tagScroll = 0;
+    announceToScreenReader("Texto de busca de tags limpo.");
+    return;
+  }
+  if (savedSearch.length > 0) {
+    savedSearch = "";
+    savedScroll = 0;
+    announceToScreenReader("Texto de busca de salvos limpo.");
+    return;
+  }
+  if (focusedCircularTagKey) {
+    focusedCircularTagKey = "";
+    announceToScreenReader("Filtro circular desmarcado.");
+    return;
+  }
   if (typeof leftPanelExtendedOpen !== "undefined" && leftPanelExtendedOpen) {
     leftPanelExtendedOpen = false;
     a11yState.focusTarget = { type: "nav", id: leftPanelTab };
     keyboardFocusActive = true;
     announceToScreenReader("Painel lateral recolhido. Foco retornado ao menu de navegação.");
+    return;
+  }
+  if (selectedProduct) {
+    selectedProduct = null;
+    announceToScreenReader("Obra desmarcada.");
     return;
   }
   keyboardFocusActive = false;
@@ -1139,6 +1260,16 @@ function handleKeyboardEvent(event) {
         ensureFocusedTagVisible(0);
         const tags = tagsToDisplay();
         if (tags.length) announceToScreenReader("Foco movido para tag: " + tags[0].label);
+        return false;
+      }
+      if (savedSearchActive) {
+        savedSearchActive = false;
+        a11yState.focusTarget = { type: "saved_item", id: "saved_item", index: 0 };
+        a11yState.savedIndex = 0;
+        keyboardFocusActive = true;
+        ensureFocusedSavedItemVisible(0);
+        const savedList = typeof savedProductsFiltered === "function" ? savedProductsFiltered() : [];
+        if (savedList.length) announceToScreenReader("Foco movido para obra salva: " + savedList[0].name);
         return false;
       }
     }

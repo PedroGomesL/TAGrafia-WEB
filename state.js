@@ -85,16 +85,19 @@ let a11yState = {
   lastAnnouncement: "",
 };
 
+let _announcerTimer = null;
 function announceToScreenReader(message) {
   if (!message) return;
   a11yState.lastAnnouncement = message;
   if (typeof document !== "undefined") {
-    const el = document.querySelector(".sr-only");
+    const el = document.getElementById("a11y-announcer") || document.querySelector(".sr-only");
     if (el) {
+      if (_announcerTimer) clearTimeout(_announcerTimer);
       el.textContent = "";
-      setTimeout(() => {
+      _announcerTimer = setTimeout(() => {
         el.textContent = message;
-      }, 40);
+        _announcerTimer = null;
+      }, 50);
     }
   }
 }
@@ -120,12 +123,14 @@ function drawFocusRingRect(x, y, w, h, cr = 4, rotation = 0) {
   if (!keyboardFocusActive) return;
   if (typeof push !== "function" || typeof rect !== "function") return;
   push();
+  if (typeof rectMode === "function" && typeof CORNER !== "undefined") {
+    rectMode(CORNER);
+  }
   if (rotation && typeof translate === "function" && typeof rotate === "function") {
     translate(x, y);
     rotate(rotation);
-    if (typeof rectMode === "function" && typeof CENTER !== "undefined") rectMode(CENTER);
-    x = 0;
-    y = 0;
+    x = -w / 2;
+    y = -h / 2;
   }
   if (typeof noFill === "function") noFill();
   const isLight = typeof lightMode === "undefined" || lightMode;
