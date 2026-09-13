@@ -59,10 +59,13 @@ function drawProductSidebar(x, y, w, h, scale) {
     };
   });
 
-  let currentY = y + 25 * scale;
+  const availableH = height - y;
+  const stepY = Math.min(85 * scale, Math.max(54 * scale, (availableH - 25 * scale) / 4));
+  const topPad = Math.min(25 * scale, Math.max(10 * scale, (availableH - 4 * stepY) / 2));
+  let currentY = y + topPad;
   for (const item of items) {
     const active = rightPanelTab === item.id || (item.id === "material" && rightPanelTab === "materiais");
-    const isHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 15 * scale && mouseY <= currentY + 70 * scale;
+    const isHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 15 * scale && mouseY <= currentY + (stepY - 15 * scale);
 
     if (isHover && typeof requestCursor === "function") {
       requestCursor(HAND);
@@ -85,7 +88,7 @@ function drawProductSidebar(x, y, w, h, scale) {
     textSize(14 * scale);
     textAlign(CENTER, CENTER);
     text(item.label, x + w / 2, currentY + 50 * scale);
-    currentY += 85 * scale;
+    currentY += stepY;
   }
 
   // Draw separator before "Salvos" immediately after the technique icon
@@ -94,7 +97,7 @@ function drawProductSidebar(x, y, w, h, scale) {
   strokeWeight(1.5 * scale);
   line(x + 10 * scale, currentY, x + w - 10 * scale, currentY);
 
-  currentY += 25 * scale;
+  currentY += Math.min(25 * scale, stepY * 0.3);
 
   // Draw "Salvos" button right below the separator
   const salvosActive = rightPanelTab === "salvos";
@@ -384,7 +387,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   // Tag chips
   const tags = selectedProduct.tagsByDimension[dim] || [];
   if (tags.length === 0) {
-    fill(120);
+    fill("#595959");
     textSize(13 * scale);
     textAlign(LEFT, CENTER);
     text("Sem tags nesta categoria", marginX, cursorY + 10 * scale);
@@ -479,7 +482,6 @@ function calculateNewDetailsHeight(w, scale) {
     const chipW = Math.max(54 * scale, estW + 18 * scale);
     if (cursorX + chipW > maxX) {
       cursorX = 20 * scale;
-      h += chipH + 8 * scale;
       h += chipH + 6 * scale;
     }
     cursorX += chipW + 6 * scale;
@@ -588,7 +590,7 @@ function drawSavedProducts(x, y, w, scale) {
   drawingContext.clip();
 
   if (!items.length) {
-    fill(120);
+    fill("#595959");
     textFont(fontes.roboto);
     textSize(13 * scale);
     textAlign(CENTER, CENTER);
@@ -662,6 +664,26 @@ function drawSavedCard(product, x, y, w, h, scale) {
     8 * scale,
   );
   noStroke();
+
+  // Origin pill badge for colorblind accessibility
+  const badgeW = 26 * scale;
+  const badgeH = 15 * scale;
+  const badgeX = x + w - badgeW - 7 * scale;
+  const badgeY = y + 7 * scale;
+  noStroke();
+  fill(product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
+  rect(badgeX, badgeY, badgeW, badgeH, 3 * scale);
+  fill(product.origin === "brasileiro" ? "#000000" : "#FFFFFF");
+  textFont(fontes.roboto);
+  textStyle(BOLD);
+  textSize(9 * scale);
+  textAlign(CENTER, CENTER);
+  text(
+    product.origin === "brasileiro" ? "BR" : "INT",
+    badgeX + badgeW / 2,
+    badgeY + badgeH / 2,
+  );
+  textStyle(NORMAL);
 
   // Pill for product name
   const pillY = y + imgBoxH + 8 * scale;
@@ -786,20 +808,23 @@ function productPanelMousePressed(mx, my) {
   // Vertical Tabs Click
   if (mx >= x && mx <= x + sidebarW && my > imageH + titleH) {
     let clickedY = my - imageH - titleH;
-    let currentY = 25 * scale;
+    const availableH = height - (imageH + titleH);
+    const stepY = Math.min(85 * scale, Math.max(54 * scale, (availableH - 25 * scale) / 4));
+    const topPad = Math.min(25 * scale, Math.max(10 * scale, (availableH - 4 * stepY) / 2));
+    let currentY = topPad;
     
     const tabs = typeof DETAIL_TABS !== "undefined" ? DETAIL_TABS : ["material", "estetico", "tecnicas"];
     for (let i = 0; i < tabs.length; i++) {
-      if (clickedY >= currentY - 15 * scale && clickedY <= currentY + 70 * scale) {
+      if (clickedY >= currentY - 15 * scale && clickedY <= currentY + (stepY - 15 * scale)) {
         rightPanelTab = tabs[i];
         savedSearchActive = false;
         return true;
       }
-      currentY += 85 * scale;
+      currentY += stepY;
     }
     
     currentY -= 5 * scale;
-    currentY += 25 * scale;
+    currentY += Math.min(25 * scale, stepY * 0.3);
     
     if (clickedY >= currentY - 15 * scale && clickedY <= currentY + 70 * scale) {
       rightPanelTab = "salvos";

@@ -41,13 +41,20 @@ function drawYearBand() {
 
   // Labels
   noStroke();
-  fill("#000000");
+  fill(typeof themeLineColor === "function" ? themeLineColor() : "#000000");
   textFont(fontes.afacad);
   textStyle(BOLD);
   textSize(24);
   textAlign(CENTER, BOTTOM);
-  text(String(yearStart), xStart, ty - 22);
-  text(String(yearEnd), xEnd, ty - 22);
+  if (yearStart === yearEnd) {
+    text(String(yearStart), xStart, ty - 22);
+  } else if (Math.abs(xStart - xEnd) < 55) {
+    text(String(yearStart), xStart - 12, ty - 22);
+    text(String(yearEnd), xEnd + 12, ty - 22);
+  } else {
+    text(String(yearStart), xStart, ty - 22);
+    text(String(yearEnd), xEnd, ty - 22);
+  }
   textStyle(NORMAL);
 }
 

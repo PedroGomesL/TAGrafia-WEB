@@ -31,27 +31,55 @@ const MOBILE_SCREENS = {
 };
 
 function isMobileMode() {
-  return typeof width !== "undefined" && width < BREAKPOINTS.mobile;
+  const w =
+    typeof width !== "undefined" && width > 0
+      ? width
+      : typeof windowWidth !== "undefined" && windowWidth > 0
+        ? windowWidth
+        : 1024;
+  return w < BREAKPOINTS.mobile;
 }
 
 function isTabletMode() {
-  return (
-    typeof width !== "undefined" &&
-    width >= BREAKPOINTS.mobile &&
-    width < BREAKPOINTS.tablet
-  );
+  const w =
+    typeof width !== "undefined" && width > 0
+      ? width
+      : typeof windowWidth !== "undefined" && windowWidth > 0
+        ? windowWidth
+        : 1024;
+  return w >= BREAKPOINTS.mobile && w < BREAKPOINTS.tablet;
 }
 
 function isDesktopMode() {
-  return typeof width !== "undefined" && width >= BREAKPOINTS.tablet;
+  const w =
+    typeof width !== "undefined" && width > 0
+      ? width
+      : typeof windowWidth !== "undefined" && windowWidth > 0
+        ? windowWidth
+        : 1024;
+  return w >= BREAKPOINTS.tablet;
 }
 
 function getDeviceMode() {
-  if (typeof width === "undefined") return "desktop";
-  if (width < BREAKPOINTS.mobile) return "mobile";
-  if (width < BREAKPOINTS.tablet) return "tablet";
-  if (width >= BREAKPOINTS.ultrawide) return "ultrawide";
+  const w =
+    typeof width !== "undefined" && width > 0
+      ? width
+      : typeof windowWidth !== "undefined" && windowWidth > 0
+        ? windowWidth
+        : 1024;
+  if (w < BREAKPOINTS.mobile) return "mobile";
+  if (w < BREAKPOINTS.tablet) return "tablet";
+  if (w >= BREAKPOINTS.ultrawide) return "ultrawide";
   return "desktop";
+}
+
+function setMobileScreen(screen) {
+  if (
+    typeof mobileState !== "undefined" &&
+    Object.values(MOBILE_SCREENS).includes(screen)
+  ) {
+    mobileState.activeScreen = screen;
+  }
 }
 
 function getOriginLabel(origin) {

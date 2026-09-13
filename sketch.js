@@ -19,15 +19,27 @@ function preload() {
 }
 
 function getOptimalCanvasDimensions() {
-  if (typeof isMobileMode === "function" && isMobileMode()) {
+  const currentW =
+    typeof windowWidth !== "undefined" && windowWidth > 0
+      ? windowWidth
+      : typeof width !== "undefined" && width > 0
+        ? width
+        : 1024;
+  const currentH =
+    typeof windowHeight !== "undefined" && windowHeight > 0
+      ? windowHeight
+      : typeof height !== "undefined" && height > 0
+        ? height
+        : 768;
+  if (currentW < BREAKPOINTS.mobile) {
     return {
-      w: Math.max(320, windowWidth),
-      h: Math.max(480, windowHeight),
+      w: Math.max(320, currentW),
+      h: Math.max(480, currentH),
     };
   }
   return {
-    w: Math.max(1024, windowWidth),
-    h: Math.max(640, windowHeight),
+    w: Math.max(1024, currentW),
+    h: Math.max(640, currentH),
   };
 }
 
@@ -97,6 +109,7 @@ function drawClickRipples() {
 function draw() {
   currentFrameCursor = typeof ARROW !== "undefined" ? ARROW : "default";
   hitAreas = [];
+  hoveredCircularTag = null;
   _cacheFrame = frameCount;
   _cachedSelectedTags = null;
   _cachedVisibleProducts = null;
@@ -224,6 +237,9 @@ function minProductW() {
 }
 
 function productPanelW() {
+  if (typeof isMobileMode === "function" && isMobileMode()) {
+    return width;
+  }
   const space = baseContentSpace();
   const visualMin = minVisualW();
   if (space < visualMin + LAYOUT_PAINEL_PRODUTO_W) {
@@ -237,6 +253,9 @@ function layoutScale() {
 }
 
 function filterPanelW() {
+  if (typeof isMobileMode === "function" && isMobileMode()) {
+    return width;
+  }
   if (typeof leftPanelExtendedOpen !== "undefined" && !leftPanelExtendedOpen) {
     return LAYOUT_NAV_W * filterPanelScale();
   }
@@ -248,14 +267,23 @@ function contentSpace() {
 }
 
 function visualW() {
+  if (typeof isMobileMode === "function" && isMobileMode()) {
+    return width;
+  }
   return Math.max(0, contentSpace() - productPanelW());
 }
 
 function visualX() {
+  if (typeof isMobileMode === "function" && isMobileMode()) {
+    return 0;
+  }
   return filterPanelW();
 }
 
 function productPanelX() {
+  if (typeof isMobileMode === "function" && isMobileMode()) {
+    return 0;
+  }
   return filterPanelW() + visualW();
 }
 
@@ -264,6 +292,7 @@ function visualH() {
 }
 
 function drawLayoutSeparators() {
+  if (typeof isMobileMode === "function" && isMobileMode()) return;
   push();
   stroke("#000000");
   strokeWeight(2);
@@ -281,8 +310,30 @@ function themeLineColor() {
 }
 
 function mousePressed() {
-  if (mouseButton !== LEFT) return;
+  if (typeof touches !== "undefined" && touches.length > 0) {
+    // Evento de toque em andamento, prosseguir
+  } else if (typeof mouseButton !== "undefined" && mouseButton !== LEFT) {
+    return;
+  }
   triggerClickRipple(mouseX, mouseY);
+
+  if (typeof isMobileMode === "function" && isMobileMode()) {
+    const activeScreen =
+      typeof mobileState !== "undefined" ? mobileState.activeScreen : "visual";
+    if (activeScreen === "filtros") {
+      if (filterMousePressed(mouseX, mouseY)) return false;
+    } else if (activeScreen === "produto") {
+      if (productPanelMousePressed(mouseX, mouseY)) return false;
+    } else if (activeScreen === "sobre") {
+      return false;
+    } else if (activeScreen === "exportar") {
+      if (filterMousePressed(mouseX, mouseY)) return false;
+    } else {
+      if (visualMousePressed(mouseX, mouseY)) return false;
+    }
+    return;
+  }
+
   if (filterMousePressed(mouseX, mouseY)) return false;
   if (productPanelMousePressed(mouseX, mouseY)) return false;
   if (visualMousePressed(mouseX, mouseY)) return false;

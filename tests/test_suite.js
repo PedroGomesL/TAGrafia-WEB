@@ -456,6 +456,51 @@ hitAreas = [
 const ghostHit = hitAreaAt(20, 100);
 assert(ghostHit === null, "hitAreaAt fora da área visual central não ativa hit areas fantasmas");
 
+console.log("\n=== 15. Validando Correções Críticas, Adaptabilidade Mobile e Acessibilidade ===");
+// 1. setMobileScreen
+assert(typeof setMobileScreen === "function", "setMobileScreen está definida");
+setMobileScreen("filtros");
+assert(mobileState.activeScreen === "filtros", "setMobileScreen('filtros') atualiza tela ativa");
+setMobileScreen("tela_invalida");
+assert(mobileState.activeScreen === "filtros", "setMobileScreen ignora telas inválidas");
+setMobileScreen("visual");
+assert(mobileState.activeScreen === "visual", "setMobileScreen('visual') restaura tela inicial");
+
+// 2. Resiliência de getOptimalCanvasDimensions
+global.windowWidth = 375;
+global.windowHeight = 667;
+global.width = undefined;
+const mobileDims = getOptimalCanvasDimensions();
+assert(mobileDims.w === 375 && mobileDims.h === 667, "getOptimalCanvasDimensions dimensiona corretamente para 375x667 mobile");
+
+global.windowWidth = 1920;
+global.windowHeight = 1080;
+const desktopDims = getOptimalCanvasDimensions();
+assert(desktopDims.w === 1920 && desktopDims.h === 1080, "getOptimalCanvasDimensions dimensiona corretamente para 1920x1080 desktop");
+
+// 3. Layout mobile completo (largura total para visual e painéis em mobile)
+global.width = 375;
+global.height = 667;
+assert(isMobileMode() === true, "isMobileMode() ativo para largura 375");
+assert(visualX() === 0, "visualX() em mobile é 0 (tela cheia)");
+assert(visualW() === 375, "visualW() em mobile ocupa 100% da largura (375)");
+assert(productPanelX() === 0, "productPanelX() em mobile inicia em 0");
+assert(productPanelW() === 375, "productPanelW() em mobile ocupa 100% da largura (375)");
+assert(filterPanelW() === 375, "filterPanelW() em mobile ocupa 100% da largura (375)");
+
+// 4. Acessibilidade de contraste em tema escuro para timeline
+lightMode = false;
+assert(themeLineColor() === "#FFFFFF", "themeLineColor() retorna #FFFFFF no modo escuro");
+lightMode = true;
+assert(themeLineColor() === "#111111", "themeLineColor() retorna #111111 no modo claro");
+
+// 5. Restauração de variáveis de desktop para garantir estabilidade
+global.width = 1920;
+global.height = 1080;
+assert(filterPanelW() === 350, "filterPanelW em Full HD volta a 350px");
+assert(productPanelW() === 405, "productPanelW em Full HD volta a 405px");
+assert(visualW() === 1920 - 350 - 405, "visualW em Full HD volta a 1165px");
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {

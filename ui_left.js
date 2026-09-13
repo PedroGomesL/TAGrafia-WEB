@@ -505,6 +505,8 @@ function filterMousePressed(mxRaw, myRaw) {
           activeView = (activeView + 1) % VIEWS_CONFIG.length;
           if (typeof mapState !== "undefined") mapState.dragging = false;
           draggedYearHandle = null;
+          hoveredCircularTag = null;
+          focusedCircularTagKey = "";
         } else {
           if (isExtended && leftPanelTab === item.id) {
             leftPanelExtendedOpen = false;
@@ -789,13 +791,17 @@ function drawExportTab() {
   if (isBtnHover && typeof requestCursor === "function") {
     requestCursor(HAND);
   }
-  fill(isBtnHover ? "#808bf5" : "#959fff");
+  const btnBg = isBtnHover ? "#2D39B8" : (typeof COLORS !== "undefined" && COLORS.blue ? COLORS.blue : "#3E4AD3");
+  fill(btnBg);
   noStroke();
   rect(24, btnY, 144, 30, 15);
 
   fill(255);
+  textFont(fontes.roboto);
+  textStyle(BOLD);
   textAlign(CENTER, CENTER);
   text("Baixar", 24 + 72, btnY + 15);
+  textStyle(NORMAL);
   textAlign(LEFT, TOP);
 }
 

@@ -53,6 +53,7 @@ function drawCircularView(visible) {
     const active = !focusedCircularTagKey || focusedCircularTagKey === tag.key;
     noStroke();
     fill(colorAlpha(tag.color, active ? 255 : 75));
+    circle(pos.x, pos.y, active ? 11 : 8);
     const hitX = cx + (pos.x - cx) * scaleRatio;
     const hitY = cy + (pos.y - cy) * scaleRatio;
     if (dist(mouseX, mouseY, hitX, hitY) <= 13 * scaleRatio) {
@@ -243,7 +244,7 @@ function drawBubbleView(productsVisible) {
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
   const outerR = Math.max(140, Math.min(visualW(), height - TIMELINE_H) * 0.46);
-  const bubbleKey = `${productsVisible.map((p) => p.key).join(",")}|${cx}|${cy}|${outerR}`;
+  const bubbleKey = `${productsVisible.map((p) => p.key).join(",")}|${cx}|${cy}|${outerR}|${yearStart}|${yearEnd}`;
   if (bubbleKey !== _bubbleCacheKey || !_cachedBubbleGroups) {
     _cachedBubbleGroups = buildBubbleGroups(productsVisible, cx, cy, outerR);
     _bubbleCacheKey = bubbleKey;
@@ -648,9 +649,19 @@ function drawMapCluster(cluster) {
     noStroke();
     fill(colorAlpha(COLORS.magenta, 210));
     arc(cluster.x, cluster.y, r * 2, r * 2, -HALF_PI, HALF_PI);
+
+    // Badge circular interno para garantir contraste WCAG AAA do número sobre as duas cores
+    const innerR = Math.min(13, r * 0.5);
+    fill(lightMode ? 255 : 24);
+    stroke(themeLineColor());
+    strokeWeight(1);
+    circle(cluster.x, cluster.y, innerR * 2);
+    fill(lightMode ? "#000000" : "#FFFFFF");
+    noStroke();
+  } else {
+    fill(hasIntl ? "#FFFFFF" : "#000000");
+    noStroke();
   }
-  fill(hasIntl && !hasBR ? "#FFFFFF" : "#000000");
-  noStroke();
   textFont(fontes.afacad);
   textStyle(BOLD);
   textSize(Math.min(21, r * 0.78));
@@ -668,7 +679,7 @@ function drawMapCluster(cluster) {
 }
 
 function visualMousePressed(mx, my) {
-  if (mx < visualX() || mx > productPanelX() || my < 0 || my > height)
+  if (mx < visualX() || mx > visualX() + visualW() || my < 0 || my > height)
     return false;
   const yearHit = clickedYearHandle(mx, my);
   if (yearHit) {
@@ -748,11 +759,11 @@ function drawVisualizationSummary() {
   const parts = summaryDims.map(
     (dim) => `${getDimension(dim)?.label || dim}: ${countsByDim[dim] || 0}`,
   );
-  text(
-    `${totalProducts} obras conectadas a ${totalTags} tags - ${parts.join(" - ")}`,
-    visualX() + 10,
-    12,
-  );
+  const fullText = `${totalProducts} obras conectadas a ${totalTags} tags - ${parts.join(" - ")}`;
+  const compactText = `${totalProducts} obras • ${totalTags} tags`;
+  const availW = Math.max(50, visualW() - 20);
+  const textToShow = textWidth(fullText) <= availW ? fullText : compactText;
+  text(textToShow, visualX() + 10, 12);
 }
 
 function drawCenteredVisualMessage(message, x, y) {
