@@ -493,9 +493,22 @@ function getCircularVisualProducts(tags = tagsForCircular()) {
 
 function productsShownInCircular() {
   const visualProducts = getCircularVisualProducts();
+  if (!visualProducts.length) return [];
+
+  let list = visualProducts;
+  if (typeof selectedProduct !== "undefined" && selectedProduct) {
+    const selIdx = list.findIndex(
+      (item) => item.product.key === selectedProduct.key,
+    );
+    if (selIdx > 15) {
+      const item = list[selIdx];
+      list = [item, ...list.slice(0, selIdx), ...list.slice(selIdx + 1)];
+    }
+  }
+
   const shown = [];
   let slot = 0;
-  for (const item of visualProducts) {
+  for (const item of list) {
     if (slot >= 38) break;
     const segments = Math.min(Math.max(1, item.weight), 3, 38 - slot);
     shown.push(item.product);

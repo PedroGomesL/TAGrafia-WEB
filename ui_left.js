@@ -117,7 +117,12 @@ function drawNavSidebar() {
 
   for (const item of NAV_CONFIG) {
     const active = isExtended && leftPanelTab === item.id;
-    const icon = item.iconKey ? icones[item.iconKey] : dynamicViewIcon;
+    const baseIcon = item.iconKey ? icones[item.iconKey] : dynamicViewIcon;
+    const icon = active
+      ? (item.iconKey
+          ? (icones_light[item.iconKey] || baseIcon)
+          : (currentView ? (icones_light[currentView.iconKey] || baseIcon) : baseIcon))
+      : baseIcon;
     const hover = mx >= 0 && mx <= LAYOUT_NAV_W && my >= item.y - 25 && my <= item.y + 31;
 
     if (hover && typeof requestCursor === "function") {
@@ -142,14 +147,14 @@ function drawNavSidebar() {
     } else {
       // Fallback if missing
       noFill();
-      stroke(active ? 255 : (lightMode ? 0 : 255));
+      stroke(active ? 0 : (lightMode ? 0 : 255));
       strokeWeight(1.8);
       circle(LAYOUT_NAV_W / 2, item.y - 9, iconSz * 0.75);
     }
 
-    // Text
+    // Text (black text when active on pastel #959fff for WCAG 9:1 contrast)
     noStroke();
-    fill(lightMode ? 0 : 255);
+    fill(active ? "#000000" : (lightMode ? 0 : 255));
     textFont(fontes.roboto);
     textSize(10);
     textLeading(11);
@@ -222,9 +227,11 @@ function drawFilterCards() {
       rect(cx, cy, 46, 46, 6);
     }
 
-    // Draw icon
-    const icon = icones[dim.iconKey];
-    if (icon) drawImageCentered(icon, cx + 23, cy + 21, 35, 35);
+    // Draw icon (use dark icon when active on light pastelColor for WCAG contrast >= 9:1)
+    const cardIcon = active
+      ? (icones_light[dim.iconKey] || icones[dim.iconKey])
+      : icones[dim.iconKey];
+    if (cardIcon) drawImageCentered(cardIcon, cx + 23, cy + 21, 35, 35);
 
     // Draw text
     fill(lightMode ? "#000000" : "#FFFFFF");
@@ -450,19 +457,21 @@ function drawTagList(listY, listBottom) {
 
   // Clip to prevent tags from bleeding outside the list area
   drawingContext.save();
-  drawingContext.beginPath();
-  drawingContext.rect(0, listY, LAYOUT_FILTRO_W, listBottom - listY);
-  drawingContext.clip();
+  try {
+    drawingContext.beginPath();
+    drawingContext.rect(0, listY, LAYOUT_FILTRO_W, listBottom - listY);
+    drawingContext.clip();
 
-  for (let i = 0; i < tags.length; i++) {
-    const y = listY - tagScroll + i * FILTER_TAG_ROW_H;
-    if (y + FILTER_TAG_ROW_H < listY || y > listBottom) continue;
-    const tag = tags[i];
-    tag._index = i; // used by drawFilterTag for alternating stripe
-    drawFilterTag(tag, y, FILTER_TAG_ROW_H);
+    for (let i = 0; i < tags.length; i++) {
+      const y = listY - tagScroll + i * FILTER_TAG_ROW_H;
+      if (y + FILTER_TAG_ROW_H < listY || y > listBottom) continue;
+      const tag = tags[i];
+      tag._index = i; // used by drawFilterTag for alternating stripe
+      drawFilterTag(tag, y, FILTER_TAG_ROW_H);
+    }
+  } finally {
+    drawingContext.restore();
   }
-
-  drawingContext.restore();
 
   if (maxScroll > 0) {
     const trackX = LAYOUT_FILTRO_W - 5;
@@ -803,10 +812,11 @@ function drawExportTab() {
   const views = VIEWS_CONFIG.map((v, i) => ({
     label: v.label,
     y: 108 + i * 32,
-    selected: Boolean(exportViewsSelection[i]),
+    selected: Boolean(exportViewsSelection && exportViewsSelection[i]),
   }));
 
-  for (const v of views) {
+  for (let i = 0; i < views.length; i++) {
+    const v = views[i];
     const isViewHover = mx >= FILTER_BAR_X - 4 && mx <= FILTER_BAR_X + FILTER_BAR_W && my >= v.y - 4 && my <= v.y + 22;
     if (isViewHover && typeof requestCursor === "function") {
       requestCursor(HAND);
@@ -858,7 +868,11 @@ function drawExportTab() {
 
   // Smooth dropdown animation
   const targetAnim = exportFormatDropdownOpen ? 1 : 0;
-  exportDropdownAnim = lerp(exportDropdownAnim, targetAnim, 0.22);
+  if (typeof lerp === "function") {
+    exportDropdownAnim = lerp(exportDropdownAnim, targetAnim, 0.22);
+  } else {
+    exportDropdownAnim = targetAnim;
+  }
   if (Math.abs(exportDropdownAnim - targetAnim) < 0.005) {
     exportDropdownAnim = targetAnim;
   }
@@ -907,29 +921,32 @@ function drawExportTab() {
 
   if (currentMenuH > 0.5) {
     drawingContext.save();
-    drawingContext.beginPath();
-    drawingContext.rect(FILTER_BAR_X, dy + 24, FILTER_BAR_W, currentMenuH);
-    drawingContext.clip();
+    try {
+      drawingContext.beginPath();
+      drawingContext.rect(FILTER_BAR_X, dy + 24, FILTER_BAR_W, currentMenuH);
+      drawingContext.clip();
 
-    for (let i = 0; i < formats.length; i++) {
-      const oy = dy + 24 + i * 24;
-      const isOptHover = mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + FILTER_BAR_W && my >= oy && my <= oy + 24 && exportDropdownAnim > 0.3;
-      if (isOptHover && typeof requestCursor === "function") {
-        requestCursor(HAND);
+      for (let i = 0; i < formats.length; i++) {
+        const oy = dy + 24 + i * 24;
+        const isOptHover = mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + FILTER_BAR_W && my >= oy && my <= oy + 24 && exportDropdownAnim > 0.3;
+        if (isOptHover && typeof requestCursor === "function") {
+          requestCursor(HAND);
+        }
+        stroke("#959fff");
+        strokeWeight(1.2);
+        fill(isOptHover ? (lightMode ? "#EFF2FF" : "#3a3a3a") : (lightMode ? "#FFFFFF" : "#262626"));
+        rect(FILTER_BAR_X, oy, FILTER_BAR_W, 24, 4);
+
+        fill(lightMode ? 0 : 255, Math.round(exportDropdownAnim * 255));
+        noStroke();
+        textFont(fontes.roboto);
+        textSize(11);
+        textAlign(LEFT, CENTER);
+        text(formats[i], FILTER_BAR_X + 8, oy + 12);
       }
-      stroke("#959fff");
-      strokeWeight(1.2);
-      fill(isOptHover ? (lightMode ? "#EFF2FF" : "#3a3a3a") : (lightMode ? "#FFFFFF" : "#262626"));
-      rect(FILTER_BAR_X, oy, FILTER_BAR_W, 24, 4);
-
-      fill(lightMode ? 0 : 255, Math.round(exportDropdownAnim * 255));
-      noStroke();
-      textFont(fontes.roboto);
-      textSize(11);
-      textAlign(LEFT, CENTER);
-      text(formats[i], FILTER_BAR_X + 8, oy + 12);
+    } finally {
+      drawingContext.restore();
     }
-    drawingContext.restore();
   }
 
   // Smoothly animated "Baixar" button position
@@ -980,16 +997,18 @@ function drawSobreTab() {
   sobreScroll = constrain(sobreScroll, 0, Math.max(0, contentH - availableH));
 
   drawingContext.save();
-  drawingContext.beginPath();
-  drawingContext.rect(0, 58, LAYOUT_FILTRO_W, availableH);
-  drawingContext.clip();
+  try {
+    drawingContext.beginPath();
+    drawingContext.rect(0, 58, LAYOUT_FILTRO_W, availableH);
+    drawingContext.clip();
 
-  push();
-  translate(0, -sobreScroll);
-  text(txt, FILTER_BAR_X, 58, LAYOUT_FILTRO_W - FILTER_BAR_X * 2, contentH + 100);
-  pop();
-
-  drawingContext.restore();
+    push();
+    translate(0, -sobreScroll);
+    text(txt, FILTER_BAR_X, 58, LAYOUT_FILTRO_W - FILTER_BAR_X * 2, contentH + 100);
+    pop();
+  } finally {
+    drawingContext.restore();
+  }
 
   if (contentH > availableH) {
     const trackX = LAYOUT_FILTRO_W - 5;

@@ -10,7 +10,17 @@ function drawCircularView(visible) {
   const tags = tagsForCircular();
   const tagPositions = new Map();
 
-  const productsVisual = getCircularVisualProducts(tags);
+  let productsVisual = getCircularVisualProducts(tags);
+
+  if (selectedProduct && productsVisual.length) {
+    const selIdx = productsVisual.findIndex(
+      (item) => item.product.key === selectedProduct.key,
+    );
+    if (selIdx > 15) {
+      const item = productsVisual[selIdx];
+      productsVisual = [item, ...productsVisual.slice(0, selIdx), ...productsVisual.slice(selIdx + 1)];
+    }
+  }
 
   if (!selectedProduct && productsVisual.length)
     selectProduct(productsVisual[0].product);
@@ -82,12 +92,13 @@ function drawCircularView(visible) {
     const targetY = cy + sin(angle) * radius;
     const rotation = cos(angle) < 0 ? angle + PI : angle;
 
+    const isItemSelected = selectedProduct && selectedProduct.key === item.product.key;
     for (const tag of item.tags) {
       const pos = tagPositions.get(tag.key);
       const active =
         !focusedCircularTagKey || focusedCircularTagKey === tag.key;
-      stroke(colorAlpha(tag.color, active ? 230 : 55));
-      strokeWeight(active ? 1.8 : 0.8);
+      stroke(colorAlpha(tag.color, isItemSelected ? 255 : (active ? 230 : 55)));
+      strokeWeight(isItemSelected ? 3.0 : (active ? 1.8 : 0.8));
       line(pos.x, pos.y, targetX, targetY);
     }
 
@@ -1340,6 +1351,14 @@ function visualMousePressed(mx, my) {
   const hit = hitAreaAt(mx, my);
   if (hit && hit.kind === "product") {
     selectProduct(hit.product);
+    if (typeof setA11yFocus === "function") {
+      setA11yFocus({
+        type: "center_product",
+        id: "center_product",
+        label: hit.product.name,
+      });
+    }
+    keyboardFocusActive = true;
     return true;
   }
   if (hit && hit.kind === "tag") {
@@ -1366,23 +1385,25 @@ function visualMousePressed(mx, my) {
 const VIEW_RENDERERS = {
   [VISAO_CIRCULAR]: (visible) => drawCircularView(visible),
   [VISAO_BOLHAS]: () => drawBubbleView(productsShownInCircular()),
-  [VISAO_LINHA_TEMPO]: () => drawTimelineView(productsShownInCircular()),
+  [VISAO_LINHA_TEMPO]: (visible) => drawTimelineView(visible),
   [VISAO_MAPA_MUNDI]: (visible) => drawMapView(visible),
 };
 
 function drawCurrentVisualization() {
   drawingContext.save();
-  drawingContext.beginPath();
-  drawingContext.rect(visualX(), 0, visualW(), visualH());
-  drawingContext.clip();
+  try {
+    drawingContext.beginPath();
+    drawingContext.rect(visualX(), 0, visualW(), visualH());
+    drawingContext.clip();
 
-  const productsVisible = visibleProducts();
-  const renderer = VIEW_RENDERERS[activeView] || drawCircularView;
-  renderer(productsVisible);
+    const productsVisible = visibleProducts();
+    const renderer = VIEW_RENDERERS[activeView] || drawCircularView;
+    renderer(productsVisible);
 
-  drawYearBand();
-
-  drawingContext.restore();
+    drawYearBand();
+  } finally {
+    drawingContext.restore();
+  }
 }
 
 function drawVisualizationBackground() {

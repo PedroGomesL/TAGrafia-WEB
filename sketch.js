@@ -220,11 +220,25 @@ function drawMobileProdutoScreen() {
 }
 
 function drawMobileSobreScreen() {
+  const scl = filterPanelScale();
+  push();
+  scale(scl);
+  noStroke();
+  fill(lightMode ? 255 : "#222222");
+  rect(0, 0, width / scl, height / scl);
   drawSobreTab();
+  pop();
 }
 
 function drawMobileExportarScreen() {
+  const scl = filterPanelScale();
+  push();
+  scale(scl);
+  noStroke();
+  fill(lightMode ? 255 : "#222222");
+  rect(0, 0, width / scl, height / scl);
   drawExportTab();
+  pop();
 }
 
 function touchStarted() {
@@ -910,10 +924,16 @@ function handleA11yArrow(direction) {
 
   // 5. Obras da Visualização Central
   if (target.type === "center_product") {
-    const prods =
-      activeView === VISAO_CIRCULAR && typeof productsShownInCircular === "function" && productsShownInCircular().length
-        ? productsShownInCircular()
-        : visibleProducts();
+    let prods;
+    if (activeView === VISAO_CIRCULAR && typeof productsShownInCircular === "function" && productsShownInCircular().length) {
+      prods = productsShownInCircular();
+    } else if (activeView === VISAO_LINHA_TEMPO) {
+      prods = (typeof visibleProducts === "function" ? visibleProducts() : [])
+        .filter((p) => p.year >= yearStart && p.year <= yearEnd)
+        .sort((a, b) => a.year - b.year || a.name.localeCompare(b.name, "pt-BR"));
+    } else {
+      prods = typeof visibleProducts === "function" ? visibleProducts() : [];
+    }
     if (!prods.length) return;
     let idx = prods.findIndex((p) => p.key === selectedProduct?.key);
     if (idx === -1) idx = 0;
@@ -923,6 +943,7 @@ function handleA11yArrow(direction) {
       idx = (idx - 1 + prods.length) % prods.length;
     }
     selectProduct(prods[idx]);
+    target.label = selectedProduct.name;
     announceToScreenReader(`Obra: ${selectedProduct.name} (${selectedProduct.year}), por ${selectedProduct.author || "autor desconhecido"}. Origem: ${getOriginLabel(selectedProduct.origin)}.`);
     return;
   }

@@ -1420,10 +1420,162 @@ lightMode = true;
 filterMousePressed(LAYOUT_NAV_W / 2, tBounds.y + 10);
 assert(lightMode === false, "Clique com mouse dentro de themeToggleBounds() comuta para modo escuro");
 
-// Restaura modo padrão
-lightMode = true;
+console.log("\n=== 22. Validando Correções de Bugs do Modo Escuro, Ícones Figma, Contraste e Navegações ===");
+// 1. Valida Ícone Figma 987:754 e demais ícones do modo escuro
+assert(ICONS_DARK_CONFIG.tipo_obra === "data/Icones/tipo_obra_white.svg", "ICONS_DARK_CONFIG possui 'tipo_obra' mapeado para 'data/Icones/tipo_obra_white.svg' (Figma node 987:754)");
+const tipoObraPath = path.join(ROOT_DIR, "data/Icones/tipo_obra_white.svg");
+assert(fs.existsSync(tipoObraPath) && fs.statSync(tipoObraPath).size > 100, "Arquivo SVG 'data/Icones/tipo_obra_white.svg' existe no disco e não está vazio");
+
+const additionalDarkIcons = [
+  { key: "artesanal", file: "data/Icones/produto_artesanal_white.svg" },
+  { key: "industrial", file: "data/Icones/produto_industrial_white.svg" },
+  { key: "assinado", file: "data/Icones/design_assinado_white.png" },
+  { key: "clear", file: "data/Icones/filter_alt_off_white.png" },
+];
+for (const item of additionalDarkIcons) {
+  assert(ICONS_DARK_CONFIG[item.key] === item.file, `ICONS_DARK_CONFIG possui '${item.key}' mapeado para '${item.file}'`);
+  const fullP = path.join(ROOT_DIR, item.file);
+  assert(fs.existsSync(fullP) && fs.statSync(fullP).size > 100, `Arquivo de ícone '${item.file}' existe no disco e não está vazio`);
+}
+
+// 2. Validação de Contraste e Acessibilidade (WCAG 2.1 AA >= 4.5:1 para texto, >= 3.0:1 para elementos gráficos)
+function parseHex(hex) {
+  const c = hex.replace("#", "");
+  return [parseInt(c.substring(0, 2), 16), parseInt(c.substring(2, 4), 16), parseInt(c.substring(4, 6), 16)];
+}
+function sRGBtoLin(val) {
+  const v = val / 255;
+  return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+}
+function relLuminance(hex) {
+  const [r, g, b] = parseHex(hex);
+  return 0.2126 * sRGBtoLin(r) + 0.7152 * sRGBtoLin(g) + 0.0722 * sRGBtoLin(b);
+}
+function calcContrast(hex1, hex2) {
+  const l1 = relLuminance(hex1);
+  const l2 = relLuminance(hex2);
+  const hi = Math.max(l1, l2);
+  const lo = Math.min(l1, l2);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+const blackHex = "#000000";
+const whiteHex = "#FFFFFF";
+const darkThemeBg = "#222222";
+const pastelColors = [
+  { name: "material/salvos", hex: "#959fff" },
+  { name: "tecnicas", hex: "#a7ff95" },
+  { name: "estetico", hex: "#ff9597" },
+  { name: "tipo_obra", hex: "#ffef95" },
+];
+
+for (const p of pastelColors) {
+  const contrastBlack = calcContrast(blackHex, p.hex);
+  const contrastWhite = calcContrast(whiteHex, p.hex);
+  assert(contrastBlack >= 4.5, `Contraste do preto (#000000) sobre o fundo pastel ${p.name} (${p.hex}) atinge WCAG AA (obtido: ${contrastBlack.toFixed(2)}:1 >= 4.5:1)`);
+  assert(contrastWhite < 3.0, `Ícone branco sobre fundo pastel ${p.name} (${p.hex}) comprova baixa taxa de contraste (${contrastWhite.toFixed(2)}:1 < 3.0:1), justificando uso de ícones pretos/escuros`);
+}
+
+const darkBgContrast = calcContrast(whiteHex, darkThemeBg);
+assert(darkBgContrast >= 4.5, `Contraste do branco (#FFFFFF) sobre o fundo escuro (${darkThemeBg}) atinge WCAG AA (obtido: ${darkBgContrast.toFixed(2)}:1 >= 4.5:1)`);
+
+// 3. Validação de Navegação por Setas na Linha do Tempo (Ordem Cronológica Estrita)
+activeView = VISAO_LINHA_TEMPO;
+yearStart = 1920;
+yearEnd = 1980;
+const timelineVisibleProds = visibleProducts()
+  .filter((p) => p.year >= yearStart && p.year <= yearEnd)
+  .sort((a, b) => a.year - b.year || a.name.localeCompare(b.name, "pt-BR"));
+assert(timelineVisibleProds.length > 5, "Existem produtos suficientes para testar navegação na timeline");
+
+selectProduct(timelineVisibleProds[0]);
+setA11yFocus({ type: "center_product", id: "center_product", label: selectedProduct.name });
+
+let previousYear = selectedProduct.year;
+let isChronological = true;
+for (let step = 0; step < 5; step++) {
+  handleA11yArrow("right");
+  if (selectedProduct.year < previousYear) {
+    isChronological = false;
+    break;
+  }
+  previousYear = selectedProduct.year;
+}
+assert(isChronological, "Navegação por seta direita na linha do tempo avança estritamente em ordem cronológica (sem saltos caóticos)");
+
+// 4. Validação da Seleção e Efeito de Posição na Visualização Circular
+activeView = VISAO_CIRCULAR;
+// Seleciona tags para gerar produtos visuais circulares
+const testTagKey = Array.from(tagsByKey.keys()).find(k => tagsByKey.get(k).dimension !== "tipo_obra");
+if (testTagKey) selectedTagKeys.add(testTagKey);
+const circularProds = productsShownInCircular();
+if (circularProds.length > 0) {
+  selectProduct(circularProds[circularProds.length - 1]);
+  // productsShownInCircular deve manter o produto selecionado na lista visível
+  const updatedShown = productsShownInCircular();
+  assert(updatedShown.some(p => p.key === selectedProduct.key), "Visualização circular garante que o produto selecionado está sempre presente entre as obras renderizadas");
+}
+
+// Valida que clique em produto no canvas define foco acessível em center_product
+global.hitAreaAt = (x, y) => ({ kind: "product", product: products[0] });
+global.visualX = () => 100;
+global.visualW = () => 800;
+global.clickedYearHandle = () => null;
+visualMousePressed(200, 200);
+assert(a11yState.focusTarget && a11yState.focusTarget.type === "center_product", "Clique em obra no canvas define a11yState.focusTarget como 'center_product'");
+assert(keyboardFocusActive === true, "Clique em obra reativa imediatamente keyboardFocusActive para setas funcionarem");
+
+// 5. Validação de Abertura da Aba Exportar em Modo Escuro
+lightMode = false;
+leftPanelTab = "exportar";
+leftPanelExtendedOpen = true;
+
+const p5Mocks = {
+  fill: () => {},
+  noFill: () => {},
+  stroke: () => {},
+  noStroke: () => {},
+  strokeWeight: () => {},
+  rect: () => {},
+  line: () => {},
+  circle: () => {},
+  text: () => {},
+  textFont: () => {},
+  textSize: () => {},
+  textStyle: () => {},
+  textAlign: () => {},
+  push: () => {},
+  pop: () => {},
+  translate: () => {},
+  rotate: () => {},
+  radians: (deg) => (deg * Math.PI) / 180,
+  beginShape: () => {},
+  vertex: () => {},
+  endShape: () => {},
+  BOLD: "bold",
+  NORMAL: "normal",
+  LEFT: "left",
+  TOP: "top",
+  CENTER: "center",
+  HAND: "pointer",
+  filterPanelScale: () => 1,
+  mouseX: 50,
+  mouseY: 50,
+};
+Object.assign(global, p5Mocks);
+
+let exportDrawSucceeded = false;
+try {
+  drawExportTab();
+  exportDrawSucceeded = true;
+} catch (err) {
+  console.error("Erro ao desenhar drawExportTab no modo escuro:", err);
+  exportDrawSucceeded = false;
+}
+assert(exportDrawSucceeded, "drawExportTab() executa sem lançar exceção no modo escuro (#222222)");
 
 // Restaura estado padrão
+lightMode = true;
 leftPanelExtendedOpen = true;
 leftPanelTab = "filtros";
 activeDimension = "tipo_obra";

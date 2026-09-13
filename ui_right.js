@@ -94,7 +94,8 @@ function drawProductSidebar(x, y, w, h, scale) {
       drawFocusRingCircle(x + w / 2, currentY + 12 * scale, circleD / 2 + 2);
     }
 
-    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 12 * scale, iconSz, iconSz);
+    const tabIcon = active ? (icones_light[item.id] || item.icon) : item.icon;
+    if (tabIcon) drawImageCentered(tabIcon, x + w / 2, currentY + 12 * scale, iconSz, iconSz);
     fill(lightMode ? "#000000" : "#FFFFFF");
     noStroke();
     textFont(fontes.roboto);
@@ -135,7 +136,8 @@ function drawProductSidebar(x, y, w, h, scale) {
     drawFocusRingCircle(x + w / 2, salvosY + 12 * scale, circleD / 2 + 2);
   }
 
-  if (icones.save) drawImageCentered(icones.save, x + w / 2, salvosY + 12 * scale, iconSz, iconSz);
+  const saveTabIcon = salvosActive ? (icones_light.save || icones.save) : icones.save;
+  if (saveTabIcon) drawImageCentered(saveTabIcon, x + w / 2, salvosY + 12 * scale, iconSz, iconSz);
   fill(lightMode ? "#000000" : "#FFFFFF");
   noStroke();
   textFont(fontes.roboto);
@@ -265,8 +267,9 @@ function drawProductInfo(x, y, w, h, scale) {
   if (typeof isFocusedElement === "function" && isFocusedElement("product_save")) {
     drawFocusRingCircle(iconSaveX, iconY, iconCircleD / 2 + 2);
   }
-  if (icones.save) {
-    drawImageCentered(icones.save, iconSaveX, iconY, iconImgSize, iconImgSize);
+  const saveIcon = isSaved ? (icones_light.save || icones.save) : icones.save;
+  if (saveIcon) {
+    drawImageCentered(saveIcon, iconSaveX, iconY, iconImgSize, iconImgSize);
   }
 
   // Draw production icon with circle around it
@@ -381,92 +384,95 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   detailScroll = constrain(detailScroll, 0, Math.max(0, contentH - visibleH));
 
   drawingContext.save();
-  drawingContext.beginPath();
-  drawingContext.rect(x, y, w, visibleH);
-  drawingContext.clip();
+  try {
+    drawingContext.beginPath();
+    drawingContext.rect(x, y, w, visibleH);
+    drawingContext.clip();
 
-  push();
-  translate(0, -detailScroll);
+    push();
+    translate(0, -detailScroll);
 
-  const dim = rightPanelTab === "materiais" ? "material" : rightPanelTab;
-  const marginX = x + 12 * scale;
-  const contentW = w - 24 * scale;
-  let cursorY = y + 10 * scale;
+    const dim = rightPanelTab === "materiais" ? "material" : rightPanelTab;
+    const marginX = x + 12 * scale;
+    const contentW = w - 24 * scale;
+    let cursorY = y + 10 * scale;
 
-  // ─── Tags section header ───
-  fill(lightMode ? "#000000" : "#FFFFFF");
-  noStroke();
-  textFont(fontes.roboto);
-  textStyle(BOLD);
-  textSize(13 * scale);
-  textAlign(LEFT, CENTER);
-  text("Tags:", marginX, cursorY + 6 * scale);
-  textStyle(NORMAL);
-  cursorY += 20 * scale;
-
-  // Tag chips
-  const tags = selectedProduct.tagsByDimension[dim] || [];
-  if (tags.length === 0) {
-    fill(lightMode ? "#595959" : "#AAAAAA");
-    textSize(11 * scale);
+    // ─── Tags section header ───
+    fill(lightMode ? "#000000" : "#FFFFFF");
+    noStroke();
+    textFont(fontes.roboto);
+    textStyle(BOLD);
+    textSize(13 * scale);
     textAlign(LEFT, CENTER);
-    text("Sem tags nesta categoria", marginX, cursorY + 8 * scale);
-    cursorY += 22 * scale;
-  } else {
-    let cursorX = marginX;
-    const maxX = x + w - 12 * scale;
-    const chipH = 20 * scale;
-    textSize(11 * scale);
+    text("Tags:", marginX, cursorY + 6 * scale);
+    textStyle(NORMAL);
+    cursorY += 20 * scale;
 
-    const tagBgColor = getDimensionPastelColor(dim);
+    // Tag chips
+    const tags = selectedProduct.tagsByDimension[dim] || [];
+    if (tags.length === 0) {
+      fill(lightMode ? "#595959" : "#AAAAAA");
+      textSize(11 * scale);
+      textAlign(LEFT, CENTER);
+      text("Sem tags nesta categoria", marginX, cursorY + 8 * scale);
+      cursorY += 22 * scale;
+    } else {
+      let cursorX = marginX;
+      const maxX = x + w - 12 * scale;
+      const chipH = 20 * scale;
+      textSize(11 * scale);
 
-    for (const tag of tags) {
-      const chipW = Math.max(44 * scale, textWidth(tag.label) + 14 * scale);
-      if (cursorX + chipW > maxX) {
-        cursorX = marginX;
-        cursorY += chipH + 5 * scale;
+      const tagBgColor = getDimensionPastelColor(dim);
+
+      for (const tag of tags) {
+        const chipW = Math.max(44 * scale, textWidth(tag.label) + 14 * scale);
+        if (cursorX + chipW > maxX) {
+          cursorX = marginX;
+          cursorY += chipH + 5 * scale;
+        }
+        noStroke();
+        fill(tagBgColor);
+        rect(cursorX, cursorY, chipW, chipH, 4);
+        fill("#000000");
+        textAlign(CENTER, CENTER);
+        text(tag.label, cursorX + chipW / 2, cursorY + chipH / 2);
+        cursorX += chipW + 5 * scale;
       }
-      noStroke();
-      fill(tagBgColor);
-      rect(cursorX, cursorY, chipW, chipH, 4);
-      fill("#000000");
-      textAlign(CENTER, CENTER);
-      text(tag.label, cursorX + chipW / 2, cursorY + chipH / 2);
-      cursorX += chipW + 5 * scale;
+      if (tags.length > 0) cursorY += chipH + 8 * scale;
     }
-    if (tags.length > 0) cursorY += chipH + 8 * scale;
+
+    // --- Draw horizontal separator between Tags and Detalhes ---
+    cursorY += 4 * scale;
+    stroke("#959fff");
+    strokeWeight(1.5 * scale);
+    line(x, cursorY, x + w, cursorY);
+    cursorY += 12 * scale;
+
+    // ─── Detalhes section header ───
+    fill(lightMode ? "#000000" : "#FFFFFF");
+    noStroke();
+    textFont(fontes.roboto);
+    textStyle(BOLD);
+    textSize(13 * scale);
+    textAlign(LEFT, CENTER);
+    text("Detalhes:", marginX, cursorY + 6 * scale);
+    textStyle(NORMAL);
+    cursorY += 20 * scale;
+
+    // Body text
+    const textValue = getProductDetailsForDimension(selectedProduct, dim);
+
+    fill(lightMode ? "#1B1212" : "#FFFFFF");
+    textFont(fontes.roboto);
+    textSize(12 * scale);
+    textLeading(18 * scale);
+    textAlign(LEFT, TOP);
+    text(textValue, marginX, cursorY, contentW, 2000 * scale);
+
+    pop();
+  } finally {
+    drawingContext.restore();
   }
-
-  // --- Draw horizontal separator between Tags and Detalhes ---
-  cursorY += 4 * scale;
-  stroke("#959fff");
-  strokeWeight(1.5 * scale);
-  line(x, cursorY, x + w, cursorY);
-  cursorY += 12 * scale;
-
-  // ─── Detalhes section header ───
-  fill(lightMode ? "#000000" : "#FFFFFF");
-  noStroke();
-  textFont(fontes.roboto);
-  textStyle(BOLD);
-  textSize(13 * scale);
-  textAlign(LEFT, CENTER);
-  text("Detalhes:", marginX, cursorY + 6 * scale);
-  textStyle(NORMAL);
-  cursorY += 20 * scale;
-
-  // Body text
-  const textValue = getProductDetailsForDimension(selectedProduct, dim);
-
-  fill(lightMode ? "#1B1212" : "#FFFFFF");
-  textFont(fontes.roboto);
-  textSize(12 * scale);
-  textLeading(18 * scale);
-  textAlign(LEFT, TOP);
-  text(textValue, marginX, cursorY, contentW, 2000 * scale);
-
-  pop();
-  drawingContext.restore();
 
   if (contentH > visibleH) {
     drawPanelScroll(x + w - 6 * scale, y, visibleH, detailScroll, contentH - visibleH);
@@ -624,37 +630,39 @@ function drawSavedProducts(x, y, w, scale) {
 
   // Clip to prevent saved product cards from overflowing
   drawingContext.save();
-  drawingContext.beginPath();
-  drawingContext.rect(x, gridY, w, height - gridY);
-  drawingContext.clip();
+  try {
+    drawingContext.beginPath();
+    drawingContext.rect(x, gridY, w, height - gridY);
+    drawingContext.clip();
 
-  if (!items.length) {
-    fill(lightMode ? "#595959" : "#AAAAAA");
-    textFont(fontes.roboto);
-    textSize(12 * scale);
-    textAlign(CENTER, CENTER);
-    text(
-      savedSearch.length
-        ? "Nenhuma obra encontrada."
-        : "Nenhuma obra salva ainda.\nClique no ícone de salvar para adicionar.",
-      x + w / 2,
-      gridY + 40 * scale,
-    );
-  }
-
-  for (let i = 0; i < items.length; i++) {
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const cx = gridX + col * (cardW + gapX);
-    const cy = gridY + row * (cardH + gapY) - savedScroll;
-    if (cy + cardH < gridY || cy > height) continue;
-    drawSavedCard(items[i], cx, cy, cardW, cardH, scale);
-    if (typeof isFocusedElement === "function" && isFocusedElement("saved_item", undefined, i)) {
-      drawFocusRingRect(cx, cy, cardW, cardH, 6 * scale);
+    if (!items.length) {
+      fill(lightMode ? "#595959" : "#AAAAAA");
+      textFont(fontes.roboto);
+      textSize(12 * scale);
+      textAlign(CENTER, CENTER);
+      text(
+        savedSearch.length
+          ? "Nenhuma obra encontrada."
+          : "Nenhuma obra salva ainda.\nClique no ícone de salvar para adicionar.",
+        x + w / 2,
+        gridY + 40 * scale,
+      );
     }
-  }
 
-  drawingContext.restore();
+    for (let i = 0; i < items.length; i++) {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const cx = gridX + col * (cardW + gapX);
+      const cy = gridY + row * (cardH + gapY) - savedScroll;
+      if (cy + cardH < gridY || cy > height) continue;
+      drawSavedCard(items[i], cx, cy, cardW, cardH, scale);
+      if (typeof isFocusedElement === "function" && isFocusedElement("saved_item", undefined, i)) {
+        drawFocusRingRect(cx, cy, cardW, cardH, 6 * scale);
+      }
+    }
+  } finally {
+    drawingContext.restore();
+  }
 
   drawPanelScroll(
     x + w - 4,
