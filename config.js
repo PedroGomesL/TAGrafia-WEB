@@ -45,10 +45,10 @@ const VIEWS_CONFIG = [
 ];
 
 const NAV_CONFIG = [
-  { id: "filtros", label: "Filtros", y: 130, iconKey: "filtros" },
-  { id: "trocar", label: "Trocar\nVisualização", y: 240, iconKey: null },
-  { id: "exportar", label: "Exportar", y: 350, iconKey: "export" },
-  { id: "sobre", label: "Sobre", y: 460, iconKey: "sobre" },
+  { id: "filtros", label: "Filtros", y: 130, iconKey: "filtros", iconSize: 30 },
+  { id: "trocar", label: "Trocar\nVisualização", y: 240, iconKey: null, iconSize: 40 },
+  { id: "exportar", label: "Exportar", y: 350, iconKey: "export", iconSize: 30 },
+  { id: "sobre", label: "Sobre", y: 460, iconKey: "sobre", iconSize: 30 },
 ];
 
 const DETAIL_TABS = ["material", "estetico", "tecnicas"];

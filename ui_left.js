@@ -78,14 +78,15 @@ function drawNavSidebar() {
     }
 
     // Icon
+    const iconSz = item.iconSize || 40;
     if (icon) {
-      drawImageCentered(icon, LAYOUT_NAV_W / 2, item.y, 40, 40);
+      drawImageCentered(icon, LAYOUT_NAV_W / 2, item.y, iconSz, iconSz);
     } else {
       // Fallback if missing
       noFill();
       stroke(active ? 255 : 0);
       strokeWeight(2);
-      circle(LAYOUT_NAV_W / 2, item.y, 30);
+      circle(LAYOUT_NAV_W / 2, item.y, iconSz * 0.75);
     }
 
     // Text

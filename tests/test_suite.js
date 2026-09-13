@@ -91,6 +91,9 @@ assert(Array.isArray(NAV_CONFIG), "NAV_CONFIG é um array");
 assert(NAV_CONFIG.length === 4, "NAV_CONFIG contém 4 itens de navegação");
 for (const nav of NAV_CONFIG) {
   assert(nav.id && nav.label && typeof nav.y === "number", `Item de navegação '${nav.id}' é válido`);
+  if (["filtros", "exportar", "sobre"].includes(nav.id)) {
+    assert(nav.iconSize === 30, `Item de navegação '${nav.id}' possui tamanho reduzido iconSize === 30 (obtido: ${nav.iconSize})`);
+  }
 }
 
 assert(Array.isArray(DETAIL_TABS), "DETAIL_TABS é um array");
