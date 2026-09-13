@@ -446,14 +446,14 @@ function drawBubbleView(productsVisible) {
   circle(cx, cy, outerR * 2);
 
   for (const group of groups) {
-    stroke("#000000");
+    stroke(lightMode ? "#000000" : "#FFFFFF");
     strokeWeight(1.6);
-    fill("#D9D9D9");
+    fill(lightMode ? "#D9D9D9" : "#333333");
     circle(group.x, group.y, group.r * 2);
     drawProductsInBubble(group);
 
     // Renderiza o nome do grupo SEMPRE dentro do círculo (terço superior)
-    fill("#000000");
+    fill(lightMode ? "#000000" : "#FFFFFF");
     noStroke();
     textFont(fontes.afacad);
     textStyle(BOLD);

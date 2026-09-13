@@ -14,7 +14,7 @@ function drawProductPanel() {
   const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 240) * scale);
 
   noStroke();
-  fill("#FFFFFF");
+  fill(lightMode ? "#FFFFFF" : "#222222");
   rect(x, 0, w, height);
 
   // 1. Top Image
@@ -51,7 +51,7 @@ function drawProductPanel() {
 }
 
 function drawProductSidebar(x, y, w, h, scale) {
-  fill("#FFFFFF");
+  fill(lightMode ? "#FFFFFF" : "#222222");
   noStroke();
   rect(x, y, w, h);
 
@@ -95,7 +95,7 @@ function drawProductSidebar(x, y, w, h, scale) {
     }
 
     if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 12 * scale, iconSz, iconSz);
-    fill("#000000");
+    fill(lightMode ? "#000000" : "#FFFFFF");
     noStroke();
     textFont(fontes.roboto);
     textSize(11 * scale);
@@ -136,7 +136,7 @@ function drawProductSidebar(x, y, w, h, scale) {
   }
 
   if (icones.save) drawImageCentered(icones.save, x + w / 2, salvosY + 12 * scale, iconSz, iconSz);
-  fill("#000000");
+  fill(lightMode ? "#000000" : "#FFFFFF");
   noStroke();
   textFont(fontes.roboto);
   textSize(11 * scale);
@@ -145,14 +145,14 @@ function drawProductSidebar(x, y, w, h, scale) {
 }
 
 function drawProductImage(x, y, w, h, scale) {
-  fill("#FFFFFF");
+  fill(lightMode ? "#FFFFFF" : "#222222");
   noStroke();
   rect(x, y, w, h);
   const img = getCurrentProductImage();
   if (img) {
     drawImageContain(img, x, y, w, h);
   } else {
-    fill(17, 17, 17, 130);
+    fill(lightMode ? color(17, 17, 17, 130) : color(255, 255, 255, 130));
     textFont(fontes.roboto);
     textSize(15 * scale);
     textAlign(CENTER, CENTER);
@@ -198,13 +198,13 @@ function drawProductImage(x, y, w, h, scale) {
 
 function drawProductInfo(x, y, w, h, scale) {
   noStroke();
-  fill("#FFFFFF");
+  fill(lightMode ? "#FFFFFF" : "#222222");
   rect(x, y, w, h);
 
   if (!selectedProduct) {
     activeProductHeaderTooltip = null;
     noStroke();
-    fill("#000000");
+    fill(lightMode ? "#000000" : "#FFFFFF");
     textFont(fontes.roboto);
     textSize(13 * scale);
     textAlign(LEFT, CENTER);
@@ -227,7 +227,7 @@ function drawProductInfo(x, y, w, h, scale) {
   rect(x + 8 * scale, titleY + 1 * scale, 4 * scale, 30 * scale, 2 * scale);
 
   // Title area (product name + year)
-  fill("#000000");
+  fill(lightMode ? "#000000" : "#FFFFFF");
   textFont(fontes.afacad);
   textStyle(BOLD);
   textSize(titleSize);
@@ -241,7 +241,7 @@ function drawProductInfo(x, y, w, h, scale) {
   const designerAndOrigin = `${authorName} • ${originText}`;
   textFont(fontes.roboto);
   textSize(11 * scale);
-  fill("#444444");
+  fill(lightMode ? "#444444" : "#FFFFFF");
   text(designerAndOrigin, titleX, titleY + 18 * scale, titleW, 16 * scale);
 
   // Icons on the right
@@ -259,7 +259,7 @@ function drawProductInfo(x, y, w, h, scale) {
   } else {
     noFill();
   }
-  stroke("#000000");
+  stroke(lightMode ? "#000000" : "#FFFFFF");
   strokeWeight(1.2 * scale);
   circle(iconSaveX, iconY, iconCircleD);
   if (typeof isFocusedElement === "function" && isFocusedElement("product_save")) {
@@ -275,7 +275,7 @@ function drawProductInfo(x, y, w, h, scale) {
   
   if (prodIcon) {
     noFill();
-    stroke("#000000");
+    stroke(lightMode ? "#000000" : "#FFFFFF");
     strokeWeight(1.2 * scale);
     circle(iconProdX, iconY, iconCircleD);
     drawImageCentered(prodIcon, iconProdX, iconY, iconImgSize, iconImgSize);
@@ -371,9 +371,9 @@ function drawProductHeaderTooltip(scale) {
 }
 
 function drawProductDetailsNew(x, y, w, h, scale) {
-  // White content background
+  // Content background
   noStroke();
-  fill("#FFFFFF");
+  fill(lightMode ? "#FFFFFF" : "#222222");
   rect(x, y, w, h);
 
   const visibleH = h;
@@ -394,7 +394,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   let cursorY = y + 10 * scale;
 
   // ─── Tags section header ───
-  fill("#000000");
+  fill(lightMode ? "#000000" : "#FFFFFF");
   noStroke();
   textFont(fontes.roboto);
   textStyle(BOLD);
@@ -407,7 +407,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   // Tag chips
   const tags = selectedProduct.tagsByDimension[dim] || [];
   if (tags.length === 0) {
-    fill("#595959");
+    fill(lightMode ? "#595959" : "#AAAAAA");
     textSize(11 * scale);
     textAlign(LEFT, CENTER);
     text("Sem tags nesta categoria", marginX, cursorY + 8 * scale);
@@ -445,7 +445,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   cursorY += 12 * scale;
 
   // ─── Detalhes section header ───
-  fill("#000000");
+  fill(lightMode ? "#000000" : "#FFFFFF");
   noStroke();
   textFont(fontes.roboto);
   textStyle(BOLD);
@@ -458,7 +458,7 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   // Body text
   const textValue = getProductDetailsForDimension(selectedProduct, dim);
 
-  fill("#1B1212");
+  fill(lightMode ? "#1B1212" : "#FFFFFF");
   textFont(fontes.roboto);
   textSize(12 * scale);
   textLeading(18 * scale);
@@ -556,12 +556,12 @@ function drawSavedProducts(x, y, w, scale) {
     requestCursor(TEXT);
   }
 
-  stroke("#D9D9D9");
+  stroke(lightMode ? "#D9D9D9" : "#444444");
   strokeWeight(1);
-  fill(isSearchHover && !savedSearchActive ? (lightMode ? "#F7F7FA" : "#CCCCCC") : (lightMode ? "#FFFFFF" : "#D9D9D9"));
+  fill(isSearchHover && !savedSearchActive ? (lightMode ? "#F7F7FA" : "#333333") : (lightMode ? "#FFFFFF" : "#262626"));
   rect(searchX, searchY, searchW, searchH, 4);
 
-  fill(savedSearch.length ? "#000000" : "#595959");
+  fill(savedSearch.length ? (lightMode ? "#000000" : "#FFFFFF") : (lightMode ? "#595959" : "#AAAAAA"));
   noStroke();
   textFont(fontes.roboto);
   textSize(11 * scale);
@@ -575,7 +575,7 @@ function drawSavedProducts(x, y, w, scale) {
   // Blinking cursor if search active
   if (savedSearchActive && frameCount % 60 < 30) {
     const cx = searchX + 10 * scale + textWidth(savedSearch);
-    stroke("#000000");
+    stroke(lightMode ? "#000000" : "#FFFFFF");
     strokeWeight(1);
     line(cx + 2, searchY + 4 * scale, cx + 2, searchY + searchH - 4 * scale);
   }
@@ -589,12 +589,12 @@ function drawSavedProducts(x, y, w, scale) {
     requestCursor(HAND);
   }
 
-  stroke("#D9D9D9");
+  stroke(lightMode ? "#D9D9D9" : "#444444");
   strokeWeight(1);
-  fill(isSortHover ? (lightMode ? "#EFEFF4" : "#C4C4C4") : (lightMode ? "#FFFFFF" : "#D9D9D9"));
+  fill(isSortHover ? (lightMode ? "#EFEFF4" : "#3a3a3a") : (lightMode ? "#FFFFFF" : "#262626"));
   rect(buttonX, searchY, buttonW, searchH, 4);
 
-  fill("#000000");
+  fill(lightMode ? "#000000" : "#FFFFFF");
   noStroke();
   textFont(fontes.roboto);
   textSize(11 * scale);
@@ -629,7 +629,7 @@ function drawSavedProducts(x, y, w, scale) {
   drawingContext.clip();
 
   if (!items.length) {
-    fill("#595959");
+    fill(lightMode ? "#595959" : "#AAAAAA");
     textFont(fontes.roboto);
     textSize(12 * scale);
     textAlign(CENTER, CENTER);
@@ -677,9 +677,9 @@ function drawSavedCard(product, x, y, w, h, scale) {
   const pillH = Math.round(22 * scale);
   const strokeW = (isCardHover ? 2.2 : 1.6) * scale;
 
-  // White card background
+  // Card background
   noStroke();
-  fill("#FFFFFF");
+  fill(lightMode ? "#FFFFFF" : "#222222");
   rect(x, y, w, imgBoxH, 6 * scale);
 
   // Product image (occupies interior)
@@ -729,7 +729,7 @@ function drawSavedCard(product, x, y, w, h, scale) {
 
   // Pill for product name
   const pillY = y + imgBoxH + 6 * scale;
-  fill(isCardHover ? (lightMode ? "#E8E8EE" : "#333333") : (lightMode ? "#F0F0F0" : "#222222"));
+  fill(isCardHover ? (lightMode ? "#E8E8EE" : "#444444") : (lightMode ? "#F0F0F0" : "#333333"));
   rect(x, pillY, w, pillH, pillH / 2);
 
   fill(lightMode ? "#000000" : "#FFFFFF");

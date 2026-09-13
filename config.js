@@ -138,7 +138,7 @@ const NAV_CONFIG = [
   { id: "filtros", label: "Filtros", y: 88, iconKey: "filtros", iconSize: 28 },
   { id: "trocar", label: "Trocar\nVisualização", y: 164, iconKey: null, iconSize: 30 },
   { id: "exportar", label: "Exportar", y: 240, iconKey: "export", iconSize: 28 },
-  { id: "sobre", label: "Sobre", y: 316, iconKey: "sobre", iconSize: 28 },
+  { id: "sobre", label: "Sobre", y: 380, iconKey: "sobre", iconSize: 28 },
 ];
 
 const DETAIL_TABS = ["material", "estetico", "tecnicas"];
@@ -175,6 +175,30 @@ const ICONS_CONFIG = {
   visao_bolhas: "data/Icones/visao_bolhas.svg",
   visao_timeline: "data/Icones/visao_timeline.svg",
   visao_mapa: "data/Icones/visao_mapa.svg",
+  theme_toggle: "data/Icones/theme_toggle_dark.svg",
+};
+
+const ICONS_DARK_CONFIG = {
+  filtros: "data/Icones/filtros_white.svg",
+  sobre: "data/Icones/sobre_white.svg",
+  export: "data/Icones/exportar_white.svg",
+  collapse_panel: "data/Icones/collapse_panel.svg",
+  clear: "data/Icones/filter_alt_off.png",
+  left: "data/Icones/keyboard_arrow_left.png",
+  right: "data/Icones/keyboard_arrow_right.png",
+  save: "data/Icones/salvar_produto_white.svg",
+  material: "data/Icones/material_white.svg",
+  tecnicas: "data/Icones/tecnicas_white.svg",
+  estetico: "data/Icones/estetico_white.svg",
+  tipo_obra: "data/Icones/tipodeproduto.png",
+  artesanal: "data/Icones/produto artesanal.png",
+  assinado: "data/Icones/design_assinado.png",
+  industrial: "data/Icones/produto industrial.png",
+  visao_circular: "data/Icones/visao_circular_white.svg",
+  visao_bolhas: "data/Icones/visao_bolhas_white.svg",
+  visao_timeline: "data/Icones/visao_timeline_white.svg",
+  visao_mapa: "data/Icones/visao_mapa_white.svg",
+  theme_toggle: "data/Icones/theme_toggle_white.svg",
 };
 
 const DIMENSIONS = {
@@ -572,7 +596,7 @@ const COLORS = {
   cyan: "#48BFC6",
   pink: "#FFA8ED",
   orange: "#FF8A00",
-  visualDark: "#111111",
+  visualDark: "#222222",
   visualLight: "#F3F1EA",
   timelineDark: "#505050",
   timelineLight: "#D7D2C5",

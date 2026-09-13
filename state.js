@@ -1,4 +1,33 @@
 let icones = {};
+let icones_light = {};
+let icones_dark = {};
+
+function updateActiveIcons() {
+  const source = lightMode ? icones_light : icones_dark;
+  for (const [key, img] of Object.entries(source)) {
+    icones[key] = img;
+  }
+  const fallback = lightMode ? icones_dark : icones_light;
+  for (const [key, img] of Object.entries(fallback)) {
+    if (!icones[key]) icones[key] = img;
+  }
+}
+
+function toggleTheme() {
+  lightMode = !lightMode;
+  updateActiveIcons();
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem("tagrafia-theme", lightMode ? "light" : "dark");
+    } catch (e) {}
+  }
+  if (typeof announceToScreenReader === "function") {
+    announceToScreenReader(lightMode ? "Modo claro ativado" : "Modo escuro ativado");
+  }
+  if (typeof redraw === "function") {
+    redraw();
+  }
+}
 
 let fontes = {};
 let sourceLines = {};

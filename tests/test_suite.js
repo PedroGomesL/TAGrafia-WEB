@@ -1340,6 +1340,76 @@ keyboardFocusActive = true;
 drawFocusRingRect(10, 10, 100, 50, 4);
 assert(true, "drawFocusRingRect executa com segurança mesmo quando rectMode anterior era CENTER");
 
+console.log("\n=== 21. Validando Modo Escuro (#222222, Textos Brancos e 12 Ícones Figma) ===");
+assert(COLORS.visualDark === "#222222", "COLORS.visualDark está definido como #222222");
+
+// Valida existência e mapeamento de todos os 12 ícones brancos do Figma
+const figmaWhiteIcons = [
+  { key: "filtros", file: "data/Icones/filtros_white.svg", nodeId: "983:747" },
+  { key: "export", file: "data/Icones/exportar_white.svg", nodeId: "983:723" },
+  { key: "sobre", file: "data/Icones/sobre_white.svg", nodeId: "983:719" },
+  { key: "theme_toggle", file: "data/Icones/theme_toggle_white.svg", nodeId: "983:742" },
+  { key: "visao_circular", file: "data/Icones/visao_circular_white.svg", nodeId: "983:669" },
+  { key: "visao_bolhas", file: "data/Icones/visao_bolhas_white.svg", nodeId: "983:689" },
+  { key: "visao_timeline", file: "data/Icones/visao_timeline_white.svg", nodeId: "983:680" },
+  { key: "visao_mapa", file: "data/Icones/visao_mapa_white.svg", nodeId: "983:726" },
+  { key: "material", file: "data/Icones/material_white.svg", nodeId: "983:730" },
+  { key: "estetico", file: "data/Icones/estetico_white.svg", nodeId: "983:711" },
+  { key: "tecnicas", file: "data/Icones/tecnicas_white.svg", nodeId: "983:715" },
+  { key: "save", file: "data/Icones/salvar_produto_white.svg", nodeId: "983:717" },
+];
+
+assert(typeof ICONS_DARK_CONFIG === "object" && ICONS_DARK_CONFIG !== null, "ICONS_DARK_CONFIG está definido");
+for (const item of figmaWhiteIcons) {
+  assert(ICONS_DARK_CONFIG[item.key] === item.file, `ICONS_DARK_CONFIG possui '${item.key}' mapeado para '${item.file}'`);
+  const fullPath = path.join(ROOT_DIR, item.file);
+  assert(fs.existsSync(fullPath) && fs.statSync(fullPath).size > 100, `Arquivo SVG '${item.file}' existe no disco e não está vazio`);
+}
+assert(fs.existsSync(path.join(ROOT_DIR, "data/Icones/theme_toggle_dark.svg")), "theme_toggle_dark.svg existe no disco para o modo claro");
+
+// Valida posicionamento do botão de tema na barra de navegação:
+// Deve ficar acima do Sobre (y: 380), abaixo do Exportar (y: 240) e da linha divisória (y: 278)
+assert(typeof themeToggleBounds === "function", "themeToggleBounds está definida");
+const tBounds = themeToggleBounds();
+assert(tBounds.y > 278, `themeToggleBounds.y (${tBounds.y}) fica abaixo da linha divisória (y: 278)`);
+const sobreNav = NAV_CONFIG.find(n => n.id === "sobre");
+assert(sobreNav && tBounds.y + tBounds.h <= sobreNav.y, `themeToggleBounds (${tBounds.y + tBounds.h}) fica acima do ícone Sobre (${sobreNav.y})`);
+
+// Valida alternância e cores do tema
+assert(typeof toggleTheme === "function", "toggleTheme está definida");
+lightMode = true;
+assert(themeTextColor() === "#000000", "Em modo claro, themeTextColor() retorna #000000");
+assert(themePanelBackground() === "#FFFFFF", "Em modo claro, themePanelBackground() retorna #FFFFFF");
+
+toggleTheme();
+assert(lightMode === false, "toggleTheme() comuta lightMode para false (modo escuro)");
+assert(themeTextColor() === "#FFFFFF", "Em modo escuro, themeTextColor() retorna #FFFFFF");
+assert(themePanelBackground() === "#222222", "Em modo escuro, themePanelBackground() retorna #222222");
+
+// Valida acessibilidade do alternador de tema
+const currentFocusables = getFocusableElements();
+const themeFocusItem = currentFocusables.find(el => el.type === "theme_toggle");
+assert(themeFocusItem !== undefined, "theme_toggle está presente na lista de elementos focáveis getFocusableElements()");
+
+setA11yFocus({ type: "theme_toggle", id: "theme_toggle" });
+handleA11yActivate();
+assert(lightMode === true, "Enter/Espaço no theme_toggle reverte para modo claro via handleA11yActivate()");
+
+handleA11yArrow("up");
+assert(a11yState.focusTarget && a11yState.focusTarget.id === "exportar", "Seta para cima no theme_toggle move foco para 'exportar'");
+
+setA11yFocus({ type: "theme_toggle", id: "theme_toggle" });
+handleA11yArrow("down");
+assert(a11yState.focusTarget && a11yState.focusTarget.id === "sobre", "Seta para baixo no theme_toggle move foco para 'sobre'");
+
+// Valida clique do mouse no alternador de tema
+lightMode = true;
+filterMousePressed(LAYOUT_NAV_W / 2, tBounds.y + 10);
+assert(lightMode === false, "Clique com mouse dentro de themeToggleBounds() comuta para modo escuro");
+
+// Restaura modo padrão
+lightMode = true;
+
 // Restaura estado padrão
 leftPanelExtendedOpen = true;
 leftPanelTab = "filtros";

@@ -14,7 +14,18 @@ function preload() {
   }
 
   for (const [key, path] of Object.entries(ICONS_CONFIG)) {
-    icones[key] = loadImage(asset(path));
+    const img = loadImage(asset(path));
+    icones_light[key] = img;
+    icones[key] = img;
+  }
+
+  if (typeof ICONS_DARK_CONFIG !== "undefined") {
+    for (const [key, path] of Object.entries(ICONS_DARK_CONFIG)) {
+      icones_dark[key] = loadImage(asset(path));
+    }
+  }
+  if (typeof updateActiveIcons === "function") {
+    updateActiveIcons();
   }
 }
 
@@ -72,6 +83,16 @@ function setup() {
   buildGeoCountries();
   loadSavedProducts();
   selectedProduct = null;
+
+  if (typeof localStorage !== "undefined") {
+    try {
+      const savedTheme = localStorage.getItem("tagrafia-theme");
+      if (savedTheme === "dark") {
+        lightMode = false;
+        if (typeof updateActiveIcons === "function") updateActiveIcons();
+      }
+    } catch (e) {}
+  }
 }
 
 function requestCursor(type) {
@@ -132,7 +153,7 @@ function draw() {
   _cachedVisibleProducts = null;
   _cachedVisibleProductsNoYear = null;
   _cachedTagCounts = null;
-  background(240);
+  background(lightMode ? 240 : "#222222");
 
   if (typeof isMobileMode === "function" && isMobileMode()) {
     drawMobileLayout();
@@ -311,7 +332,7 @@ function visualH() {
 function drawLayoutSeparators() {
   if (typeof isMobileMode === "function" && isMobileMode()) return;
   push();
-  stroke("#000000");
+  stroke(lightMode ? "#000000" : "#959fff");
   strokeWeight(2);
   line(filterPanelW(), 0, filterPanelW(), height);
   line(productPanelX(), 0, productPanelX(), height);
@@ -324,6 +345,14 @@ function themeVisualBackground() {
 
 function themeLineColor() {
   return lightMode ? "#111111" : "#FFFFFF";
+}
+
+function themeTextColor() {
+  return lightMode ? "#000000" : "#FFFFFF";
+}
+
+function themePanelBackground() {
+  return lightMode ? "#FFFFFF" : "#222222";
 }
 
 function mousePressed() {
@@ -465,6 +494,11 @@ function getFocusableElements() {
       list.push({ type: "nav", id: nav.id, label: nav.label });
     }
   }
+  list.push({
+    type: "theme_toggle",
+    id: "theme_toggle",
+    label: lightMode ? "Mudar para modo escuro" : "Mudar para modo claro",
+  });
 
   // 2. Painel Lateral Estendido (se aberto)
   const isExtended = typeof leftPanelExtendedOpen === "undefined" || leftPanelExtendedOpen;
@@ -811,6 +845,16 @@ function handleA11yArrow(direction) {
     return;
   }
 
+  // 1b. Alternador de Tema
+  if (target.type === "theme_toggle") {
+    if (direction === "up" || direction === "left") {
+      setA11yFocus({ type: "nav", id: "exportar", label: "Exportar" });
+    } else {
+      setA11yFocus({ type: "nav", id: "sobre", label: "Sobre" });
+    }
+    return;
+  }
+
   // 2. Alça Inicial da Timeline
   if (target.type === "timeline_start") {
     if (direction === "left" || direction === "down") {
@@ -1030,6 +1074,14 @@ function handleA11yActivate() {
         sobreScroll = 0;
         announceToScreenReader(`Painel ${target.id} expandido.`);
       }
+    }
+    return;
+  }
+
+  // 1b. Alternador de Tema
+  if (target.type === "theme_toggle") {
+    if (typeof toggleTheme === "function") {
+      toggleTheme();
     }
     return;
   }

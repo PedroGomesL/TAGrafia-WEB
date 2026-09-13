@@ -3,7 +3,7 @@ function drawFilterPanel() {
   push();
   scale(scl);
   noStroke();
-  fill(255);
+  fill(lightMode ? 255 : "#222222");
   const isExtended = typeof leftPanelExtendedOpen === "undefined" || leftPanelExtendedOpen;
   const panelW = isExtended ? LAYOUT_NAV_W + LAYOUT_FILTRO_W : LAYOUT_NAV_W;
   rect(0, 0, panelW, height / scl);
@@ -33,18 +33,69 @@ function drawFilterPanel() {
   pop();
 }
 
+function themeToggleBounds() {
+  return {
+    x: LAYOUT_NAV_W / 2 - 25,
+    y: 292,
+    w: 50,
+    h: 56,
+    iconY: 308,
+    iconSz: 28,
+  };
+}
+
+function drawThemeToggleButton() {
+  const bounds = themeToggleBounds();
+  const scl = filterPanelScale();
+  const mx = mouseX / scl;
+  const my = mouseY / scl;
+  const hover = mx >= 0 && mx <= LAYOUT_NAV_W && my >= bounds.y && my <= bounds.y + bounds.h;
+
+  if (hover && typeof requestCursor === "function") {
+    requestCursor(HAND);
+  }
+
+  if (hover) {
+    noStroke();
+    fill(lightMode ? color(0, 0, 0, 15) : color(255, 255, 255, 25));
+    rect(bounds.x, bounds.y, bounds.w, bounds.h, 6);
+  }
+
+  const icon = icones.theme_toggle;
+  if (icon) {
+    drawImageCentered(icon, LAYOUT_NAV_W / 2, bounds.iconY, bounds.iconSz, bounds.iconSz);
+  } else {
+    noFill();
+    stroke(lightMode ? 0 : 255);
+    strokeWeight(1.8);
+    circle(LAYOUT_NAV_W / 2, bounds.iconY, bounds.iconSz * 0.75);
+  }
+
+  noStroke();
+  fill(lightMode ? 0 : 255);
+  textFont(fontes.roboto);
+  textSize(10);
+  textLeading(11);
+  textAlign(CENTER, TOP);
+  text("Tema", LAYOUT_NAV_W / 2, bounds.iconY + 16);
+
+  if (typeof isFocusedElement === "function" && isFocusedElement("theme_toggle")) {
+    drawFocusRingRect(bounds.x, bounds.y, bounds.w, bounds.h, 6);
+  }
+}
+
 function drawNavSidebar() {
   push();
   noStroke();
-  fill(255);
+  fill(lightMode ? 255 : "#222222");
   rect(0, 0, LAYOUT_NAV_W, height / filterPanelScale());
 
   // Title (Compact Afacad Flux, bold 700)
-  fill("#000000");
+  fill(lightMode ? "#000000" : "#FFFFFF");
   noStroke();
   drawingContext.save();
   drawingContext.font = "700 15px 'Afacad Flux', sans-serif";
-  drawingContext.fillStyle = "#000000";
+  drawingContext.fillStyle = lightMode ? "#000000" : "#FFFFFF";
   drawingContext.textAlign = "center";
   drawingContext.textBaseline = "middle";
   drawingContext.fillText("TAGrafia", LAYOUT_NAV_W / 2, 28);
@@ -80,7 +131,7 @@ function drawNavSidebar() {
       rect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 56, 6);
     } else if (hover) {
       noStroke();
-      fill(0, 0, 0, 15);
+      fill(lightMode ? color(0, 0, 0, 15) : color(255, 255, 255, 25));
       rect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 56, 6);
     }
 
@@ -91,14 +142,14 @@ function drawNavSidebar() {
     } else {
       // Fallback if missing
       noFill();
-      stroke(active ? 255 : 0);
+      stroke(active ? 255 : (lightMode ? 0 : 255));
       strokeWeight(1.8);
       circle(LAYOUT_NAV_W / 2, item.y - 9, iconSz * 0.75);
     }
 
     // Text
     noStroke();
-    fill(0);
+    fill(lightMode ? 0 : 255);
     textFont(fontes.roboto);
     textSize(10);
     textLeading(11);
@@ -111,10 +162,13 @@ function drawNavSidebar() {
     }
   }
 
-  // Divider between Exportar and Sobre
+  // Divider between Exportar and Sobre (placed at y: 278)
   stroke("#959fff");
   strokeWeight(1.5);
   line(10, 278, LAYOUT_NAV_W - 10, 278);
+
+  // Theme toggle button (above Sobre, below divider)
+  drawThemeToggleButton();
 
   pop();
 }
@@ -173,7 +227,7 @@ function drawFilterCards() {
     if (icon) drawImageCentered(icon, cx + 23, cy + 21, 35, 35);
 
     // Draw text
-    fill("#000000");
+    fill(lightMode ? "#000000" : "#FFFFFF");
     noStroke();
     textFont(fontes.roboto);
     textSize(11);
@@ -188,9 +242,9 @@ function drawFilterCards() {
 }
 
 function drawFilterBody() {
-  // White background for entire filter body
+  // Background for entire filter body
   noStroke();
-  fill("#FFFFFF");
+  fill(lightMode ? "#FFFFFF" : "#222222");
   rect(
     0,
     FILTER_BODY_Y,
@@ -207,16 +261,16 @@ function drawFilterBody() {
   const mx = mouseX / scl - LAYOUT_NAV_W;
   const my = mouseY / scl;
 
-  // --- Category pill (white bg, radius 4, label centered) ---
+  // --- Category pill (radius 4, label centered) ---
   if (activeDimension !== "tipo_obra") {
     const hoverCat = insideRect(mx, my, FILTER_BAR_X, catY, FILTER_BAR_W, 24);
     if (hoverCat && typeof requestCursor === "function") requestCursor(HAND);
-    stroke("#D9D9D9");
+    stroke(lightMode ? "#D9D9D9" : "#444444");
     strokeWeight(1);
-    fill(hoverCat ? "#F4F4F8" : "#FFFFFF");
+    fill(hoverCat ? (lightMode ? "#F4F4F8" : "#333333") : (lightMode ? "#FFFFFF" : "#262626"));
     rect(FILTER_BAR_X, catY, FILTER_BAR_W, 24, 4);
     const categoryLabel = currentCategoryLabel();
-    fill("#000000");
+    fill(lightMode ? "#000000" : "#FFFFFF");
     noStroke();
     textFont(fontes.roboto);
     textSize(fitTextSize(categoryLabel, FILTER_BAR_W - 24, 12, 9));
@@ -224,7 +278,7 @@ function drawFilterBody() {
     text(categoryLabel, FILTER_BAR_X + FILTER_BAR_W / 2 - 4, catY + 12);
 
     // Subtle dropdown chevron
-    stroke("#888888");
+    stroke(lightMode ? "#888888" : "#AAAAAA");
     strokeWeight(1.4);
     noFill();
     const arrX = FILTER_BAR_X + FILTER_BAR_W - 10;
@@ -245,15 +299,15 @@ function drawFilterBody() {
   // --- Search bar ---
   const hoverSearch = insideRect(mx, my, FILTER_BAR_X, searchY, FILTER_BAR_W, 24);
   if (hoverSearch && typeof requestCursor === "function") requestCursor(TEXT);
-  stroke("#D9D9D9");
+  stroke(lightMode ? "#D9D9D9" : "#444444");
   strokeWeight(1);
-  fill(hoverSearch && !tagSearchActive ? "#FAFAFC" : "#FFFFFF");
+  fill(hoverSearch && !tagSearchActive ? (lightMode ? "#FAFAFC" : "#333333") : (lightMode ? "#FFFFFF" : "#262626"));
   rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 24, 4);
   noStroke();
   textFont(fontes.roboto);
   textSize(12);
   textAlign(LEFT, CENTER);
-  fill(tagSearch.length ? "#000000" : "#595959");
+  fill(tagSearch.length ? (lightMode ? "#000000" : "#FFFFFF") : (lightMode ? "#595959" : "#AAAAAA"));
   text(
     tagSearch.length ? tagSearch : "Pesquisar tag",
     FILTER_BAR_X + 8,
@@ -262,7 +316,7 @@ function drawFilterBody() {
   // Blinking cursor
   if (tagSearchActive && frameCount % 60 < 30) {
     const cx = FILTER_BAR_X + 8 + textWidth(tagSearch);
-    stroke("#000000");
+    stroke(lightMode ? "#000000" : "#FFFFFF");
     strokeWeight(1);
     line(cx + 2, searchY + 4, cx + 2, searchY + 20);
   }
@@ -275,7 +329,7 @@ function drawFilterBody() {
   const hoverClear = insideRect(mx, my, FILTER_BAR_X, clearY, FILTER_BAR_W, 24);
   if (hoverClear && selectedTagKeys.size && typeof requestCursor === "function") requestCursor(HAND);
   noStroke();
-  fill(selectedTagKeys.size ? (hoverClear ? "#C8C8C8" : "#D9D9D9") : color(220));
+  fill(selectedTagKeys.size ? (hoverClear ? (lightMode ? "#C8C8C8" : "#555555") : (lightMode ? "#D9D9D9" : "#444444")) : (lightMode ? color(220) : color(45)));
   rect(FILTER_BAR_X, clearY, FILTER_BAR_W, 24, 12);
   drawImageCentered(
     icones.clear,
@@ -347,7 +401,7 @@ function drawCategorySelector(listY, listBottom) {
   const my = mouseY / scl;
 
   noStroke();
-  fill(lightMode ? "#FFFFFF" : "#D9D9D9");
+  fill(lightMode ? "#FFFFFF" : "#222222");
   rect(0, listY - 6, LAYOUT_FILTRO_W, Math.max(0, listBottom - listY + 6));
   for (let i = 0; i < options.length; i++) {
     const y = listY + i * rowH;
@@ -362,7 +416,7 @@ function drawCategorySelector(listY, listBottom) {
 
     if (isHover && !active) {
       noStroke();
-      fill(0, 0, 0, 12);
+      fill(lightMode ? color(0, 0, 0, 12) : color(255, 255, 255, 18));
       rect(0, y, LAYOUT_FILTRO_W, rowH);
     }
 
@@ -374,10 +428,10 @@ function drawCategorySelector(listY, listBottom) {
     if (active && typeof isFocusedElement === "function" && isFocusedElement("category_selector")) {
       drawFocusRingRect(FILTER_BAR_X, y + 2, FILTER_BAR_W, rowH - 4, 4);
     }
-    stroke(lightMode ? color(0, 0, 0, 45) : color(0, 0, 0, 65));
+    stroke(lightMode ? color(0, 0, 0, 45) : color(255, 255, 255, 30));
     strokeWeight(0.5);
     line(FILTER_BAR_X, y + rowH - 1, FILTER_BAR_X + FILTER_BAR_W, y + rowH - 1);
-    fill("#000000");
+    fill(lightMode ? "#000000" : "#FFFFFF");
     noStroke();
     textFont(fontes.roboto);
     textSize(fitTextSize(option.label.toUpperCase(), FILTER_BAR_W - 12, 11, 9));
@@ -452,14 +506,14 @@ function drawFilterTag(tag, y, rowH) {
     fill("#000000");
   } else {
     noStroke();
-    fill(isHovered ? "#F0F2F7" : "#FFFFFF");
+    fill(isHovered ? (lightMode ? "#F0F2F7" : "#333333") : (lightMode ? "#FFFFFF" : "#222222"));
     rect(0, y, LAYOUT_FILTRO_W, rowH);
     // Subtle alternating stripe if not hovered
     if (!isHovered && tag._index % 2 === 1) {
-      fill(0, 0, 0, 8);
+      fill(lightMode ? color(0, 0, 0, 8) : color(255, 255, 255, 8));
       rect(0, y, LAYOUT_FILTRO_W, rowH);
     }
-    fill("#000000");
+    fill(lightMode ? "#000000" : "#FFFFFF");
   }
 
   // Click animation effect (if recently clicked)
@@ -502,9 +556,9 @@ function drawFilterTag(tag, y, rowH) {
   // Badge pill
   if (badgeText) {
     noStroke();
-    fill(selected ? color(255, 255, 255, 130) : (isHovered ? color(200, 200, 205, 240) : color(217, 217, 217, 210)));
+    fill(selected ? color(255, 255, 255, 130) : (isHovered ? (lightMode ? color(200, 200, 205, 240) : color(65, 65, 70, 240)) : (lightMode ? color(217, 217, 217, 210) : color(50, 50, 50, 210))));
     rect(badgeX, y + rowH / 2 - 9, badgeW, 18, 9);
-    fill(selected ? "#000000" : (isHovered ? "#111111" : "#333333"));
+    fill(selected ? "#000000" : (isHovered ? (lightMode ? "#111111" : "#FFFFFF") : (lightMode ? "#333333" : "#DDDDDD")));
     textSize(10);
     textAlign(CENTER, CENTER);
     text(badgeText, badgeX + badgeW / 2, y + rowH / 2);
@@ -558,6 +612,14 @@ function filterMousePressed(mxRaw, myRaw) {
   }
 
   if (mx < LAYOUT_NAV_W) {
+    const tb = typeof themeToggleBounds === "function" ? themeToggleBounds() : null;
+    if (tb && my >= tb.y && my <= tb.y + tb.h) {
+      if (typeof toggleTheme === "function") {
+        toggleTheme();
+      }
+      return true;
+    }
+
     for (const item of NAV_CONFIG) {
       if (my >= item.y - 25 && my <= item.y + 31) {
         if (item.id === "trocar") {
@@ -729,7 +791,7 @@ function drawExportTab() {
   const mx = mouseX / scl - LAYOUT_NAV_W;
   const my = mouseY / scl;
 
-  fill(0);
+  fill(lightMode ? 0 : 255);
   noStroke();
   textFont(fontes.roboto);
   textSize(13);
@@ -755,7 +817,7 @@ function drawExportTab() {
     if (v.selected) {
       fill("#6750a4");
     } else {
-      fill(isViewHover ? "#F2EFF9" : "#FFFFFF");
+      fill(isViewHover ? (lightMode ? "#F2EFF9" : "#333333") : (lightMode ? "#FFFFFF" : "#262626"));
     }
     rect(FILTER_BAR_X, v.y, 16, 16, 3);
 
@@ -770,7 +832,7 @@ function drawExportTab() {
       endShape();
     }
 
-    fill(0);
+    fill(lightMode ? 0 : 255);
     noStroke();
     textFont(fontes.roboto);
     textSize(11);
@@ -783,11 +845,11 @@ function drawExportTab() {
     }
   }
 
-  stroke(220);
+  stroke(lightMode ? 220 : 60);
   strokeWeight(1);
   line(FILTER_BAR_X, 248, FILTER_BAR_X + FILTER_BAR_W, 248);
 
-  fill(0);
+  fill(lightMode ? 0 : 255);
   noStroke();
   textFont(fontes.roboto);
   textSize(11);
@@ -809,10 +871,10 @@ function drawExportTab() {
 
   stroke("#959fff");
   strokeWeight(1.2);
-  fill(isTriggerHover ? "#F6F7FF" : "#FFFFFF");
+  fill(isTriggerHover ? (lightMode ? "#F6F7FF" : "#333333") : (lightMode ? "#FFFFFF" : "#262626"));
   rect(FILTER_BAR_X, dy, FILTER_BAR_W, 24, 4);
 
-  fill(0);
+  fill(lightMode ? 0 : 255);
   noStroke();
   textFont(fontes.roboto);
   textSize(11);
@@ -857,10 +919,10 @@ function drawExportTab() {
       }
       stroke("#959fff");
       strokeWeight(1.2);
-      fill(isOptHover ? "#EFF2FF" : "#FFFFFF");
+      fill(isOptHover ? (lightMode ? "#EFF2FF" : "#3a3a3a") : (lightMode ? "#FFFFFF" : "#262626"));
       rect(FILTER_BAR_X, oy, FILTER_BAR_W, 24, 4);
 
-      fill(0, 0, 0, Math.round(exportDropdownAnim * 255));
+      fill(lightMode ? 0 : 255, Math.round(exportDropdownAnim * 255));
       noStroke();
       textFont(fontes.roboto);
       textSize(11);
@@ -899,7 +961,7 @@ function drawSobreTab() {
   const scl = filterPanelScale();
   const availableH = height / scl - 70;
 
-  fill(0);
+  fill(lightMode ? 0 : 255);
   noStroke();
   textFont(fontes.roboto);
   textSize(12);
