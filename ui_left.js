@@ -104,6 +104,11 @@ function drawNavSidebar() {
     textLeading(11);
     textAlign(CENTER, TOP);
     text(item.label, LAYOUT_NAV_W / 2, item.y + 7);
+
+    // Focus visible WCAG
+    if (typeof isFocusedElement === "function" && isFocusedElement("nav", item.id)) {
+      drawFocusRingRect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 56, 6);
+    }
   }
 
   // Divider between Exportar and Sobre
@@ -174,6 +179,11 @@ function drawFilterCards() {
     textSize(11);
     textAlign(CENTER, TOP);
     text(dim.label, cx + 23, cy + 50);
+
+    // Focus visible WCAG
+    if (typeof isFocusedElement === "function" && isFocusedElement("dimension", dimKey)) {
+      drawFocusRingRect(cx, cy, 46, 46, 6);
+    }
   }
 }
 
@@ -226,6 +236,10 @@ function drawFilterBody() {
       line(arrX - 3.5, arrY - 2, arrX, arrY + 2);
       line(arrX, arrY + 2, arrX + 3.5, arrY - 2);
     }
+    // Focus visible WCAG
+    if (typeof isFocusedElement === "function" && isFocusedElement("category_selector")) {
+      drawFocusRingRect(FILTER_BAR_X, catY, FILTER_BAR_W, 24, 4);
+    }
   }
 
   // --- Search bar ---
@@ -252,6 +266,10 @@ function drawFilterBody() {
     strokeWeight(1);
     line(cx + 2, searchY + 4, cx + 2, searchY + 20);
   }
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("tag_search")) {
+    drawFocusRingRect(FILTER_BAR_X, searchY, FILTER_BAR_W, 24, 4);
+  }
 
   // --- Clear button ---
   const hoverClear = insideRect(mx, my, FILTER_BAR_X, clearY, FILTER_BAR_W, 24);
@@ -266,6 +284,10 @@ function drawFilterBody() {
     18,
     18,
   );
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("tag_clear")) {
+    drawFocusRingRect(FILTER_BAR_X, clearY, FILTER_BAR_W, 24, 12);
+  }
 
   const maxH = height / filterPanelScale() - 10;
   if (categorySelectorOpen && activeDimension !== "tipo_obra")
@@ -483,6 +505,11 @@ function drawFilterTag(tag, y, rowH) {
     textSize(10);
     textAlign(CENTER, CENTER);
     text(badgeText, badgeX + badgeW / 2, y + rowH / 2);
+  }
+
+  // Focus visible WCAG
+  if (typeof isFocusedTag === "function" && isFocusedTag(tag, tag._index)) {
+    drawFocusRingRect(1, y + 1, LAYOUT_FILTRO_W - 2, rowH - 2, 3);
   }
 }
 
@@ -746,6 +773,11 @@ function drawExportTab() {
     textSize(11);
     textAlign(LEFT, CENTER);
     text(v.label, FILTER_BAR_X + 24, v.y + 8);
+
+    // Focus visible WCAG
+    if (typeof isFocusedElement === "function" && isFocusedElement("export_view", undefined, i)) {
+      drawFocusRingRect(FILTER_BAR_X - 2, v.y - 2, 20, 20, 4);
+    }
   }
 
   stroke(220);
@@ -783,6 +815,11 @@ function drawExportTab() {
   textSize(11);
   textAlign(LEFT, CENTER);
   text(exportFormatSelected, FILTER_BAR_X + 8, dy + 12);
+
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("export_format")) {
+    drawFocusRingRect(FILTER_BAR_X, dy, FILTER_BAR_W, 24, 4);
+  }
 
   // Animated rotating chevron
   push();
@@ -848,6 +885,11 @@ function drawExportTab() {
   textAlign(CENTER, CENTER);
   text("Baixar", FILTER_BAR_X + FILTER_BAR_W / 2, btnY + 14);
   textStyle(NORMAL);
+
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("export_button")) {
+    drawFocusRingRect(FILTER_BAR_X, btnY, FILTER_BAR_W, 28, 14);
+  }
 }
 
 function drawSobreTab() {
@@ -894,6 +936,11 @@ function drawSobreTab() {
     fill("#959fff");
     rect(trackX, thumbY, 4, thumbH, 2);
   }
+
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("sobre_content")) {
+    drawFocusRingRect(FILTER_BAR_X - 4, 54, LAYOUT_FILTRO_W - FILTER_BAR_X * 2 + 8, availableH + 4, 4);
+  }
 }
 
 function drawCollapseButton() {
@@ -918,6 +965,11 @@ function drawCollapseButton() {
     noStroke();
     fill(0, 0, 0, 15);
     rect(btnX - 2, btnY - 2, btnW + 4, btnH + 4, 4);
+  }
+
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("collapse")) {
+    drawFocusRingRect(btnX - 2, btnY - 2, btnW + 4, btnH + 4, 4);
   }
 
   if (icones && icones.collapse_panel) {

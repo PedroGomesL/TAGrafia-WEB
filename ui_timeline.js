@@ -51,8 +51,14 @@ function drawYearBand() {
   strokeWeight(1.8);
   fill(hoverStart || draggedYearHandle === "start" ? "#F0F2FF" : "#ffffff");
   circle(xStart, ty, hoverStart || draggedYearHandle === "start" ? 28 : 26);
+  if (typeof isFocusedElement === "function" && isFocusedElement("timeline_start")) {
+    drawFocusRingCircle(xStart, ty, 15);
+  }
   fill(hoverEnd || draggedYearHandle === "end" ? "#F0F2FF" : "#ffffff");
   circle(xEnd, ty, hoverEnd || draggedYearHandle === "end" ? 28 : 26);
+  if (typeof isFocusedElement === "function" && isFocusedElement("timeline_end")) {
+    drawFocusRingCircle(xEnd, ty, 15);
+  }
 
   // Labels dos anos selecionados (com afastamento suave quando os anos estão próximos)
   noStroke();

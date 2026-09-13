@@ -90,6 +90,10 @@ function drawProductSidebar(x, y, w, h, scale) {
       circle(x + w / 2, currentY + 12 * scale, circleD);
     }
 
+    if (typeof isFocusedElement === "function" && isFocusedElement("product_tab", item.id)) {
+      drawFocusRingCircle(x + w / 2, currentY + 12 * scale, circleD / 2 + 2);
+    }
+
     if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 12 * scale, iconSz, iconSz);
     fill("#000000");
     noStroke();
@@ -125,6 +129,10 @@ function drawProductSidebar(x, y, w, h, scale) {
     fill("#959fff44");
     noStroke();
     circle(x + w / 2, salvosY + 12 * scale, circleD);
+  }
+
+  if (typeof isFocusedElement === "function" && isFocusedElement("product_tab", "salvos")) {
+    drawFocusRingCircle(x + w / 2, salvosY + 12 * scale, circleD / 2 + 2);
   }
 
   if (icones.save) drawImageCentered(icones.save, x + w / 2, salvosY + 12 * scale, iconSz, iconSz);
@@ -174,8 +182,14 @@ function drawProductImage(x, y, w, h, scale) {
       fill(leftBtnHover ? 255 : color(255, 255, 255, 200));
       noStroke();
       circle(x + 28 * scale, y + h - 28 * scale, 30 * scale);
+      if (typeof isFocusedElement === "function" && isFocusedElement("product_image_prev")) {
+        drawFocusRingCircle(x + 28 * scale, y + h - 28 * scale, 15 * scale);
+      }
       fill(rightBtnHover ? 255 : color(255, 255, 255, 200));
       circle(x + w - 28 * scale, y + h - 28 * scale, 30 * scale);
+      if (typeof isFocusedElement === "function" && isFocusedElement("product_image_next")) {
+        drawFocusRingCircle(x + w - 28 * scale, y + h - 28 * scale, 15 * scale);
+      }
       if (icones.left) drawImageCentered(icones.left, x + 28 * scale, y + h - 28 * scale, 22 * scale, 22 * scale);
       if (icones.right) drawImageCentered(icones.right, x + w - 28 * scale, y + h - 28 * scale, 22 * scale, 22 * scale);
     }
@@ -248,6 +262,9 @@ function drawProductInfo(x, y, w, h, scale) {
   stroke("#000000");
   strokeWeight(1.2 * scale);
   circle(iconSaveX, iconY, iconCircleD);
+  if (typeof isFocusedElement === "function" && isFocusedElement("product_save")) {
+    drawFocusRingCircle(iconSaveX, iconY, iconCircleD / 2 + 2);
+  }
   if (icones.save) {
     drawImageCentered(icones.save, iconSaveX, iconY, iconImgSize, iconImgSize);
   }
@@ -454,6 +471,11 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   if (contentH > visibleH) {
     drawPanelScroll(x + w - 6 * scale, y, visibleH, detailScroll, contentH - visibleH);
   }
+
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("product_details")) {
+    drawFocusRingRect(x + 4 * scale, y + 4 * scale, w - 8 * scale, visibleH - 8 * scale, 4);
+  }
 }
 
 function getProductDetailsForDimension(product, dimension) {
@@ -557,6 +579,10 @@ function drawSavedProducts(x, y, w, scale) {
     strokeWeight(1);
     line(cx + 2, searchY + 4 * scale, cx + 2, searchY + searchH - 4 * scale);
   }
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("saved_search")) {
+    drawFocusRingRect(searchX, searchY, searchW, searchH, 4);
+  }
 
   const isSortHover = insideRect(mouseX, mouseY, buttonX, searchY, buttonW, searchH);
   if (isSortHover && typeof requestCursor === "function") {
@@ -574,6 +600,10 @@ function drawSavedProducts(x, y, w, scale) {
   textSize(11 * scale);
   textAlign(CENTER, CENTER);
   text(savedSortLabel(), buttonX + buttonW / 2, searchY + searchH / 2);
+  // Focus visible WCAG
+  if (typeof isFocusedElement === "function" && isFocusedElement("saved_sort")) {
+    drawFocusRingRect(buttonX, searchY, buttonW, searchH, 4);
+  }
 
   const items = savedProductsFiltered();
   const gridY = y + 46 * scale;
@@ -619,6 +649,9 @@ function drawSavedProducts(x, y, w, scale) {
     const cy = gridY + row * (cardH + gapY) - savedScroll;
     if (cy + cardH < gridY || cy > height) continue;
     drawSavedCard(items[i], cx, cy, cardW, cardH, scale);
+    if (typeof isFocusedElement === "function" && isFocusedElement("saved_item", undefined, i)) {
+      drawFocusRingRect(cx, cy, cardW, cardH, 6 * scale);
+    }
   }
 
   drawingContext.restore();
@@ -926,6 +959,7 @@ function toggleSavedProduct() {
 }
 
 function loadSavedProducts() {
+  if (typeof localStorage === "undefined") return;
   const key = typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.savedProducts : "tagrafia-saved-products";
   try {
     savedProductKeys = new Set(
@@ -937,6 +971,7 @@ function loadSavedProducts() {
 }
 
 function persistSavedProducts() {
+  if (typeof localStorage === "undefined") return;
   const key = typeof STORAGE_KEYS !== "undefined" ? STORAGE_KEYS.savedProducts : "tagrafia-saved-products";
   localStorage.setItem(
     key,

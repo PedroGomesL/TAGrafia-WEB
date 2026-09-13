@@ -176,6 +176,9 @@ function drawProductCard(product, cx, cy, w, h, rotation) {
   textStyle(BOLD);
   drawProductCardLabel(product.name, w - 18, h - 8);
   textStyle(NORMAL);
+  if (selected && typeof isFocusedElement === "function" && isFocusedElement("center_product")) {
+    drawFocusRingRect(-w / 2, -h / 2, w, h, 4);
+  }
   pop();
 }
 
@@ -805,6 +808,9 @@ function drawProductsInBubble(group) {
     }
     fill(product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
     circle(pos.x, pos.y, (pos.r + (selected ? 1.5 : 0)) * 2);
+    if (selected && typeof isFocusedElement === "function" && isFocusedElement("center_product")) {
+      drawFocusRingCircle(pos.x, pos.y, pos.r + 3);
+    }
     hitAreas.push({
       kind: "product",
       product,
@@ -854,6 +860,9 @@ function drawTimelineView(productsVisible) {
     }
     fill(product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
     circle(px, py, (r + (selected ? 3 : 0)) * 2);
+    if (selected && typeof isFocusedElement === "function" && isFocusedElement("center_product")) {
+      drawFocusRingCircle(px, py, r + 4);
+    }
     hitAreas.push({
       kind: "product",
       product,
@@ -1259,6 +1268,9 @@ function drawMapPoint(point) {
   }
   fill(point.product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
   circle(point.x, point.y, r * 2);
+  if (selected && typeof isFocusedElement === "function" && isFocusedElement("center_product")) {
+    drawFocusRingCircle(point.x, point.y, r + 4);
+  }
   hitAreas.push({
     kind: "product",
     product: point.product,

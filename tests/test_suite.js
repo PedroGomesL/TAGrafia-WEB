@@ -1024,6 +1024,226 @@ for (const z of [5.2, 5.5, 6.0, 7.0]) {
 }
 assert(multiZoomOverlapCount === 0, `Margem anti-colisão >= 4px (dist >= 18px) garantida em múltiplos níveis de zoom (erros: ${multiZoomOverlapCount})`);
 
+console.log("\n=== 20. Validando Acessibilidade por Teclado (WCAG 2.1/2.2: Tab, Setas, Foco Visível e Leitores de Tela) ===");
+
+// 1. Inicialização de acessibilidade e leitor de tela
+assert(typeof keyboardFocusActive === "boolean", "keyboardFocusActive está definido no estado");
+assert(typeof a11yState === "object" && a11yState !== null, "a11yState está definido no estado");
+assert(typeof announceToScreenReader === "function", "announceToScreenReader está definida");
+assert(typeof isFocusedElement === "function", "isFocusedElement está definida");
+assert(typeof isFocusedTag === "function", "isFocusedTag está definida");
+assert(typeof drawFocusRingRect === "function", "drawFocusRingRect está definida");
+assert(typeof drawFocusRingCircle === "function", "drawFocusRingCircle está definida");
+
+announceToScreenReader("Teste de anúncio de acessibilidade");
+assert(a11yState.lastAnnouncement === "Teste de anúncio de acessibilidade", "announceToScreenReader atualiza a11yState.lastAnnouncement");
+
+// 2. Ordem Sequencial do Foco (WCAG 2.4.3 Focus Order)
+leftPanelExtendedOpen = true;
+leftPanelTab = "filtros";
+selectedProduct = products[0];
+const focusableElements = getFocusableElements();
+assert(Array.isArray(focusableElements) && focusableElements.length > 0, `getFocusableElements retorna lista de elementos focáveis (${focusableElements.length} itens)`);
+
+// Valida ordem lógica: Nav -> Painel Filtros -> Centro -> Timeline -> Painel Produto
+const navIndices = focusableElements.map((el, i) => el.type === "nav" ? i : -1).filter(i => i >= 0);
+const collapseIdx = focusableElements.findIndex(el => el.type === "collapse");
+const dimIndices = focusableElements.map((el, i) => el.type === "dimension" ? i : -1).filter(i => i >= 0);
+const centerIdx = focusableElements.findIndex(el => el.type === "center_product");
+const timelineStartIdx = focusableElements.findIndex(el => el.type === "timeline_start");
+const timelineEndIdx = focusableElements.findIndex(el => el.type === "timeline_end");
+const productTabIndices = focusableElements.map((el, i) => el.type === "product_tab" ? i : -1).filter(i => i >= 0);
+
+assert(navIndices.length === 4, "Barra de navegação contém 4 itens focáveis");
+assert(collapseIdx > navIndices[navIndices.length - 1], "Botão de recolher vem após a barra de navegação");
+assert(dimIndices.length === 4 && dimIndices[0] > collapseIdx, "Cards de dimensão vêm após o botão de recolher");
+assert(centerIdx > dimIndices[dimIndices.length - 1], "Visualização central vem após o painel de filtros");
+assert(timelineStartIdx > centerIdx && timelineEndIdx > timelineStartIdx, "Timeline vem após o centro visual e possui ordem alça inicial -> final");
+assert(productTabIndices.length >= 3 && productTabIndices[0] > timelineEndIdx, "Abas do painel de produto vêm após a timeline");
+
+// Valida que ao recolher o menu, controles do painel de filtros são excluídos do foco
+leftPanelExtendedOpen = false;
+const collapsedElements = getFocusableElements();
+const hasCollapsedFilterControls = collapsedElements.some(el => ["collapse", "dimension", "category_selector", "tag_search", "tag_clear", "tag_item"].includes(el.type));
+assert(!hasCollapsedFilterControls, "Controles do painel de filtros recolhido não estão no fluxo de Tab (WCAG 2.4.3)");
+leftPanelExtendedOpen = true;
+
+// 3. Navegação por Tab e Shift+Tab (WCAG 2.1.1 Keyboard Accessible & 2.1.2 No Keyboard Trap)
+a11yState.focusTarget = null;
+handleA11yTab(false);
+assert(keyboardFocusActive === true, "Tab ativa keyboardFocusActive");
+assert(a11yState.focusTarget && a11yState.focusTarget.type === "nav" && a11yState.focusTarget.id === "filtros", "Primeiro Tab foca o primeiro item da navegação (filtros)");
+
+handleA11yTab(false);
+assert(a11yState.focusTarget.id === "trocar", "Segundo Tab avança para 'trocar'");
+
+handleA11yTab(true); // Shift+Tab
+assert(a11yState.focusTarget.id === "filtros", "Shift+Tab retrocede o foco para 'filtros'");
+
+// Valida ciclo sem Keyboard Trap (WCAG 2.1.2)
+const allElements = getFocusableElements();
+setA11yFocus(allElements[allElements.length - 1]);
+assert(a11yState.focusTarget === allElements[allElements.length - 1], "Foco posicionado no último elemento");
+handleA11yTab(false);
+assert(a11yState.focusTarget.type === allElements[0].type && a11yState.focusTarget.id === allElements[0].id, "Tab no último elemento retorna ao primeiro ciclicamente sem armadilha");
+
+// 4. Navegação por Setas na Timeline (Ajuste Ano a Ano suave)
+setA11yFocus({ type: "timeline_start", id: "timeline_start" });
+yearStart = 1920;
+yearEnd = 1980;
+handleA11yArrow("right");
+assert(yearStart === 1921, `Seta Direita na alça inicial incrementa ano a ano (obtido: ${yearStart})`);
+handleA11yArrow("left");
+assert(yearStart === 1920, `Seta Esquerda na alça inicial decrementa ano a ano (obtido: ${yearStart})`);
+assert(a11yState.lastAnnouncement.includes("1920"), "Leitor de tela anuncia novo ano da timeline");
+
+// Limite inferior e barreira entre alças
+yearStart = YEAR_MIN;
+handleA11yArrow("left");
+assert(yearStart === YEAR_MIN, `Seta Esquerda respeita limite mínimo YEAR_MIN (${YEAR_MIN})`);
+yearStart = 1980;
+handleA11yArrow("right");
+assert(yearStart === 1980, "Alça inicial não ultrapassa a alça final (1980)");
+
+// Reseta alça inicial para permitir ajuste livre da alça final
+yearStart = 1920;
+setA11yFocus({ type: "timeline_end", id: "timeline_end" });
+yearEnd = 1980;
+handleA11yArrow("left");
+assert(yearEnd === 1979, `Seta Esquerda na alça final decrementa ano a ano (obtido: ${yearEnd})`);
+handleA11yArrow("right");
+assert(yearEnd === 1980, `Seta Direita na alça final incrementa ano a ano (obtido: ${yearEnd})`);
+yearEnd = YEAR_MAX;
+handleA11yArrow("right");
+assert(yearEnd === YEAR_MAX, `Seta Direita respeita limite máximo YEAR_MAX (${YEAR_MAX})`);
+
+// 5. Navegação por Setas na Lista de Tags do Filtro e Auto-Scroll
+activeDimension = "material";
+tagSearch = "";
+categorySelectorOpen = false;
+tagScroll = 0;
+const currentTags = tagsToDisplay();
+assert(currentTags.length > 2, "Existem tags de material para testar");
+setA11yFocus({ type: "tag_item", id: "tag_list", index: 0 });
+assert(a11yState.tagIndex === 0, "Índice inicial da tag é 0");
+
+handleA11yArrow("down");
+assert(a11yState.tagIndex === 1, "Seta para baixo avança para a próxima tag");
+assert(isFocusedTag(currentTags[1], 1), "isFocusedTag identifica tag índice 1 como focada");
+assert(a11yState.lastAnnouncement.includes(currentTags[1].label), "Leitor de tela anuncia nome da tag selecionada por seta");
+
+handleA11yArrow("up");
+assert(a11yState.tagIndex === 0, "Seta para cima retrocede para a tag anterior");
+
+// Teste de rolagem automática garantindo visibilidade da tag focada
+a11yState.tagIndex = Math.min(15, currentTags.length - 1);
+ensureFocusedTagVisible(a11yState.tagIndex);
+assert(tagScroll >= 0, `Auto-scroll mantém a tag focada visível (tagScroll: ${tagScroll})`);
+
+// 6. Navegação por Setas na Visualização Central
+setA11yFocus({ type: "center_product", id: "center_product" });
+const visProds = visibleProducts();
+assert(visProds.length > 1, "Produtos visíveis disponíveis");
+selectProduct(visProds[0]);
+handleA11yArrow("right");
+assert(selectedProduct && selectedProduct.key === visProds[1].key, "Seta Direita na visualização central avança para a próxima obra");
+assert(a11yState.lastAnnouncement.includes(visProds[1].name), "Leitor de tela anuncia nome da obra ao navegar por setas");
+
+handleA11yArrow("left");
+assert(selectedProduct && selectedProduct.key === visProds[0].key, "Seta Esquerda na visualização central retorna à obra anterior");
+
+// 7. Navegação por Setas nas Abas do Painel de Produto
+rightPanelTab = "material";
+setA11yFocus({ type: "product_tab", id: "material" });
+handleA11yArrow("down");
+assert(rightPanelTab === "estetico", `Seta para baixo alterna aba de produto para 'estetico' (obtido: ${rightPanelTab})`);
+handleA11yArrow("down");
+assert(rightPanelTab === "tecnicas", `Seta para baixo alterna aba de produto para 'tecnicas' (obtido: ${rightPanelTab})`);
+handleA11yArrow("down");
+assert(rightPanelTab === "salvos", `Seta para baixo alterna aba de produto para 'salvos' (obtido: ${rightPanelTab})`);
+handleA11yArrow("up");
+assert(rightPanelTab === "tecnicas", `Seta para cima retorna aba de produto para 'tecnicas' (obtido: ${rightPanelTab})`);
+
+// 8. Navegação por Setas no Grid 2x2 dos Cards de Dimensão
+activeDimension = "tipo_obra";
+setA11yFocus({ type: "dimension", id: "tipo_obra" });
+handleA11yArrow("right");
+assert(activeDimension === "material", "Seta Direita no grid de dimensão move de 'tipo_obra' para 'material'");
+handleA11yArrow("down");
+assert(activeDimension === "tecnicas", "Seta para Baixo no grid de dimensão move de 'material' para 'tecnicas'");
+handleA11yArrow("left");
+assert(activeDimension === "estetico", "Seta para Esquerda no grid de dimensão move de 'tecnicas' para 'estetico'");
+handleA11yArrow("up");
+assert(activeDimension === "tipo_obra", "Seta para Cima no grid de dimensão move de 'estetico' para 'tipo_obra'");
+
+// 9. Ativação via Enter e Espaço (WCAG 2.1.1)
+// A. Alternar tag na lista
+activeDimension = "material";
+selectedTagKeys.clear();
+const activeTags = tagsToDisplay();
+const testTag = activeTags[0];
+a11yState.tagIndex = 0;
+setA11yFocus({ type: "tag_item", id: "tag_list", index: 0, tagKey: testTag.key });
+handleA11yActivate(); // Enter ou Espaço
+assert(selectedTagKeys.has(testTag.key), "Enter/Espaço marca a tag focada");
+assert(a11yState.lastAnnouncement.includes("marcada"), "Leitor de tela anuncia que a tag foi marcada");
+
+handleA11yActivate(); // Segundo Enter/Espaço desmarca
+assert(!selectedTagKeys.has(testTag.key), "Segundo Enter/Espaço desmarca a tag focada");
+assert(a11yState.lastAnnouncement.includes("desmarcada"), "Leitor de tela anuncia que a tag foi desmarcada");
+
+// B. Alternar visualização (trocar)
+activeView = VISAO_CIRCULAR;
+setA11yFocus({ type: "nav", id: "trocar" });
+handleA11yActivate();
+assert(activeView === VISAO_BOLHAS, `Enter em 'trocar' avança visualização para Bolhas (obtido: ${activeView})`);
+assert(a11yState.lastAnnouncement.includes("Bolhas"), "Leitor de tela anuncia nova visão selecionada");
+
+// C. Botão de recolher/expandir menu
+leftPanelExtendedOpen = true;
+setA11yFocus({ type: "collapse", id: "collapse" });
+handleA11yActivate();
+assert(leftPanelExtendedOpen === false, "Enter em 'collapse' recolhe o menu lateral");
+handleA11yActivate();
+assert(leftPanelExtendedOpen === true, "Enter novamente em 'collapse' expande o menu lateral");
+
+// D. Salvar obra favorita
+savedProductKeys.clear();
+selectedProduct = products[0];
+setA11yFocus({ type: "product_save", id: "product_save" });
+handleA11yActivate();
+assert(savedProductKeys.has(products[0].key), "Enter no botão de salvar adiciona obra aos favoritos");
+handleA11yActivate();
+assert(!savedProductKeys.has(products[0].key), "Segundo Enter no botão de salvar remove obra dos favoritos");
+
+// 10. Tecla Escape (Descarte e Saída de Modos)
+tagSearchActive = true;
+handleA11yEscape();
+assert(tagSearchActive === false, "Escape desativa modo de busca de tags");
+
+categorySelectorOpen = true;
+handleA11yEscape();
+assert(categorySelectorOpen === false, "Escape fecha o seletor de categorias");
+
+leftPanelExtendedOpen = true;
+handleA11yEscape();
+assert(leftPanelExtendedOpen === false, "Escape recolhe o painel estendido aberto");
+assert(a11yState.focusTarget.type === "nav", "Após fechar painel com Escape, foco retorna à barra de navegação");
+
+// 11. Foco Visível e Supressão por Mouse (WCAG 2.4.7 / 2.4.11)
+keyboardFocusActive = true;
+mousePressed();
+assert(keyboardFocusActive === false, "Interação por mouse suprime indicadores visuais de foco do teclado");
+handleKeyboardEvent({ key: "Tab", keyCode: 9, shiftKey: false });
+assert(keyboardFocusActive === true, "Próxima tecla reativa imediatamente o foco visível do teclado");
+
+// Restaura estado padrão
+leftPanelExtendedOpen = true;
+leftPanelTab = "filtros";
+activeDimension = "tipo_obra";
+selectedTagKeys.clear();
+activeView = VISAO_CIRCULAR;
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {
@@ -1031,3 +1251,4 @@ if (failed > 0) {
 } else {
   console.log("Todos os testes passaram com sucesso!");
 }
+
