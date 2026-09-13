@@ -248,6 +248,7 @@ function getBubbleTextCandidates(name) {
     return [
       ["Modernismo", "Norte-Americano"],
       ["Modernismo", "Norte-", "Americano"],
+      ["Modernismo", "Norte", "Americano"],
       [clean],
     ];
   }
@@ -255,6 +256,7 @@ function getBubbleTextCandidates(name) {
     return [
       ["HfG Ulm /", "Good Design"],
       ["HfG Ulm", "Good Design"],
+      ["HfG Ulm", "Good", "Design"],
       [clean],
     ];
   }
@@ -268,18 +270,21 @@ function getBubbleTextCandidates(name) {
   if (clean === "California New Wave") {
     return [
       ["California", "New Wave"],
+      ["California", "New", "Wave"],
       [clean],
     ];
   }
   if (clean === "Deutscher Werkbund") {
     return [
       ["Deutscher", "Werkbund"],
+      ["Deutscher", "Werk-", "bund"],
       [clean],
     ];
   }
   if (clean === "Estilo Internacional") {
     return [
       ["Estilo", "Internacional"],
+      ["Estilo", "Inter-", "nacional"],
       [clean],
     ];
   }
@@ -299,6 +304,24 @@ function getBubbleTextCandidates(name) {
     return [
       [clean],
       ["Obras", "brasileiras"],
+    ];
+  }
+  if (clean === "Streamlining") {
+    return [
+      [clean],
+      ["Stream-", "lining"],
+    ];
+  }
+  if (clean === "Biomorfismo") {
+    return [
+      [clean],
+      ["Bio-", "morfismo"],
+    ];
+  }
+  if (clean === "Anti-Design") {
+    return [
+      [clean],
+      ["Anti-", "Design"],
     ];
   }
 
@@ -329,8 +352,6 @@ function getBubbleTextCandidates(name) {
 
 function fitBubbleText(group) {
   const hasProds = group.products.length > 0;
-  const availW = group.r * (hasProds ? 1.55 : 1.72);
-  const availH = group.r * (hasProds ? 0.70 : 1.35);
   const candidates = getBubbleTextCandidates(group.name);
 
   const measureW = (str, s) => {
@@ -341,33 +362,64 @@ function fitBubbleText(group) {
     return cleanText(str).length * s * 0.55;
   };
 
-  let bestCandidate = candidates[0];
-  let bestSize = 7.0;
+  const centerY = hasProds ? group.y - group.r * 0.44 : group.y;
+  const minDotTopY = group.y - group.r * 0.08;
+
+  let bestCand = candidates[0];
+  let bestSize = 6.0;
+  let foundValid = false;
+  let bestScore = -999999;
 
   for (const cand of candidates) {
-    let size = Math.min(13.5, Math.max(9, group.r * 0.24));
-    if (!hasProds) size = Math.min(15, Math.max(10, group.r * 0.28));
-    const minSize = 7.0;
+    const maxS = Math.min(13.5, Math.max(9.0, group.r * 0.25));
+    for (let s = maxS; s >= 5.5; s -= 0.25) {
+      const lineHeight = s * 1.15;
+      const totalH = (cand.length - 1) * lineHeight;
+      const startY = centerY - totalH / 2;
+      const topY = startY - s * 0.45;
+      const bottomY = startY + totalH + s * 0.45;
 
-    const fits = (s) => {
-      for (const line of cand) {
-        if (measureW(line, s) > availW) return false;
+      // Restrições verticais: topo dentro da calota e base acima dos círculos das obras
+      if (topY < group.y - group.r + 1.5) continue;
+      if (hasProds && bottomY > minDotTopY - 1.0) continue;
+      if (!hasProds && bottomY > group.y + group.r - 1.5) continue;
+
+      // Restrições horizontais: cada linha deve caber na corda do círculo naquela altura
+      let allLinesFit = true;
+      for (let i = 0; i < cand.length; i++) {
+        const lineY = startY + i * lineHeight;
+        const dy = Math.abs(lineY - group.y);
+        if (dy >= group.r - 0.5) {
+          allLinesFit = false;
+          break;
+        }
+        const chordW = 2 * Math.sqrt(group.r * group.r - dy * dy) - 4.0;
+        const lineW = measureW(cand[i], s);
+        if (lineW > chordW) {
+          allLinesFit = false;
+          break;
+        }
       }
-      const totalH = (cand.length - 1) * (s * 1.15) + s;
-      return totalH <= availH;
-    };
 
-    while (!fits(size) && size > minSize) {
-      size -= 0.5;
-    }
-
-    if (size > bestSize || (size === bestSize && cand.length < bestCandidate.length)) {
-      bestSize = size;
-      bestCandidate = cand;
+      if (allLinesFit) {
+        const score = s * 10 - cand.length * 0.6;
+        if (!foundValid || score > bestScore) {
+          foundValid = true;
+          bestScore = score;
+          bestCand = cand;
+          bestSize = s;
+        }
+        break; // Encontrou maior tamanho que cabe para este candidato
+      }
     }
   }
 
-  return { lines: bestCandidate, size: bestSize };
+  if (!foundValid) {
+    bestCand = candidates.find((c) => c.length > 1) || candidates[0];
+    bestSize = 5.5;
+  }
+
+  return { lines: bestCand, size: bestSize };
 }
 
 function drawBubbleView(productsVisible) {
@@ -888,9 +940,13 @@ function drawMapView(productsVisible) {
   if (!selectedProduct && points.length) selectProduct(points[0].product);
   const clusters = makeMapClusters(points, mapBox);
   for (const cluster of clusters) {
-    if (cluster.points.length === 1 || mapState.zoom > 5.2)
+    if (mapState.zoom > 5.2) {
+      for (const pt of cluster.points) drawMapPoint(pt);
+    } else if (cluster.points.length === 1) {
       drawMapPoint(cluster.points[0]);
-    else drawMapCluster(cluster);
+    } else {
+      drawMapCluster(cluster);
+    }
   }
   if (!points.length)
     drawCenteredVisualMessage(
@@ -1077,9 +1133,27 @@ function makeMapClusters(points, box) {
     locGroups.push({ key, basePos, points: distributed });
   }
 
-  // Anti-colisão global entre todas as obras para garantir margem de >= 4px entre círculos
-  const minPointSep = 18.0;
-  for (let iter = 0; iter < 45; iter++) {
+  // Anti-colisão global entre todas as obras para garantir margem de >= 4.5-5px entre círculos
+  const minPointSep = 19.0;
+  for (let iter = 0; iter < 55; iter++) {
+    for (let i = 0; i < expanded.length; i++) {
+      for (let j = i + 1; j < expanded.length; j++) {
+        const dx = expanded[j].x - expanded[i].x;
+        const dy = expanded[j].y - expanded[i].y;
+        const d = Math.hypot(dx, dy) || 0.001;
+        if (d < minPointSep) {
+          const push = (minPointSep - d) * 0.5;
+          const px = (dx / d) * push;
+          const py = (dy / d) * push;
+          expanded[i].x -= px;
+          expanded[i].y -= py;
+          expanded[j].x += px;
+          expanded[j].y += py;
+        }
+      }
+    }
+  }
+  for (let pass = 0; pass < 10; pass++) {
     for (let i = 0; i < expanded.length; i++) {
       for (let j = i + 1; j < expanded.length; j++) {
         const dx = expanded[j].x - expanded[i].x;
@@ -1134,8 +1208,8 @@ function makeMapClusters(points, box) {
   }
 
   // Anti-colisão global entre clusters para garantir margem
-  const clusterMargin = 4.0;
-  for (let iter = 0; iter < 35; iter++) {
+  const clusterMargin = 4.5;
+  for (let iter = 0; iter < 40; iter++) {
     for (let i = 0; i < clusters.length; i++) {
       for (let j = i + 1; j < clusters.length; j++) {
         const rA =

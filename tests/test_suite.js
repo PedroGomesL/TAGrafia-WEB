@@ -962,6 +962,48 @@ for (let i = 0; i < clustersZ4.length; i++) {
 }
 assert(clusterOverlapCount === 0, `Nenhum cluster do mapa se sobrepõe em zoom intermediário (sobreposições: ${clusterOverlapCount})`);
 
+// 5. Bolhas: valida que bolhas pequenas e filtradas (ex: 2 obras) contêm seus nomes dentro do perímetro circular
+let filteredBubbleOverflows = 0;
+const testSmallRadii = [42, 35, 29, 26];
+for (const r of testSmallRadii) {
+  for (const name of ["Modernismo Norte-Americano", "Cranbrook Academy of Art", "Deutscher Werkbund", "Estilo Internacional", "HfG Ulm / Good Design", "Streamlining"]) {
+    const testGroup = { name, r, x: 500, y: 500, products: [products[0], products[1]] };
+    const res = fitBubbleText(testGroup);
+    const lineHeight = res.size * 1.15;
+    const centerY = testGroup.y - testGroup.r * 0.44;
+    const totalH = (res.lines.length - 1) * lineHeight;
+    const startY = centerY - totalH / 2;
+    const topY = startY - res.size * 0.45;
+    const bottomY = startY + totalH + res.size * 0.45;
+    if (topY < testGroup.y - testGroup.r - 0.5) filteredBubbleOverflows++;
+    if (bottomY > testGroup.y - testGroup.r * 0.08 + 0.5) filteredBubbleOverflows++;
+    for (let i = 0; i < res.lines.length; i++) {
+      const lineY = startY + i * lineHeight;
+      const dy = Math.abs(lineY - testGroup.y);
+      const chordW = dy >= testGroup.r ? 0 : 2 * Math.sqrt(testGroup.r * testGroup.r - dy * dy);
+      const lineW = res.lines[i].length * res.size * 0.55;
+      if (lineW > chordW + 1.0) filteredBubbleOverflows++;
+    }
+  }
+}
+assert(filteredBubbleOverflows === 0, `Nenhum nome de bolha pequena/filtrada transborda do círculo (erros: ${filteredBubbleOverflows})`);
+
+// 6. Mapa: valida que margem anti-colisão >= 4px (dist >= 18px) é respeitada em múltiplos níveis de zoom detalhado (5.2, 5.5, 6.0, 7.0)
+let multiZoomOverlapCount = 0;
+for (const z of [5.2, 5.5, 6.0, 7.0]) {
+  mapState.zoom = z;
+  const zClusters = makeMapClusters(mapPoints, mapBox);
+  for (let i = 0; i < zClusters.length; i++) {
+    for (let j = i + 1; j < zClusters.length; j++) {
+      const d = Math.hypot(zClusters[i].points[0].x - zClusters[j].points[0].x, zClusters[i].points[0].y - zClusters[j].points[0].y);
+      if (d < 18.0) {
+        multiZoomOverlapCount++;
+      }
+    }
+  }
+}
+assert(multiZoomOverlapCount === 0, `Margem anti-colisão >= 4px (dist >= 18px) garantida em múltiplos níveis de zoom (erros: ${multiZoomOverlapCount})`);
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {
