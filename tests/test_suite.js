@@ -1366,6 +1366,8 @@ for (const item of figmaWhiteIcons) {
   assert(fs.existsSync(fullPath) && fs.statSync(fullPath).size > 100, `Arquivo SVG '${item.file}' existe no disco e não está vazio`);
 }
 assert(fs.existsSync(path.join(ROOT_DIR, "data/Icones/theme_toggle_dark.svg")), "theme_toggle_dark.svg existe no disco para o modo claro");
+assert(ICONS_DARK_CONFIG.collapse_panel === "data/Icones/collapse_panel_white.svg", "ICONS_DARK_CONFIG possui 'collapse_panel' mapeado para 'collapse_panel_white.svg'");
+assert(fs.existsSync(path.join(ROOT_DIR, "data/Icones/collapse_panel_white.svg")), "collapse_panel_white.svg existe no disco para o modo escuro");
 
 // Valida posicionamento do botão de tema na barra de navegação:
 // Deve ficar acima do Sobre (y: 380), abaixo do Exportar (y: 240) e da linha divisória (y: 278)
@@ -1386,10 +1388,21 @@ assert(lightMode === false, "toggleTheme() comuta lightMode para false (modo esc
 assert(themeTextColor() === "#FFFFFF", "Em modo escuro, themeTextColor() retorna #FFFFFF");
 assert(themePanelBackground() === "#222222", "Em modo escuro, themePanelBackground() retorna #222222");
 
-// Valida acessibilidade do alternador de tema
+// Valida acessibilidade do alternador de tema e ordem sequencial do foco
 const currentFocusables = getFocusableElements();
 const themeFocusItem = currentFocusables.find(el => el.type === "theme_toggle");
 assert(themeFocusItem !== undefined, "theme_toggle está presente na lista de elementos focáveis getFocusableElements()");
+const exportIdx = currentFocusables.findIndex(el => el.type === "nav" && el.id === "exportar");
+const themeIdx = currentFocusables.findIndex(el => el.type === "theme_toggle");
+const sobreIdx = currentFocusables.findIndex(el => el.type === "nav" && el.id === "sobre");
+assert(themeIdx > exportIdx && themeIdx < sobreIdx, "theme_toggle está posicionado sequencialmente entre 'exportar' e 'sobre' no fluxo de foco (WCAG 2.4.3)");
+
+// Valida navegação por Tab: exportar -> theme_toggle -> sobre
+setA11yFocus(currentFocusables[exportIdx]);
+handleA11yTab(false);
+assert(a11yState.focusTarget && a11yState.focusTarget.type === "theme_toggle", "Tab a partir de 'exportar' avança para 'theme_toggle'");
+handleA11yTab(false);
+assert(a11yState.focusTarget && a11yState.focusTarget.id === "sobre", "Tab a partir de 'theme_toggle' avança para 'sobre'");
 
 setA11yFocus({ type: "theme_toggle", id: "theme_toggle" });
 handleA11yActivate();

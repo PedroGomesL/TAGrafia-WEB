@@ -491,14 +491,16 @@ function getFocusableElements() {
   // 1. Barra de Navegação Esquerda (sempre presente)
   if (typeof NAV_CONFIG !== "undefined" && Array.isArray(NAV_CONFIG)) {
     for (const nav of NAV_CONFIG) {
+      if (nav.id === "sobre") {
+        list.push({
+          type: "theme_toggle",
+          id: "theme_toggle",
+          label: lightMode ? "Mudar para modo escuro" : "Mudar para modo claro",
+        });
+      }
       list.push({ type: "nav", id: nav.id, label: nav.label });
     }
   }
-  list.push({
-    type: "theme_toggle",
-    id: "theme_toggle",
-    label: lightMode ? "Mudar para modo escuro" : "Mudar para modo claro",
-  });
 
   // 2. Painel Lateral Estendido (se aberto)
   const isExtended = typeof leftPanelExtendedOpen === "undefined" || leftPanelExtendedOpen;

@@ -265,7 +265,7 @@ function drawFilterBody() {
   if (activeDimension !== "tipo_obra") {
     const hoverCat = insideRect(mx, my, FILTER_BAR_X, catY, FILTER_BAR_W, 24);
     if (hoverCat && typeof requestCursor === "function") requestCursor(HAND);
-    stroke(lightMode ? "#D9D9D9" : "#444444");
+    stroke(lightMode ? "#D9D9D9" : "#959fff");
     strokeWeight(1);
     fill(hoverCat ? (lightMode ? "#F4F4F8" : "#333333") : (lightMode ? "#FFFFFF" : "#262626"));
     rect(FILTER_BAR_X, catY, FILTER_BAR_W, 24, 4);
@@ -299,7 +299,7 @@ function drawFilterBody() {
   // --- Search bar ---
   const hoverSearch = insideRect(mx, my, FILTER_BAR_X, searchY, FILTER_BAR_W, 24);
   if (hoverSearch && typeof requestCursor === "function") requestCursor(TEXT);
-  stroke(lightMode ? "#D9D9D9" : "#444444");
+  stroke(lightMode ? "#D9D9D9" : "#959fff");
   strokeWeight(1);
   fill(hoverSearch && !tagSearchActive ? (lightMode ? "#FAFAFC" : "#333333") : (lightMode ? "#FFFFFF" : "#262626"));
   rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 24, 4);
@@ -1028,7 +1028,7 @@ function drawCollapseButton() {
 
   if (isHover) {
     noStroke();
-    fill(0, 0, 0, 15);
+    fill(lightMode ? color(0, 0, 0, 15) : color(255, 255, 255, 25));
     rect(btnX - 2, btnY - 2, btnW + 4, btnH + 4, 4);
   }
 
@@ -1047,7 +1047,7 @@ function drawCollapseButton() {
     );
   } else {
     // Vector fallback resembling the chevron icon from Figma (keyboard_arrow_left)
-    stroke(60);
+    stroke(lightMode ? 60 : 220);
     strokeWeight(1.8);
     noFill();
     strokeCap(ROUND);

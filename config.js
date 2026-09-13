@@ -182,7 +182,7 @@ const ICONS_DARK_CONFIG = {
   filtros: "data/Icones/filtros_white.svg",
   sobre: "data/Icones/sobre_white.svg",
   export: "data/Icones/exportar_white.svg",
-  collapse_panel: "data/Icones/collapse_panel.svg",
+  collapse_panel: "data/Icones/collapse_panel_white.svg",
   clear: "data/Icones/filter_alt_off.png",
   left: "data/Icones/keyboard_arrow_left.png",
   right: "data/Icones/keyboard_arrow_right.png",
