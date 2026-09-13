@@ -1,23 +1,17 @@
 let activeProductHeaderTooltip = null;
 let _headerHoverHandSet = false;
 
-function productPanelTopBounds(scale) {
-  const maxTopH = Math.max(120, (height - 160) * 0.45);
-  const imageH = Math.round(Math.min(300 * scale, maxTopH * 0.78));
-  const titleH = Math.round(Math.min(80 * scale, maxTopH * 0.22));
-  return { imageH, titleH };
-}
-
 function drawProductPanel() {
   const x = productPanelX();
   const w = productPanelW();
   const scale = layoutScale();
 
-  const { imageH, titleH } = productPanelTopBounds(scale);
-  const sidebarW = Math.round(74 * scale);
+  const titleH = 80 * scale;
+  const sidebarW = 74 * scale;
 
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
+  const imageH = Math.round(300 * scale);
 
   noStroke();
   fill("#FFFFFF");
@@ -748,10 +742,11 @@ function productPanelMousePressed(mx, my) {
   const w = productPanelW();
   const scale = layoutScale();
 
-  const { imageH, titleH } = productPanelTopBounds(scale);
-  const sidebarW = Math.round(74 * scale);
+  const titleH = 80 * scale;
+  const sidebarW = 74 * scale;
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
+  const imageH = Math.round(300 * scale);
 
   if (mx < x || mx > x + w || my < 0 || my > height) return false;
 
@@ -856,7 +851,8 @@ function productPanelWheel(event) {
   const x = productPanelX();
   const w = productPanelW();
   const scale = layoutScale();
-  const { imageH, titleH } = productPanelTopBounds(scale);
+  const imageH = Math.round(300 * scale);
+  const titleH = Math.round(80 * scale);
   const contentY = imageH + titleH;
   
   if (mouseX < x || mouseX > x + w || mouseY < contentY) return false;

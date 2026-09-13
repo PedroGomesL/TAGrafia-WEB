@@ -359,7 +359,8 @@ global.height = 650;
 const scaleNotebook = filterPanelScale();
 assert(scaleNotebook === 1.0, `Notebook 1366x650 mantém filterPanelScale === 1.0 (obtido: ${scaleNotebook})`);
 const prodWNotebook = productPanelW();
-assert(prodWNotebook >= 250 && prodWNotebook <= 405, `productPanelW em notebook 1366x650 fica em faixa ergonômica (obtido: ${prodWNotebook})`);
+assert(prodWNotebook === LAYOUT_PAINEL_PRODUTO_W, `productPanelW em notebook 1366x650 mantém 405px (obtido: ${prodWNotebook})`);
+assert(layoutScale() === 1.0, "layoutScale em notebook 1366x650 é 1.0");
 const visWNotebook = visualW();
 assert(filterPanelW() + visWNotebook + prodWNotebook === 1366, "Layout 1366x650 preenche exatamente a largura da tela");
 
@@ -368,14 +369,15 @@ global.width = 1536;
 global.height = 700;
 const scaleLaptopDpi = filterPanelScale();
 assert(scaleLaptopDpi === 1.0, `Notebook FHD 125% (1536x700) mantém filterPanelScale === 1.0 (obtido: ${scaleLaptopDpi})`);
-const topBoundsFHD125 = productPanelTopBounds(layoutScale());
-assert(topBoundsFHD125.imageH + topBoundsFHD125.titleH <= (700 - 160) * 0.45 + 2, "Topo do painel direito adapta altura para evitar overflow vertical em 700px");
+assert(productPanelW() === LAYOUT_PAINEL_PRODUTO_W, "Painel direito mantém 405px em notebook 125% sem encolher elementos");
+assert(layoutScale() === 1.0, "layoutScale permanece 1.0 em notebook 125% garantindo fontes e imagens em tamanho original");
 
-// 3. Notebook Compacto com Escala Windows 125% (1366x768 -> CSS 1092 x ~500)
-global.width = 1092;
-global.height = 500;
-const scaleSmallLaptop = filterPanelScale();
-assert(scaleSmallLaptop < 1.0 && scaleSmallLaptop >= 0.85, `Notebook compacto 125% (1092x500) reduz escala proporcionalmente (obtido: ${scaleSmallLaptop.toFixed(3)})`);
+// 3. Resolução Full HD sem escala (1920 x 1080)
+global.width = 1920;
+global.height = 1080;
+assert(filterPanelScale() === 1.0, "Full HD 1920x1080 mantém filterPanelScale === 1.0");
+assert(productPanelW() === LAYOUT_PAINEL_PRODUTO_W, "Full HD 1920x1080 mantém productPanelW === 405");
+assert(layoutScale() === 1.0, "Full HD 1920x1080 mantém layoutScale === 1.0");
 
 // 4. Ultrawide 21:9 (2560 x 1080 e 3440 x 1440)
 global.width = 2560;
@@ -396,13 +398,12 @@ assert(ultrawideTrack.tw === 1800, `Track da timeline em Ultrawide 3440px é lim
 const ultrawideExpectedTx = visualX() + (visualW() - 1800) / 2;
 assert(Math.abs(ultrawideTrack.tx - ultrawideExpectedTx) < 0.001, `Track da timeline fica perfeitamente centralizado em Ultrawide (obtido: ${ultrawideTrack.tx})`);
 
-// 5. Monitor 4K UHD (3840 x 2160)
-global.width = 3840;
-global.height = 2160;
-const scale4K = filterPanelScale();
-assert(scale4K === 1.25, `Monitor 4K escala legibilidade para 1.25x (obtido: ${scale4K})`);
-const lScale4K = layoutScale();
-assert(lScale4K === 1.25, `layoutScale escala até 1.25x em tela 4K (obtido: ${lScale4K})`);
+// 5. Janela compacta (< 1000px)
+global.width = 900;
+global.height = 640;
+const scaleCompact = filterPanelScale();
+assert(scaleCompact === 0.9, `Janela 900px reduz filterPanelScale proporcionalmente para 0.9 (obtido: ${scaleCompact})`);
+assert(productPanelW() >= LAYOUT_PAINEL_PRODUTO_W_MIN, "Janela compacta preserva largura mínima do painel de produtos");
 
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);

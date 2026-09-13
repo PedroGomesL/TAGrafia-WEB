@@ -19,7 +19,10 @@ function preload() {
 }
 
 function setup() {
-  const canvas = createCanvas(windowWidth, windowHeight);
+  const canvas = createCanvas(
+    Math.max(1024, windowWidth),
+    Math.max(640, windowHeight),
+  );
   canvas.parent("canvasMount");
   pixelDensity(Math.min(2, displayDensity()));
   textFont(fontes.robotoCondensed);
@@ -107,16 +110,13 @@ function draw() {
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+  resizeCanvas(Math.max(1024, windowWidth), Math.max(640, windowHeight));
   pixelDensity(Math.min(2, displayDensity()));
 }
 
 function filterPanelScale() {
-  const w = typeof width !== "undefined" ? width : 1200;
-  const h = typeof height !== "undefined" ? height : 800;
-  const scaleW = w < 1000 ? w / 1000 : (w >= 2400 ? Math.min(1.25, w / 2000) : 1);
-  const scaleH = h < 550 ? h / 550 : (h >= 1400 ? Math.min(1.25, h / 1200) : 1);
-  return constrain(Math.min(scaleW, scaleH), 0.65, 1.25);
+  if (width < 1000) return Math.max(0.65, width / 1000);
+  return 1;
 }
 
 function baseContentSpace() {
@@ -124,12 +124,25 @@ function baseContentSpace() {
   return Math.max(1, width - baseFilterW);
 }
 
-function layoutScale() {
+function minVisualW() {
+  return LAYOUT_VISUAL_W_MIN;
+}
+
+function minProductW() {
+  return LAYOUT_PAINEL_PRODUTO_W_MIN;
+}
+
+function productPanelW() {
   const space = baseContentSpace();
-  const scaleW = space / (LAYOUT_VISUAL_W_BASE + LAYOUT_PAINEL_PRODUTO_W);
-  const h = typeof height !== "undefined" ? height : 800;
-  const scaleH = h < 750 ? h / 750 : (h > 1200 ? Math.min(1.25, h / 1080) : 1);
-  return constrain(Math.min(scaleW, scaleH), 0.65, 1.25);
+  const visualMin = minVisualW();
+  if (space < visualMin + LAYOUT_PAINEL_PRODUTO_W) {
+    return constrain(space - visualMin, minProductW(), LAYOUT_PAINEL_PRODUTO_W);
+  }
+  return LAYOUT_PAINEL_PRODUTO_W;
+}
+
+function layoutScale() {
+  return productPanelW() / LAYOUT_PAINEL_PRODUTO_W;
 }
 
 function filterPanelW() {
@@ -141,32 +154,6 @@ function filterPanelW() {
 
 function contentSpace() {
   return Math.max(0, width - filterPanelW());
-}
-
-function minVisualW() {
-  const space = contentSpace();
-  const combined = LAYOUT_VISUAL_W_MIN + LAYOUT_PAINEL_PRODUTO_W_MIN;
-  if (space < combined)
-    return constrain(space * 0.52, 180, LAYOUT_VISUAL_W_MIN);
-  return LAYOUT_VISUAL_W_MIN;
-}
-
-function minProductW() {
-  const space = contentSpace();
-  const scaledMin = Math.round(LAYOUT_PAINEL_PRODUTO_W_MIN * Math.min(1, layoutScale()));
-  const combined = LAYOUT_VISUAL_W_MIN + scaledMin;
-  if (space < combined)
-    return constrain(space - minVisualW(), 160, scaledMin);
-  return scaledMin;
-}
-
-function productPanelW() {
-  const space = contentSpace();
-  const visualMin = minVisualW();
-  const scaled = Math.round(LAYOUT_PAINEL_PRODUTO_W * layoutScale());
-  const minW = Math.min(minProductW(), Math.max(0, space - visualMin));
-  const maxW = Math.max(minW, space - visualMin);
-  return constrain(scaled, minW, maxW);
 }
 
 function visualW() {
