@@ -225,6 +225,26 @@ assert(x2010 === bounds.tx + bounds.tw, "yearToX(2010) mapeia para o fim do trac
 assert(xToYear(bounds.tx) === 1880, "xToYear reverte início para 1880");
 assert(xToYear(bounds.tx + bounds.tw) === 2010, "xToYear reverte fim para 2010");
 
+// Validações da passagem ano a ano (e não por décadas)
+assert(xToYear(yearToX(1923)) === 1923, "xToYear mapeia com precisão o ano 1923 (não-década)");
+assert(xToYear(yearToX(1957)) === 1957, "xToYear mapeia com precisão o ano 1957 (não-década)");
+assert(xToYear(yearToX(1984)) === 1984, "xToYear mapeia com precisão o ano 1984 (não-década)");
+assert(xToYear(yearToX(2003)) === 2003, "xToYear mapeia com precisão o ano 2003 (não-década)");
+
+let roundtripErrors = 0;
+for (let y = YEAR_MIN; y <= YEAR_MAX; y++) {
+  if (xToYear(yearToX(y)) !== y) roundtripErrors++;
+}
+assert(roundtripErrors === 0, `Todos os anos individuais de ${YEAR_MIN} a ${YEAR_MAX} revertem perfeitamente via xToYear`);
+
+// Validação de clique suave direto sobre a barra da timeline
+yearStart = 1920;
+yearEnd = 1980;
+const targetYearX = yearToX(1915);
+const clickBefore = clickedYearHandle(targetYearX, bounds.ty);
+assert(clickBefore === "start", "Clique antes do início posiciona e seleciona handle 'start'");
+assert(yearStart === 1915, `yearStart atualizado suavemente para 1915 pelo clique na barra (obtido: ${yearStart})`);
+
 console.log("\n=== 8. Validando Despacho Declarativo de Visões (ui_center.js) ===");
 // Mock canvas drawingContext and missing p5 helpers for ui_center
 global.drawingContext = {
