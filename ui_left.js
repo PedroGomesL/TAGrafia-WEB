@@ -914,20 +914,22 @@ function drawCollapseButton() {
       icones.collapse_panel,
       btnX + btnW / 2,
       btnY + btnH / 2,
-      18,
-      18,
+      22,
+      22,
     );
   } else {
-    // Vector fallback resembling panel collapse icon
+    // Vector fallback resembling the chevron icon from Figma (keyboard_arrow_left)
     stroke(60);
-    strokeWeight(1.5);
+    strokeWeight(1.8);
     noFill();
-    rect(btnX, btnY, btnW, btnH, 4);
-    line(btnX + 7, btnY, btnX + 7, btnY + btnH);
+    strokeCap(ROUND);
+    strokeJoin(ROUND);
+    const cx = btnX + btnW / 2;
+    const cy = btnY + btnH / 2;
     beginShape();
-    vertex(btnX + 16, btnY + 7);
-    vertex(btnX + 11, btnY + 12);
-    vertex(btnX + 16, btnY + 17);
+    vertex(cx + 3, cy - 5.5);
+    vertex(cx - 3, cy);
+    vertex(cx + 3, cy + 5.5);
     endShape();
   }
 
