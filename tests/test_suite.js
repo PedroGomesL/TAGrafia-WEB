@@ -580,17 +580,28 @@ assert(140 - 122 === 158 - 140, "Margens da linha horizontal em relação ao tex
 assert(DIMENSIONS.tipo_obra.gridX + 46 < crossMidX, "Card Tipo não sobrepõe a linha vertical");
 assert(crossMidX < DIMENSIONS.material.gridX, "Card Material não sobrepõe a linha vertical");
 
-// 2. Geometria da Linha Separadora do Painel Direito (execução real de drawProductSidebar)
+// 2. Geometria da Linha Separadora e Espaçamento dos Ícones do Painel Direito
 let sidebarLines = [];
+let sidebarTexts = [];
 global.line = (x1, y1, x2, y2) => {
   sidebarLines.push({ x1, y1, x2, y2 });
 };
+global.text = (txt, tx, ty) => {
+  sidebarTexts.push({ txt, tx, ty });
+};
 global.height = 1080;
-drawProductSidebar(1515, 246, 70, 834, 1.0);
+drawProductSidebar(1515, 296, 70, 784, 1.0);
 
 const sepLine = sidebarLines.find(l => l.x1 === 1515 + 12 && l.x2 === 1515 + 70 - 12);
 assert(sepLine !== undefined, "drawProductSidebar() traça linha separadora com margens laterais de 12px na sidebar de 70px");
 assert(sepLine && sepLine.y1 === sepLine.y2, "Separador do Salvos na sidebar é perfeitamente horizontal");
+
+const tabLabels = sidebarTexts.filter(t => ["Material", "Estético", "Técnica"].includes(t.txt));
+assert(tabLabels.length === 3, "drawProductSidebar renderiza os rótulos das 3 abas");
+if (tabLabels.length === 3) {
+  const distBetweenTabs = tabLabels[1].ty - tabLabels[0].ty;
+  assert(distBetweenTabs === 66, `Distância entre os 3 ícones das abas foi aproximada para 66px (obtido: ${distBetweenTabs})`);
+}
 
 // Restaura mocks
 global.line = origLine;

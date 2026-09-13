@@ -67,7 +67,7 @@ function drawProductSidebar(x, y, w, h, scale) {
   });
 
   const availableH = height - y;
-  const stepY = Math.min(78 * scale, Math.max(50 * scale, (availableH - 24 * scale) / 4.2));
+  const stepY = Math.min(66 * scale, Math.max(48 * scale, (availableH - 24 * scale) / 5.0));
   const topPad = Math.min(20 * scale, Math.max(8 * scale, (availableH - 4 * stepY) / 2));
   const circleD = 42 * scale;
   const iconSz = 26 * scale;
@@ -818,7 +818,7 @@ function productPanelMousePressed(mx, my) {
   if (mx >= x && mx <= x + sidebarW && my > imageH + titleH) {
     let clickedY = my - imageH - titleH;
     const availableH = height - (imageH + titleH);
-    const stepY = Math.min(78 * scale, Math.max(50 * scale, (availableH - 24 * scale) / 4.2));
+    const stepY = Math.min(66 * scale, Math.max(48 * scale, (availableH - 24 * scale) / 5.0));
     const topPad = Math.min(20 * scale, Math.max(8 * scale, (availableH - 4 * stepY) / 2));
     let currentY = topPad;
     
