@@ -463,63 +463,130 @@ function buildBubbleGroups(productsVisible, cx, cy, outerR) {
   return groups;
 }
 
+function seededRandom(seed, idx, salt) {
+  let h = (seed ^ (idx * 374761393) ^ (salt * 668265263)) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 2246822519);
+  h = Math.imul(h ^ (h >>> 13), 3266489917);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+function computeBubbleDots(group) {
+  const total = group.products.length;
+  if (!total) return [];
+
+  let dotR;
+  if (total === 1) dotR = constrain(group.r * 0.15, 6, 9);
+  else if (total === 2) dotR = constrain(group.r * 0.14, 5.5, 8.5);
+  else if (total <= 4) dotR = constrain(group.r * 0.125, 5, 8);
+  else {
+    const fieldR = group.r * 0.52;
+    dotR = constrain(fieldR / Math.max(2.2, Math.sqrt(total) * 1.75), 4.0, 7.5);
+  }
+
+  const minDotTopY = group.y - group.r * 0.08;
+  const centerY = group.y + group.r * (total <= 4 ? 0.35 : 0.30);
+  const centerX = group.x;
+
+  if (total === 1) {
+    return [{ x: centerX, y: centerY, r: dotR }];
+  }
+
+  const seed = Math.abs(hashString(group.name));
+  const minSpacing = dotR * 2 + 2.5;
+  const maxSpreadR = Math.min(
+    group.r - dotR - 3.5,
+    Math.max(minSpacing * 0.9, Math.sqrt(total) * minSpacing * 0.58),
+  );
+
+  const dots = group.products.map((p, i) => {
+    const pSeed = Math.abs(hashString(p.key || p.name || String(i)));
+    const u = seededRandom(seed ^ pSeed, i, 3);
+    const v = seededRandom(seed ^ pSeed, i, 7);
+    const angle = i * GOLDEN_ANGLE + (u - 0.5) * 1.4;
+    const dist = Math.sqrt(0.15 + 0.85 * ((i + v * 0.8) / total)) * maxSpreadR;
+    return {
+      x: centerX + Math.cos(angle) * dist,
+      y: centerY + Math.sin(angle) * dist * 0.85,
+      r: dotR,
+    };
+  });
+
+  function applyConstraints(d) {
+    const distFromCenter = Math.hypot(d.x - group.x, d.y - group.y);
+    const maxDist = group.r - dotR - 2.5;
+    if (distFromCenter > maxDist) {
+      d.x = group.x + ((d.x - group.x) / distFromCenter) * maxDist;
+      d.y = group.y + ((d.y - group.y) / distFromCenter) * maxDist;
+    }
+    if (d.y - dotR < minDotTopY) {
+      d.y = minDotTopY + dotR;
+      const d2 = Math.hypot(d.x - group.x, d.y - group.y);
+      if (d2 > maxDist) {
+        d.x = group.x + ((d.x - group.x) / d2) * maxDist;
+      }
+    }
+  }
+
+  const iters = 40;
+  for (let iter = 0; iter < iters; iter++) {
+    for (let i = 0; i < total; i++) {
+      for (let j = i + 1; j < total; j++) {
+        const dx = dots[j].x - dots[i].x;
+        const dy = dots[j].y - dots[i].y;
+        const d = Math.hypot(dx, dy) || 0.001;
+        if (d < minSpacing) {
+          const push = (minSpacing - d) * 0.52;
+          const px = (dx / d) * push;
+          const py = (dy / d) * push;
+          dots[i].x -= px;
+          dots[i].y -= py;
+          dots[j].x += px;
+          dots[j].y += py;
+        }
+      }
+    }
+
+    for (let i = 0; i < total; i++) {
+      dots[i].x += (centerX - dots[i].x) * 0.02;
+      dots[i].y += (centerY - dots[i].y) * 0.02;
+      applyConstraints(dots[i]);
+    }
+  }
+
+  for (let pass = 0; pass < 8; pass++) {
+    for (let i = 0; i < total; i++) {
+      for (let j = i + 1; j < total; j++) {
+        const dx = dots[j].x - dots[i].x;
+        const dy = dots[j].y - dots[i].y;
+        const d = Math.hypot(dx, dy) || 0.001;
+        const reqDist = dots[i].r + dots[j].r + 1.2;
+        if (d < reqDist) {
+          const push = (reqDist - d) * 0.5;
+          const px = (dx / d) * push;
+          const py = (dy / d) * push;
+          dots[i].x -= px;
+          dots[i].y -= py;
+          dots[j].x += px;
+          dots[j].y += py;
+        }
+      }
+    }
+    for (let i = 0; i < total; i++) {
+      applyConstraints(dots[i]);
+    }
+  }
+
+  return dots;
+}
+
 function drawProductsInBubble(group) {
   const total = group.products.length;
   if (!total) return;
 
-  // Zona reservada para o nome: terço superior (y < group.y - group.r * 0.06)
-  // Dots ficam distribuídos na área abaixo dessa zona
-  const labelClearance = group.r * 0.26; // espaço livre acima do centro para o label
-
-  const positions = [];
-  if (total === 1) {
-    const dotR = constrain(group.r * 0.15, 6, 9);
-    positions.push({ x: group.x, y: group.y + labelClearance * 0.5, r: dotR });
-  } else if (total === 2) {
-    const dotR = constrain(group.r * 0.14, 5.5, 8.5);
-    const spacing = dotR + 6;
-    positions.push({ x: group.x - spacing, y: group.y + labelClearance * 0.5, r: dotR });
-    positions.push({ x: group.x + spacing, y: group.y + labelClearance * 0.5, r: dotR });
-  } else if (total === 3) {
-    const dotR = constrain(group.r * 0.13, 5, 8);
-    const sp = dotR + 5;
-    positions.push({ x: group.x, y: group.y + labelClearance * 0.1, r: dotR });
-    positions.push({ x: group.x - sp, y: group.y + labelClearance * 0.6, r: dotR });
-    positions.push({ x: group.x + sp, y: group.y + labelClearance * 0.6, r: dotR });
-  } else if (total === 4) {
-    const dotR = constrain(group.r * 0.12, 5, 7.5);
-    const sp = dotR + 5;
-    positions.push({ x: group.x - sp, y: group.y + labelClearance * 0.1, r: dotR });
-    positions.push({ x: group.x + sp, y: group.y + labelClearance * 0.1, r: dotR });
-    positions.push({ x: group.x - sp, y: group.y + labelClearance * 0.65, r: dotR });
-    positions.push({ x: group.x + sp, y: group.y + labelClearance * 0.65, r: dotR });
-  } else {
-    // Distribuição sunflower (phyllotaxis) pelo círculo disponível abaixo do label
-    // fieldR: raio do campo de dots; centro deslocado para baixo para dar espaço ao label no topo
-    const fieldR = group.r * 0.52;
-    const dotR = constrain(fieldR / Math.max(2.2, Math.sqrt(total) * 1.75), 4.0, 7.5);
-    // Limite superior para a borda do dot (não pode subir além daqui)
-    const minDotTopY = group.y - group.r * 0.08;
-    // Centro dos dots deslocado para baixo para afastar da zona do label
-    const offsetY = group.r * 0.16;
-    for (let i = 0; i < total; i++) {
-      const angle = i * GOLDEN_ANGLE;
-      // Raio crescente de forma uniforme (sunflower)
-      const d = Math.sqrt((i + 0.5) / total) * (fieldR - dotR);
-      let x = group.x + cos(angle) * d;
-      let y = (group.y + offsetY) + sin(angle) * d;
-      // Garante que dot fica dentro do círculo da bolha
-      const distFromCenter = Math.hypot(x - group.x, y - group.y);
-      const maxDist = group.r - dotR - 3;
-      if (distFromCenter > maxDist) {
-        x = group.x + ((x - group.x) / distFromCenter) * maxDist;
-        y = group.y + ((y - group.y) / distFromCenter) * maxDist;
-      }
-      // Garante que a BORDA SUPERIOR do dot não invade a zona do label
-      if (y - dotR < minDotTopY) y = minDotTopY + dotR;
-      positions.push({ x, y, r: dotR });
-    }
+  if (!group._dotPositions || group._dotPositions.length !== total) {
+    group._dotPositions = computeBubbleDots(group);
   }
+  const positions = group._dotPositions;
 
   for (let i = 0; i < total; i++) {
     const product = group.products[i];
@@ -715,27 +782,130 @@ function project(lon, lat, box) {
   };
 }
 
-function makeMapClusters(points, box) {
-  const expanded = [];
-  const perLocation = new Map();
-  for (const point of points) {
-    const key = `${point.location.name}:${point.location.lat}:${point.location.lon}`;
-    const index = perLocation.get(key) || 0;
-    perLocation.set(key, index + 1);
-    const pos = project(point.location.lon, point.location.lat, box);
-    if (index > 0) {
-      // Jitter sempre ativo: afasta pontos sobrepostos com ângulo dourado
-      // Raio maior em zoom alto (mais espaço disponível); suficiente p/ separar em zoom 1x
-      const jitterRadius = Math.min(
-        10 + 13 * Math.sqrt(index) * Math.sqrt(mapState.zoom),
-        48
-      );
-      const angle = index * GOLDEN_ANGLE;
-      pos.x += cos(angle) * jitterRadius;
-      pos.y += sin(angle) * jitterRadius;
-    }
-    expanded.push({ ...point, x: pos.x, y: pos.y });
+const _mapLocationOffsetsCache = new Map();
+
+function getOrganicLocationOffsets(locPoints, locKey) {
+  const cacheKey = `${locKey}|${locPoints.map((p) => p.product.key).join(",")}`;
+  if (_mapLocationOffsetsCache.has(cacheKey)) {
+    return _mapLocationOffsetsCache.get(cacheKey);
   }
+
+  const n = locPoints.length;
+  if (n === 0) return [];
+  if (n === 1) {
+    const res = [{ dx: 0, dy: 0 }];
+    _mapLocationOffsetsCache.set(cacheKey, res);
+    return res;
+  }
+
+  const dotSep = 16.0;
+  const maxR = Math.max(dotSep * 0.95, Math.sqrt(n) * dotSep * 0.68);
+
+  let groupSeed = 0;
+  for (const pt of locPoints) {
+    groupSeed =
+      (groupSeed + Math.abs(hashString(pt.product.key || pt.product.name))) >>>
+      0;
+  }
+
+  const pts = locPoints.map((pt, i) => {
+    const pSeed = Math.abs(
+      hashString(pt.product.key || pt.product.name || String(i)),
+    );
+    const u = seededRandom(groupSeed ^ pSeed, i, 11);
+    const v = seededRandom(groupSeed ^ pSeed, i, 17);
+    const angle = i * GOLDEN_ANGLE + (u - 0.5) * 1.5;
+    const r = Math.sqrt(0.08 + 0.92 * ((i + v * 0.8) / n)) * maxR;
+    return {
+      dx: Math.cos(angle) * r,
+      dy: Math.sin(angle) * r,
+    };
+  });
+
+  const iters = 30;
+  for (let iter = 0; iter < iters; iter++) {
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const dx = pts[j].dx - pts[i].dx;
+        const dy = pts[j].dy - pts[i].dy;
+        const d = Math.hypot(dx, dy) || 0.001;
+        if (d < dotSep) {
+          const push = (dotSep - d) * 0.5;
+          const px = (dx / d) * push;
+          const py = (dy / d) * push;
+          pts[i].dx -= px;
+          pts[i].dy -= py;
+          pts[j].dx += px;
+          pts[j].dy += py;
+        }
+      }
+    }
+    for (let i = 0; i < n; i++) {
+      pts[i].dx *= 0.98;
+      pts[i].dy *= 0.98;
+    }
+  }
+
+  for (let pass = 0; pass < 6; pass++) {
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const dx = pts[j].dx - pts[i].dx;
+        const dy = pts[j].dy - pts[i].dy;
+        const d = Math.hypot(dx, dy) || 0.001;
+        const minReq = 14.0;
+        if (d < minReq) {
+          const push = (minReq - d) * 0.5;
+          const px = (dx / d) * push;
+          const py = (dy / d) * push;
+          pts[i].dx -= px;
+          pts[i].dy -= py;
+          pts[j].dx += px;
+          pts[j].dy += py;
+        }
+      }
+    }
+  }
+
+  _mapLocationOffsetsCache.set(cacheKey, pts);
+  return pts;
+}
+
+function distributeMapLocationPoints(locPoints, locKey, basePos, zoom) {
+  const offsets = getOrganicLocationOffsets(locPoints, locKey);
+  const zoomFactor = Math.min(1.35, Math.max(0.85, 0.85 + (zoom - 1) * 0.08));
+  return locPoints.map((pt, i) => ({
+    ...pt,
+    x: basePos.x + offsets[i].dx * zoomFactor,
+    y: basePos.y + offsets[i].dy * zoomFactor,
+  }));
+}
+
+function makeMapClusters(points, box) {
+  const byLocation = new Map();
+  for (const point of points) {
+    const key = `${point.location.name || ""}:${point.location.lat}:${point.location.lon}`;
+    if (!byLocation.has(key)) byLocation.set(key, []);
+    byLocation.get(key).push(point);
+  }
+
+  const expanded = [];
+  for (const [key, locPoints] of byLocation.entries()) {
+    const basePos = project(
+      locPoints[0].location.lon,
+      locPoints[0].location.lat,
+      box,
+    );
+    const distributed = distributeMapLocationPoints(
+      locPoints,
+      key,
+      basePos,
+      mapState.zoom,
+    );
+    for (const p of distributed) {
+      expanded.push(p);
+    }
+  }
+
   const threshold =
     mapState.zoom < 2
       ? 52

@@ -768,6 +768,115 @@ for (const g of subsetGroups) {
 }
 assert(subsetTextCollisions === 0, `Nenhum círculo de obra colide com os nomes das 10 escolas (colisões: ${subsetTextCollisions})`);
 
+console.log("\n=== 18. Validando Distribuição Orgânica das Obras (Bolhas e Mapa) ===");
+global.dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+global.stroke = () => {};
+global.strokeWeight = () => {};
+
+// 1. Bolhas: valida que para 2 obras a distribuição NÃO é uma linha horizontal ou vertical rígida
+const testG2 = {
+  name: "Escola 2 Itens",
+  x: 500,
+  y: 500,
+  r: 60,
+  products: [products[0], products[1]],
+};
+drawnDots.length = 0;
+drawProductsInBubble(testG2);
+assert(drawnDots.length === 2, "drawProductsInBubble desenhou 2 pontos");
+const d2_0 = drawnDots[0];
+const d2_1 = drawnDots[1];
+assert(Math.abs(d2_0.y - d2_1.y) > 2.0, "2 obras na bolha não estão rigidamente alinhadas na horizontal (y diferente)");
+assert(Math.abs(d2_0.x - d2_1.x) > 2.0, "2 obras na bolha não estão rigidamente alinhadas na vertical (x diferente)");
+const dist2 = Math.hypot(d2_0.x - d2_1.x, d2_0.y - d2_1.y);
+assert(dist2 >= (d2_0.d + d2_1.d) / 2, "2 obras na bolha não se sobrepõem");
+
+// 2. Bolhas: valida que para 3 obras a distribuição NÃO é um triângulo isósceles com base alinhada
+const testG3 = {
+  name: "Escola 3 Itens",
+  x: 500,
+  y: 500,
+  r: 60,
+  products: [products[0], products[1], products[2]],
+};
+drawnDots.length = 0;
+drawProductsInBubble(testG3);
+assert(drawnDots.length === 3, "drawProductsInBubble desenhou 3 pontos");
+const yValues3 = drawnDots.map((d) => d.y);
+let sameY3 = false;
+for (let i = 0; i < 3; i++) {
+  for (let j = i + 1; j < 3; j++) {
+    if (Math.abs(yValues3[i] - yValues3[j]) < 0.5) sameY3 = true;
+  }
+}
+assert(!sameY3, "3 obras na bolha possuem distribuição orgânica (nenhum par com mesmo y)");
+
+// 3. Bolhas: valida que para 4 obras a distribuição NÃO é um grid quadrado 2x2 mecânico
+const testG4 = {
+  name: "Escola 4 Itens",
+  x: 500,
+  y: 500,
+  r: 60,
+  products: [products[0], products[1], products[2], products[3]],
+};
+drawnDots.length = 0;
+drawProductsInBubble(testG4);
+assert(drawnDots.length === 4, "drawProductsInBubble desenhou 4 pontos");
+let matchingX4 = 0;
+let matchingY4 = 0;
+for (let i = 0; i < 4; i++) {
+  for (let j = i + 1; j < 4; j++) {
+    if (Math.abs(drawnDots[i].x - drawnDots[j].x) < 1.0) matchingX4++;
+    if (Math.abs(drawnDots[i].y - drawnDots[j].y) < 1.0) matchingY4++;
+  }
+}
+assert(matchingX4 === 0 && matchingY4 === 0, "4 obras na bolha não formam grid 2x2 mecânico (dispersão orgânica)");
+
+// 4. Mapa: valida que cidades com múltiplas obras NÃO formam um círculo geométrico perfeito / halo ring
+global.visualX = () => 280;
+global.visualW = () => 1280;
+global.height = 1080;
+mapState.zoom = 6.0;
+mapState.panX = 0;
+mapState.panY = 0;
+yearStart = 1880;
+yearEnd = 2010;
+
+const mapBox = currentMapBox();
+const mapPoints = products
+  .map((p) => ({ product: p, location: productLocation(p) }))
+  .filter((item) => item.location);
+
+const clustersZoom6 = makeMapClusters(mapPoints, mapBox);
+assert(clustersZoom6.length > 0, `makeMapClusters gerou ${clustersZoom6.length} pontos individuais em zoom 6.0`);
+
+const dessauPoints = clustersZoom6.filter((c) => c.points[0].location.name.includes("Dessau"));
+assert(dessauPoints.length === 24, "Dessau contém 24 obras localizadas");
+const dessauCenter = project(dessauPoints[0].points[0].location.lon, dessauPoints[0].points[0].location.lat, mapBox);
+const dessauRadii = dessauPoints.map((p) => Math.hypot(p.x - dessauCenter.x, p.y - dessauCenter.y));
+const minDessauR = Math.min(...dessauRadii);
+const maxDessauR = Math.max(...dessauRadii);
+const rangeDessauR = maxDessauR - minDessauR;
+assert(rangeDessauR > 25, `Obras em Dessau possuem variação de raios (min: ${minDessauR.toFixed(1)}px, max: ${maxDessauR.toFixed(1)}px, range: ${rangeDessauR.toFixed(1)}px) e NÃO um halo/círculo único`);
+
+let mapOverlapCount = 0;
+for (let i = 0; i < dessauPoints.length; i++) {
+  for (let j = i + 1; j < dessauPoints.length; j++) {
+    const d = Math.hypot(dessauPoints[i].x - dessauPoints[j].x, dessauPoints[i].y - dessauPoints[j].y);
+    if (d < 13.0) mapOverlapCount++;
+  }
+}
+assert(mapOverlapCount === 0, `Nenhum par de pontos do mapa em Dessau se sobrepõe (distâncias < 13px: ${mapOverlapCount})`);
+
+const clustersZoom6Second = makeMapClusters(mapPoints, mapBox);
+const dessauPointsSecond = clustersZoom6Second.filter((c) => c.points[0].location.name.includes("Dessau"));
+let maxDrift = 0;
+for (let i = 0; i < dessauPoints.length; i++) {
+  const drift = Math.hypot(dessauPoints[i].x - dessauPointsSecond[i].x, dessauPoints[i].y - dessauPointsSecond[i].y);
+  if (drift > maxDrift) maxDrift = drift;
+}
+assert(maxDrift === 0, "Posições das obras no mapa são 100% estáveis e determinísticas entre renderizações");
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {
