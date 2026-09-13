@@ -6,13 +6,17 @@ const DATA_PATHS = {
   images: "data/image-manifest.json",
 };
 
-const LAYOUT_NAV_W = 125;
-const LAYOUT_FILTRO_W = 225;
+const LAYOUT_NAV_W = 70;
+const LAYOUT_FILTRO_W = 210;
 const LAYOUT_VISUAL_W_BASE = 1180;
-const LAYOUT_PAINEL_PRODUTO_W = 405;
+const LAYOUT_PAINEL_PRODUTO_W = 295;
 const LAYOUT_VISUAL_W_MIN = 320;
 
-const LAYOUT_PAINEL_PRODUTO_W_MIN = 300;
+const LAYOUT_PAINEL_PRODUTO_W_MIN = 240;
+
+const PRODUCT_IMAGE_H = 190;
+const PRODUCT_TITLE_H = 56;
+const PRODUCT_SIDEBAR_W = 54;
 
 // Breakpoints responsivos para mobile, tablet e desktop
 const BREAKPOINTS = {
@@ -104,13 +108,13 @@ function getContrastTextColor(hexColor) {
 const FILTER_HEADER_H = 58;
 const FILTER_CARD_H = 100;
 const FILTER_BODY_Y = FILTER_HEADER_H + FILTER_CARD_H * 2 + 10;
-const FILTER_CAT_OFFSET = 18;
-const FILTER_SEARCH_OFFSET = 41;
-const FILTER_CLEAR_OFFSET = 41;
-const FILTER_LIST_OFFSET = 44;
-const FILTER_BAR_X = 27;
-const FILTER_BAR_W = 175;
-const FILTER_TAG_ROW_H = 36;
+const FILTER_CAT_OFFSET = 14;
+const FILTER_SEARCH_OFFSET = 36;
+const FILTER_CLEAR_OFFSET = 36;
+const FILTER_LIST_OFFSET = 38;
+const FILTER_BAR_X = 18;
+const FILTER_BAR_W = 174;
+const FILTER_TAG_ROW_H = 30;
 
 const YEAR_MIN = 1880;
 const YEAR_MAX = 2010;
@@ -131,10 +135,10 @@ const VIEWS_CONFIG = [
 ];
 
 const NAV_CONFIG = [
-  { id: "filtros", label: "Filtros", y: 130, iconKey: "filtros", iconSize: 30 },
-  { id: "trocar", label: "Trocar\nVisualização", y: 240, iconKey: null, iconSize: 40 },
-  { id: "exportar", label: "Exportar", y: 350, iconKey: "export", iconSize: 30 },
-  { id: "sobre", label: "Sobre", y: 460, iconKey: "sobre", iconSize: 30 },
+  { id: "filtros", label: "Filtros", y: 88, iconKey: "filtros", iconSize: 24 },
+  { id: "trocar", label: "Trocar\nVisualização", y: 164, iconKey: null, iconSize: 26 },
+  { id: "exportar", label: "Exportar", y: 240, iconKey: "export", iconSize: 24 },
+  { id: "sobre", label: "Sobre", y: 316, iconKey: "sobre", iconSize: 24 },
 ];
 
 const DETAIL_TABS = ["material", "estetico", "tecnicas"];
@@ -180,7 +184,7 @@ const DIMENSIONS = {
     iconKey: "material",
     color: "#3E4AD3",
     pastelColor: "#959fff",
-    gridX: 126,
+    gridX: 128,
     gridY: 58,
   },
   tecnicas: {
@@ -189,7 +193,7 @@ const DIMENSIONS = {
     iconKey: "tecnicas",
     color: "#4AD33E",
     pastelColor: "#a7ff95",
-    gridX: 126,
+    gridX: 128,
     gridY: 158,
   },
   estetico: {
@@ -198,7 +202,7 @@ const DIMENSIONS = {
     iconKey: "estetico",
     color: "#D33E4A",
     pastelColor: "#ff9597",
-    gridX: 28,
+    gridX: 36,
     gridY: 158,
   },
   tipo_obra: {
@@ -207,7 +211,7 @@ const DIMENSIONS = {
     iconKey: "tipo_obra",
     color: "#FFCB00",
     pastelColor: "#ffef95",
-    gridX: 28,
+    gridX: 36,
     gridY: 58,
   },
 };

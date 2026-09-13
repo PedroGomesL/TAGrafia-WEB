@@ -2,9 +2,10 @@ function drawCircularView(visible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
+  const availH = height - TIMELINE_H;
   const baseRadius = Math.min(
-    380,
-    Math.max(80, Math.min(visualW() - 320, height - TIMELINE_H - 380) / 2),
+    340,
+    Math.max(100, Math.min(visualW() - 260, availH - 80) / 2),
   );
   const tags = tagsForCircular();
   const tagPositions = new Map();
@@ -15,21 +16,21 @@ function drawCircularView(visible) {
     selectProduct(productsVisual[0].product);
 
   // Pre-calculate max radius to determine scale factor
-  let maxCornerDist = baseRadius + 160;
+  let maxCornerDist = baseRadius + 140;
   let slotCalc = 0;
   for (const item of productsVisual) {
     if (slotCalc >= 38) break;
     const segments = Math.min(constrain(item.weight, 1, 3), 38 - slotCalc);
-    const cardH = Math.max(38, ((TWO_PI * baseRadius) / 38) * segments * 0.92);
-    const cardW = constrain(measureText(item.product.name, 18) + 28, 100, 150);
+    const cardH = Math.max(34, ((TWO_PI * baseRadius) / 38) * segments * 0.92);
+    const cardW = constrain(measureText(item.product.name, 16) + 24, 90, 135);
     const dist = Math.hypot(baseRadius + cardW + 6, cardH / 2);
     if (dist > maxCornerDist) maxCornerDist = dist;
     slotCalc += segments;
   }
 
-  // Calculate safe boundaries (45px top padding for text)
-  const safeR_Y = cy - 45;
-  const safeR_X = visualW() / 2 - 20;
+  // Calculate safe boundaries (40px top padding for text)
+  const safeR_Y = cy - 40;
+  const safeR_X = visualW() / 2 - 16;
   const scaleRatio = Math.min(
     1,
     safeR_Y / maxCornerDist,
@@ -73,10 +74,10 @@ function drawCircularView(visible) {
     if (slot >= 38) break;
     const segments = Math.min(constrain(item.weight, 1, 3), 38 - slot);
     const angle = -HALF_PI + ((slot + (segments - 1) / 2) * TWO_PI) / 38;
-    const cardW = constrain(measureText(item.product.name, 18) + 28, 100, 150);
-    const cardH = Math.max(38, ((TWO_PI * radius) / 38) * segments * 0.92);
-    const cardCx = cx + cos(angle) * (radius + cardW / 2 + 6);
-    const cardCy = cy + sin(angle) * (radius + cardW / 2 + 6);
+    const cardW = constrain(measureText(item.product.name, 16) + 24, 90, 135);
+    const cardH = Math.max(34, ((TWO_PI * radius) / 38) * segments * 0.92);
+    const cardCx = cx + cos(angle) * (radius + cardW / 2 + 5);
+    const cardCy = cy + sin(angle) * (radius + cardW / 2 + 5);
     const targetX = cx + cos(angle) * radius;
     const targetY = cy + sin(angle) * radius;
     const rotation = cos(angle) < 0 ? angle + PI : angle;
@@ -191,7 +192,7 @@ function drawProductCardLabel(label, maxW, maxH) {
 }
 
 function fitProductCardLabel(label, maxW, maxH) {
-  for (let size = 22; size >= 12; size--) {
+  for (let size = 16; size >= 10; size--) {
     textSize(size);
     const lines = wrapProductCardLabel(label, maxW);
     const lineH = size * 0.94;
@@ -202,8 +203,8 @@ function fitProductCardLabel(label, maxW, maxH) {
       return { lines, size };
     }
   }
-  textSize(12);
-  const maxLines = Math.max(1, Math.floor(maxH / (12 * 0.94)));
+  textSize(10);
+  const maxLines = Math.max(1, Math.floor(maxH / (10 * 0.94)));
   const lines = wrapProductCardLabel(label, maxW).slice(0, maxLines);
   if (lines.length && textWidth(lines[lines.length - 1]) > maxW) {
     lines[lines.length - 1] = fitLineWithEllipsis(
@@ -211,7 +212,7 @@ function fitProductCardLabel(label, maxW, maxH) {
       maxW,
     );
   }
-  return { lines, size: 12 };
+  return { lines, size: 10 };
 }
 
 function wrapProductCardLabel(label, maxW) {
@@ -243,7 +244,7 @@ function drawBubbleView(productsVisible) {
   drawVisualizationBackground();
   const cx = visualX() + visualW() / 2;
   const cy = (height - TIMELINE_H) / 2;
-  const outerR = Math.max(140, Math.min(visualW(), height - TIMELINE_H) * 0.46);
+  const outerR = Math.max(130, Math.min(visualW() * 0.46, (height - TIMELINE_H) * 0.46));
   const bubbleKey = `${productsVisible.map((p) => p.key).join(",")}|${cx}|${cy}|${outerR}|${yearStart}|${yearEnd}`;
   if (bubbleKey !== _bubbleCacheKey || !_cachedBubbleGroups) {
     _cachedBubbleGroups = buildBubbleGroups(productsVisible, cx, cy, outerR);
@@ -256,12 +257,12 @@ function drawBubbleView(productsVisible) {
 
   noFill();
   stroke(themeLineColor());
-  strokeWeight(4);
+  strokeWeight(2.5);
   circle(cx, cy, outerR * 2);
 
   for (const group of groups) {
     stroke("#000000");
-    strokeWeight(2);
+    strokeWeight(1.6);
     fill("#D9D9D9");
     circle(group.x, group.y, group.r * 2);
     drawProductsInBubble(group);
@@ -269,9 +270,9 @@ function drawBubbleView(productsVisible) {
     noStroke();
     textFont(fontes.afacad);
     textStyle(BOLD);
-    textSize(fitTextSize(group.name, group.r * 1.52, 26, 11));
+    textSize(fitTextSize(group.name, group.r * 1.52, 16, 10));
     textAlign(CENTER, CENTER);
-    text(group.name, group.x - group.r * 0.75, group.y - 24, group.r * 1.5, 54);
+    text(group.name, group.x - group.r * 0.75, group.y - 15, group.r * 1.5, 32);
     textStyle(NORMAL);
   }
 

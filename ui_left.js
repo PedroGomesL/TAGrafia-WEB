@@ -39,21 +39,21 @@ function drawNavSidebar() {
   fill(255);
   rect(0, 0, LAYOUT_NAV_W, height / filterPanelScale());
 
-  // Title (Figma: Afacad Flux, 24px, weight 600, color #000, text-align center)
+  // Title (Compact Afacad Flux, bold 700)
   fill("#000000");
   noStroke();
   drawingContext.save();
-  drawingContext.font = "600 24px 'Afacad Flux', sans-serif";
+  drawingContext.font = "700 15px 'Afacad Flux', sans-serif";
   drawingContext.fillStyle = "#000000";
   drawingContext.textAlign = "center";
   drawingContext.textBaseline = "middle";
-  drawingContext.fillText("TAGrafia", LAYOUT_NAV_W / 2, 40);
+  drawingContext.fillText("TAGrafia", LAYOUT_NAV_W / 2, 28);
   drawingContext.restore();
 
   // Divider
   stroke("#959fff");
   strokeWeight(1.5);
-  line(15, 75, LAYOUT_NAV_W - 15, 75);
+  line(10, 48, LAYOUT_NAV_W - 10, 48);
 
   const currentView = VIEWS_CONFIG.find((v) => v.id === activeView);
   const dynamicViewIcon = currentView ? icones[currentView.iconKey] : icones.visao_circular;
@@ -67,7 +67,7 @@ function drawNavSidebar() {
   for (const item of NAV_CONFIG) {
     const active = isExtended && leftPanelTab === item.id;
     const icon = item.iconKey ? icones[item.iconKey] : dynamicViewIcon;
-    const hover = mx >= 0 && mx <= LAYOUT_NAV_W && my >= item.y - 30 && my <= item.y + 30;
+    const hover = mx >= 0 && mx <= LAYOUT_NAV_W && my >= item.y - 24 && my <= item.y + 28;
 
     if (hover && typeof requestCursor === "function") {
       requestCursor(HAND);
@@ -77,38 +77,39 @@ function drawNavSidebar() {
     if (active) {
       noStroke();
       fill("#959fff");
-      rect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 50, 10);
+      rect(LAYOUT_NAV_W / 2 - 25, item.y - 24, 50, 52, 6);
     } else if (hover) {
       noStroke();
       fill(0, 0, 0, 15);
-      rect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 50, 10);
+      rect(LAYOUT_NAV_W / 2 - 25, item.y - 24, 50, 52, 6);
     }
 
     // Icon
-    const iconSz = item.iconSize || 40;
+    const iconSz = item.iconSize || 24;
     if (icon) {
-      drawImageCentered(icon, LAYOUT_NAV_W / 2, item.y, iconSz, iconSz);
+      drawImageCentered(icon, LAYOUT_NAV_W / 2, item.y - 8, iconSz, iconSz);
     } else {
       // Fallback if missing
       noFill();
       stroke(active ? 255 : 0);
-      strokeWeight(2);
-      circle(LAYOUT_NAV_W / 2, item.y, iconSz * 0.75);
+      strokeWeight(1.8);
+      circle(LAYOUT_NAV_W / 2, item.y - 8, iconSz * 0.75);
     }
 
     // Text
     noStroke();
     fill(0);
     textFont(fontes.roboto);
-    textSize(14);
+    textSize(10);
+    textLeading(11);
     textAlign(CENTER, TOP);
-    text(item.label, LAYOUT_NAV_W / 2, item.y + 35);
+    text(item.label, LAYOUT_NAV_W / 2, item.y + 7);
   }
 
   // Divider between Exportar and Sobre
   stroke("#959fff");
   strokeWeight(1.5);
-  line(15, 420, LAYOUT_NAV_W - 15, 420);
+  line(10, 278, LAYOUT_NAV_W - 10, 278);
 
   pop();
 }
@@ -118,8 +119,8 @@ function drawFilterCards() {
   // Draw the blue cross
   stroke("#959fff");
   strokeWeight(1.5);
-  line(107, 88, 107, 207); // Vertical
-  line(47, 148, 166, 148); // Horizontal
+  line(105, 68, 105, 204); // Vertical
+  line(30, 148, 180, 148); // Horizontal
   pop();
 
   const scl = filterPanelScale();
@@ -131,7 +132,7 @@ function drawFilterCards() {
     const active = activeDimension === dimKey;
     const cx = dim.gridX;
     const cy = dim.gridY;
-    const hover = mx >= cx - 12 && mx <= cx + 62 && my >= cy && my <= cy + 90;
+    const hover = mx >= cx - 6 && mx <= cx + 52 && my >= cy && my <= cy + 74;
 
     if (hover && typeof requestCursor === "function") {
       requestCursor(HAND);
@@ -141,24 +142,24 @@ function drawFilterCards() {
     if (active) {
       noStroke();
       fill(dim.pastelColor);
-      rect(cx, cy, 50, 50, 5); // Rounded corners like Figma
+      rect(cx, cy, 46, 46, 6);
     } else if (hover) {
       noStroke();
-      fill(dim.pastelColor + "44"); // Soft pastel hover
-      rect(cx, cy, 50, 50, 5);
+      fill(dim.pastelColor + "44");
+      rect(cx, cy, 46, 46, 6);
     }
 
     // Draw icon
     const icon = icones[dim.iconKey];
-    if (icon) drawImageCentered(icon, cx + 25, cy + 25, 40, 40);
+    if (icon) drawImageCentered(icon, cx + 23, cy + 20, 30, 30);
 
     // Draw text
     fill("#000000");
     noStroke();
     textFont(fontes.roboto);
-    textSize(14);
+    textSize(11);
     textAlign(CENTER, TOP);
-    text(dim.label, cx + 25, cy + 60);
+    text(dim.label, cx + 23, cy + 50);
   }
 }
 
@@ -182,60 +183,74 @@ function drawFilterBody() {
   const mx = mouseX / scl - LAYOUT_NAV_W;
   const my = mouseY / scl;
 
-  // --- Category pill (white bg, radius 5, label centered) ---
+  // --- Category pill (white bg, radius 4, label centered) ---
   if (activeDimension !== "tipo_obra") {
-    const hoverCat = insideRect(mx, my, FILTER_BAR_X, catY, FILTER_BAR_W, 26);
+    const hoverCat = insideRect(mx, my, FILTER_BAR_X, catY, FILTER_BAR_W, 24);
     if (hoverCat && typeof requestCursor === "function") requestCursor(HAND);
     stroke("#D9D9D9");
     strokeWeight(1);
     fill(hoverCat ? "#F4F4F8" : "#FFFFFF");
-    rect(FILTER_BAR_X, catY, FILTER_BAR_W, 26, 5);
+    rect(FILTER_BAR_X, catY, FILTER_BAR_W, 24, 4);
     const categoryLabel = currentCategoryLabel();
     fill("#000000");
     noStroke();
     textFont(fontes.roboto);
-    textSize(fitTextSize(categoryLabel, FILTER_BAR_W - 22, 14, 10));
+    textSize(fitTextSize(categoryLabel, FILTER_BAR_W - 24, 12, 9));
     textAlign(CENTER, CENTER);
-    text(categoryLabel, FILTER_BAR_X + FILTER_BAR_W / 2, catY + 13);
+    text(categoryLabel, FILTER_BAR_X + FILTER_BAR_W / 2 - 4, catY + 12);
+
+    // Subtle dropdown chevron
+    stroke("#888888");
+    strokeWeight(1.4);
+    noFill();
+    const arrX = FILTER_BAR_X + FILTER_BAR_W - 10;
+    const arrY = catY + 12;
+    if (categorySelectorOpen) {
+      line(arrX - 3.5, arrY + 2, arrX, arrY - 2);
+      line(arrX, arrY - 2, arrX + 3.5, arrY + 2);
+    } else {
+      line(arrX - 3.5, arrY - 2, arrX, arrY + 2);
+      line(arrX, arrY + 2, arrX + 3.5, arrY - 2);
+    }
   }
 
   // --- Search bar ---
-  const hoverSearch = insideRect(mx, my, FILTER_BAR_X, searchY, FILTER_BAR_W, 26);
+  const hoverSearch = insideRect(mx, my, FILTER_BAR_X, searchY, FILTER_BAR_W, 24);
   if (hoverSearch && typeof requestCursor === "function") requestCursor(TEXT);
   stroke("#D9D9D9");
   strokeWeight(1);
   fill(hoverSearch && !tagSearchActive ? "#FAFAFC" : "#FFFFFF");
-  rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 26, 5);
+  rect(FILTER_BAR_X, searchY, FILTER_BAR_W, 24, 4);
   noStroke();
   textFont(fontes.roboto);
-  textSize(14);
+  textSize(12);
   textAlign(LEFT, CENTER);
   fill(tagSearch.length ? "#000000" : "#595959");
   text(
     tagSearch.length ? tagSearch : "Pesquisar tag",
-    FILTER_BAR_X + 10,
-    searchY + 13,
+    FILTER_BAR_X + 8,
+    searchY + 12,
   );
   // Blinking cursor
   if (tagSearchActive && frameCount % 60 < 30) {
-    const cx = FILTER_BAR_X + 10 + textWidth(tagSearch);
+    const cx = FILTER_BAR_X + 8 + textWidth(tagSearch);
     stroke("#000000");
     strokeWeight(1);
-    line(cx + 2, searchY + 6, cx + 2, searchY + 20);
+    line(cx + 2, searchY + 4, cx + 2, searchY + 20);
   }
 
   // --- Clear button ---
-  const hoverClear = insideRect(mx, my, FILTER_BAR_X, clearY, FILTER_BAR_W, 26);
+  const hoverClear = insideRect(mx, my, FILTER_BAR_X, clearY, FILTER_BAR_W, 24);
   if (hoverClear && selectedTagKeys.size && typeof requestCursor === "function") requestCursor(HAND);
   noStroke();
   fill(selectedTagKeys.size ? (hoverClear ? "#C8C8C8" : "#D9D9D9") : color(220));
-  rect(FILTER_BAR_X, clearY, FILTER_BAR_W, 26, 13);
+  rect(FILTER_BAR_X, clearY, FILTER_BAR_W, 24, 12);
   drawImageCentered(
     icones.clear,
     FILTER_BAR_X + FILTER_BAR_W / 2,
-    clearY + 13,
-    20,
-    20,
+    clearY + 12,
+    18,
+    18,
   );
 
   const maxH = height / filterPanelScale() - 10;
@@ -290,7 +305,7 @@ function getFilterCategoryOptions(dimension) {
 
 function drawCategorySelector(listY, listBottom) {
   const options = getFilterCategoryOptions(activeDimension);
-  const rowH = 34;
+  const rowH = 28;
   const scl = filterPanelScale();
   const mx = mouseX / scl - LAYOUT_NAV_W;
   const my = mouseY / scl;
@@ -318,17 +333,17 @@ function drawCategorySelector(listY, listBottom) {
     if (active) {
       noStroke();
       fill("#959fff");
-      rect(13, y + rowH - 6, LAYOUT_FILTRO_W - 26, 3);
+      rect(FILTER_BAR_X, y + rowH - 4, FILTER_BAR_W, 2);
     }
-    stroke(lightMode ? color(0, 0, 0, 65) : color(0, 0, 0, 80));
+    stroke(lightMode ? color(0, 0, 0, 45) : color(0, 0, 0, 65));
     strokeWeight(0.5);
-    line(13, y + rowH - 3, LAYOUT_FILTRO_W - 13, y + rowH - 3);
+    line(FILTER_BAR_X, y + rowH - 1, FILTER_BAR_X + FILTER_BAR_W, y + rowH - 1);
     fill("#000000");
     noStroke();
     textFont(fontes.roboto);
-    textSize(fitTextSize(option.label.toUpperCase(), 225, 14, 10));
-    textAlign(LEFT, BASELINE);
-    text(option.label.toUpperCase(), FILTER_BAR_X, y + rowH / 2 + 5);
+    textSize(fitTextSize(option.label.toUpperCase(), FILTER_BAR_W - 12, 11, 9));
+    textAlign(LEFT, CENTER);
+    text(option.label.toUpperCase(), FILTER_BAR_X + 2, y + rowH / 2);
   }
 }
 
@@ -436,12 +451,12 @@ function drawFilterTag(tag, y, rowH) {
     tag.dimension === "tipo_obra"
       ? ""
       : String(countProductsWithTagInCurrentType(tag));
-  textSize(12);
-  const badgeW = badgeText ? Math.max(26, textWidth(badgeText) + 14) : 0;
-  const badgeX = LAYOUT_FILTRO_W - badgeW - 14;
+  textSize(11);
+  const badgeW = badgeText ? Math.max(20, textWidth(badgeText) + 10) : 0;
+  const badgeX = LAYOUT_FILTRO_W - badgeW - 12;
 
   // Tag label
-  textSize(fitTextSize(tag.label, badgeX - FILTER_BAR_X - 5, 15, 10));
+  textSize(fitTextSize(tag.label, badgeX - FILTER_BAR_X - 5, 12, 9));
   textAlign(LEFT, CENTER);
   text(tag.label, FILTER_BAR_X, y + rowH / 2);
 
@@ -449,9 +464,9 @@ function drawFilterTag(tag, y, rowH) {
   if (badgeText) {
     noStroke();
     fill(selected ? color(255, 255, 255, 130) : (isHovered ? color(200, 200, 205, 240) : color(217, 217, 217, 210)));
-    rect(badgeX, y + rowH / 2 - 11, badgeW, 22, 11);
+    rect(badgeX, y + rowH / 2 - 9, badgeW, 18, 9);
     fill(selected ? "#000000" : (isHovered ? "#111111" : "#333333"));
-    textSize(12);
+    textSize(10);
     textAlign(CENTER, CENTER);
     text(badgeText, badgeX + badgeW / 2, y + rowH / 2);
   }
@@ -500,7 +515,7 @@ function filterMousePressed(mxRaw, myRaw) {
 
   if (mx < LAYOUT_NAV_W) {
     for (const item of NAV_CONFIG) {
-      if (my >= item.y - 30 && my <= item.y + 30) {
+      if (my >= item.y - 24 && my <= item.y + 28) {
         if (item.id === "trocar") {
           activeView = (activeView + 1) % VIEWS_CONFIG.length;
           if (typeof mapState !== "undefined") mapState.dragging = false;
@@ -531,10 +546,10 @@ function filterMousePressed(mxRaw, myRaw) {
   mx -= LAYOUT_NAV_W;
 
   // Check collapse button click at top right of extended panel
-  const btnW = 28;
-  const btnH = 28;
-  const btnX = LAYOUT_FILTRO_W - btnW - 12;
-  const btnY = 16;
+  const btnW = 24;
+  const btnH = 24;
+  const btnX = LAYOUT_FILTRO_W - btnW - 10;
+  const btnY = 12;
   if (
     mx >= btnX - 4 &&
     mx <= btnX + btnW + 4 &&
@@ -550,7 +565,7 @@ function filterMousePressed(mxRaw, myRaw) {
       const dim = DIMENSIONS[dimKey];
       const cx = dim.gridX;
       const cy = dim.gridY;
-      if (mx >= cx - 12 && mx <= cx + 62 && my >= cy && my <= cy + 90) {
+      if (mx >= cx - 6 && mx <= cx + 52 && my >= cy && my <= cy + 74) {
         activeDimension = dimKey;
         tagScroll = 0;
         categorySelectorOpen = false;
@@ -562,17 +577,17 @@ function filterMousePressed(mxRaw, myRaw) {
     const clearY = searchY + FILTER_CLEAR_OFFSET;
     if (
       activeDimension !== "tipo_obra" &&
-      insideRect(mx, my, FILTER_BAR_X, catY, FILTER_BAR_W, 31)
+      insideRect(mx, my, FILTER_BAR_X, catY, FILTER_BAR_W, 24)
     ) {
       categorySelectorOpen = !categorySelectorOpen;
       tagSearchActive = false;
       return true;
     }
-    if (insideRect(mx, my, FILTER_BAR_X, searchY, FILTER_BAR_W, 31)) {
+    if (insideRect(mx, my, FILTER_BAR_X, searchY, FILTER_BAR_W, 24)) {
       tagSearchActive = true;
       return true;
     }
-    if (insideRect(mx, my, FILTER_BAR_X, clearY, FILTER_BAR_W, 28)) {
+    if (insideRect(mx, my, FILTER_BAR_X, clearY, FILTER_BAR_W, 24)) {
       selectedTagKeys.clear();
       focusedCircularTagKey = "";
       tagSearch = "";
@@ -583,17 +598,19 @@ function filterMousePressed(mxRaw, myRaw) {
     const listY = filterListY();
     if (
       categorySelectorOpen &&
-      activeDimension !== "tipo_obra" &&
-      my >= listY
+      activeDimension !== "tipo_obra"
     ) {
-      const options = getFilterCategoryOptions(activeDimension);
-      const index = Math.floor((my - listY) / 34);
-      if (index >= 0 && index < options.length) {
-        activeCategoryByDimension[activeDimension] = options[index].value;
+      if (my >= listY) {
+        const options = getFilterCategoryOptions(activeDimension);
+        const index = Math.floor((my - listY) / 28);
+        if (index >= 0 && index < options.length) {
+          activeCategoryByDimension[activeDimension] = options[index].value;
+          tagScroll = 0;
+        }
         categorySelectorOpen = false;
-        tagScroll = 0;
         return true;
       }
+      categorySelectorOpen = false;
     }
     if (my >= listY) {
       const tags = tagsToDisplay();
@@ -612,27 +629,27 @@ function filterMousePressed(mxRaw, myRaw) {
   } else if (leftPanelTab === "exportar") {
     // Export tab interaction
     for (let i = 0; i < VIEWS_CONFIG.length; i++) {
-      const vy = 118 + i * 38;
-      if (my >= vy - 6 && my <= vy + 26 && mx >= 20 && mx <= 160) {
+      const vy = 108 + i * 32;
+      if (my >= vy - 4 && my <= vy + 24 && mx >= FILTER_BAR_X - 4 && mx <= FILTER_BAR_X + FILTER_BAR_W) {
         exportViewsSelection[i] = !exportViewsSelection[i];
         return true;
       }
     }
 
-    const dy = 325;
-    if (my >= dy && my <= dy + 26 && mx >= 24 && mx <= 168) {
+    const dy = 286;
+    if (my >= dy && my <= dy + 24 && mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + FILTER_BAR_W) {
       exportFormatDropdownOpen = !exportFormatDropdownOpen;
       return true;
     }
 
     const availableFormats = typeof EXPORT_FORMATS !== "undefined" ? EXPORT_FORMATS : ["PDF", "JPG", "SVG"];
     const formats = availableFormats.filter(f => f !== exportFormatSelected);
-    const totalMenuH = formats.length * 26;
+    const totalMenuH = formats.length * 24;
 
     if (exportFormatDropdownOpen && exportDropdownAnim > 0.3) {
       for (let i = 0; i < formats.length; i++) {
-        const oy = dy + 26 + i * 26;
-        if (my >= oy && my <= oy + 26 && mx >= 24 && mx <= 168) {
+        const oy = dy + 24 + i * 24;
+        if (my >= oy && my <= oy + 24 && mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + FILTER_BAR_W) {
           exportFormatSelected = formats[i];
           exportFormatDropdownOpen = false;
           return true;
@@ -641,8 +658,8 @@ function filterMousePressed(mxRaw, myRaw) {
     }
 
     // Export button click
-    const btnY = Math.round(dy + 46 + (totalMenuH + 10) * exportDropdownAnim);
-    if (mx >= 24 && mx <= 168 && my >= btnY && my <= btnY + 30) {
+    const btnY = Math.round(dy + 38 + (totalMenuH + 8) * exportDropdownAnim);
+    if (mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + FILTER_BAR_W && my >= btnY && my <= btnY + 28) {
       if (exportFormatSelected === "JPG") {
         saveCanvas("tagrafia-visualizacao", "jpg");
       } else {
@@ -671,54 +688,62 @@ function drawExportTab() {
   fill(0);
   noStroke();
   textFont(fontes.roboto);
-  textSize(15);
+  textSize(13);
+  textStyle(BOLD);
   textAlign(LEFT, TOP);
-  text("Selecione as visualizações\npara exportar", 24, 58);
+  text("Selecione as visualizações\npara exportar", FILTER_BAR_X, 58);
+  textStyle(NORMAL);
 
   const views = VIEWS_CONFIG.map((v, i) => ({
     label: v.label,
-    y: 118 + i * 38,
+    y: 108 + i * 32,
     selected: Boolean(exportViewsSelection[i]),
   }));
 
   for (const v of views) {
-    const isViewHover = mx >= 20 && mx <= 180 && my >= v.y - 4 && my <= v.y + 24;
+    const isViewHover = mx >= FILTER_BAR_X - 4 && mx <= FILTER_BAR_X + FILTER_BAR_W && my >= v.y - 4 && my <= v.y + 22;
     if (isViewHover && typeof requestCursor === "function") {
       requestCursor(HAND);
     }
 
     stroke("#6750a4");
-    strokeWeight(2);
+    strokeWeight(1.5);
     if (v.selected) {
       fill("#6750a4");
     } else {
       fill(isViewHover ? "#F2EFF9" : "#FFFFFF");
     }
-    rect(24, v.y, 18, 18, 4);
+    rect(FILTER_BAR_X, v.y, 16, 16, 3);
 
     if (v.selected) {
       stroke(255);
-      strokeWeight(2);
+      strokeWeight(1.8);
       noFill();
       beginShape();
-      vertex(28, v.y + 9);
-      vertex(32, v.y + 13);
-      vertex(38, v.y + 5);
+      vertex(FILTER_BAR_X + 3.5, v.y + 8);
+      vertex(FILTER_BAR_X + 7, v.y + 11.5);
+      vertex(FILTER_BAR_X + 12.5, v.y + 4.5);
       endShape();
     }
 
     fill(0);
     noStroke();
-    text(v.label, 54, v.y + 2);
+    textFont(fontes.roboto);
+    textSize(11);
+    textAlign(LEFT, CENTER);
+    text(v.label, FILTER_BAR_X + 24, v.y + 8);
   }
 
   stroke(220);
   strokeWeight(1);
-  line(24, 275, LAYOUT_FILTRO_W - 24, 275);
+  line(FILTER_BAR_X, 248, FILTER_BAR_X + FILTER_BAR_W, 248);
 
   fill(0);
   noStroke();
-  text("Exportar em:", 24, 295);
+  textFont(fontes.roboto);
+  textSize(11);
+  textAlign(LEFT, TOP);
+  text("Exportar em:", FILTER_BAR_X, 264);
 
   // Smooth dropdown animation
   const targetAnim = exportFormatDropdownOpen ? 1 : 0;
@@ -727,82 +752,88 @@ function drawExportTab() {
     exportDropdownAnim = targetAnim;
   }
 
-  const dy = 325;
-  const isTriggerHover = mx >= 24 && mx <= 168 && my >= dy && my <= dy + 26;
+  const dy = 286;
+  const isTriggerHover = mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + FILTER_BAR_W && my >= dy && my <= dy + 24;
   if (isTriggerHover && typeof requestCursor === "function") {
     requestCursor(HAND);
   }
 
   stroke("#959fff");
-  strokeWeight(1.5);
+  strokeWeight(1.2);
   fill(isTriggerHover ? "#F6F7FF" : "#FFFFFF");
-  rect(24, dy, 144, 26, 4);
+  rect(FILTER_BAR_X, dy, FILTER_BAR_W, 24, 4);
 
   fill(0);
   noStroke();
-  text(exportFormatSelected, 30, dy + 5);
+  textFont(fontes.roboto);
+  textSize(11);
+  textAlign(LEFT, CENTER);
+  text(exportFormatSelected, FILTER_BAR_X + 8, dy + 12);
 
   // Animated rotating chevron
   push();
-  translate(155, dy + 13);
+  translate(FILTER_BAR_X + FILTER_BAR_W - 14, dy + 12);
   rotate(radians(exportDropdownAnim * 180));
   stroke("#959fff");
-  strokeWeight(2);
+  strokeWeight(1.8);
   noFill();
   beginShape();
-  vertex(-4.5, -2.5);
-  vertex(0, 2.5);
-  vertex(4.5, -2.5);
+  vertex(-4, -2);
+  vertex(0, 2);
+  vertex(4, -2);
   endShape();
   pop();
 
   const availableFormats = typeof EXPORT_FORMATS !== "undefined" ? EXPORT_FORMATS : ["PDF", "JPG", "SVG"];
   const formats = availableFormats.filter(f => f !== exportFormatSelected);
-  const totalMenuH = formats.length * 26;
+  const totalMenuH = formats.length * 24;
   const currentMenuH = totalMenuH * exportDropdownAnim;
 
   if (currentMenuH > 0.5) {
     drawingContext.save();
     drawingContext.beginPath();
-    drawingContext.rect(24, dy + 26, 144, currentMenuH);
+    drawingContext.rect(FILTER_BAR_X, dy + 24, FILTER_BAR_W, currentMenuH);
     drawingContext.clip();
 
     for (let i = 0; i < formats.length; i++) {
-      const oy = dy + 26 + i * 26;
-      const isOptHover = mx >= 24 && mx <= 168 && my >= oy && my <= oy + 26 && exportDropdownAnim > 0.3;
+      const oy = dy + 24 + i * 24;
+      const isOptHover = mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + FILTER_BAR_W && my >= oy && my <= oy + 24 && exportDropdownAnim > 0.3;
       if (isOptHover && typeof requestCursor === "function") {
         requestCursor(HAND);
       }
       stroke("#959fff");
-      strokeWeight(1.5);
+      strokeWeight(1.2);
       fill(isOptHover ? "#EFF2FF" : "#FFFFFF");
-      rect(24, oy, 144, 26, 4);
+      rect(FILTER_BAR_X, oy, FILTER_BAR_W, 24, 4);
 
       fill(0, 0, 0, Math.round(exportDropdownAnim * 255));
       noStroke();
-      text(formats[i], 30, oy + 5);
+      textFont(fontes.roboto);
+      textSize(11);
+      textAlign(LEFT, CENTER);
+      text(formats[i], FILTER_BAR_X + 8, oy + 12);
     }
     drawingContext.restore();
   }
 
   // Smoothly animated "Baixar" button position
-  const btnY = Math.round(dy + 46 + (totalMenuH + 10) * exportDropdownAnim);
-  const isBtnHover = mx >= 24 && mx <= 168 && my >= btnY && my <= btnY + 30;
+  const btnY = Math.round(dy + 38 + (totalMenuH + 8) * exportDropdownAnim);
+  const isBtnHover = mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + FILTER_BAR_W && my >= btnY && my <= btnY + 28;
   if (isBtnHover && typeof requestCursor === "function") {
     requestCursor(HAND);
   }
   const btnBg = isBtnHover ? "#2D39B8" : (typeof COLORS !== "undefined" && COLORS.blue ? COLORS.blue : "#3E4AD3");
   fill(btnBg);
   noStroke();
-  rect(24, btnY, 144, 30, 15);
+  rect(FILTER_BAR_X, btnY, FILTER_BAR_W, 28, 14);
 
   fill(255);
   textFont(fontes.roboto);
   textStyle(BOLD);
+  textSize(12);
   textAlign(CENTER, CENTER);
-  text("Baixar", 24 + 72, btnY + 15);
+  text("Baixar", FILTER_BAR_X + FILTER_BAR_W / 2, btnY + 14);
   textStyle(NORMAL);
-  textAlign(LEFT, TOP);
 }
 
 function drawSobreTab() {
@@ -812,9 +843,9 @@ function drawSobreTab() {
   fill(0);
   noStroke();
   textFont(fontes.roboto);
-  textSize(15);
+  textSize(12);
   textAlign(LEFT, TOP);
-  textLeading(22);
+  textLeading(18);
 
   let txt =
     "Projeto de Conclusão de Curso\n\n" +
@@ -834,17 +865,28 @@ function drawSobreTab() {
 
   push();
   translate(0, -sobreScroll);
-  text(txt, 20, 58, LAYOUT_FILTRO_W - 40, contentH + 100);
+  text(txt, FILTER_BAR_X, 58, LAYOUT_FILTRO_W - FILTER_BAR_X * 2, contentH + 100);
   pop();
 
   drawingContext.restore();
+
+  if (contentH > availableH) {
+    const trackX = LAYOUT_FILTRO_W - 5;
+    const thumbH = Math.max(30, (availableH * availableH) / contentH);
+    const thumbY = 58 + map(sobreScroll, 0, contentH - availableH, 0, availableH - thumbH);
+    noStroke();
+    fill(lightMode ? color(0, 0, 0, 45) : color(255, 255, 255, 45));
+    rect(trackX, 58, 4, availableH, 2);
+    fill("#959fff");
+    rect(trackX, thumbY, 4, thumbH, 2);
+  }
 }
 
 function drawCollapseButton() {
-  const btnW = 28;
-  const btnH = 28;
-  const btnX = LAYOUT_FILTRO_W - btnW - 12;
-  const btnY = 16;
+  const btnW = 24;
+  const btnH = 24;
+  const btnX = LAYOUT_FILTRO_W - btnW - 10;
+  const btnY = 12;
   const scl = filterPanelScale();
   const mx = mouseX / scl - LAYOUT_NAV_W;
   const my = mouseY / scl;
@@ -861,7 +903,7 @@ function drawCollapseButton() {
   if (isHover) {
     noStroke();
     fill(0, 0, 0, 15);
-    rect(btnX - 2, btnY - 2, btnW + 4, btnH + 4, 6);
+    rect(btnX - 2, btnY - 2, btnW + 4, btnH + 4, 4);
   }
 
   if (icones && icones.collapse_panel) {
@@ -869,20 +911,20 @@ function drawCollapseButton() {
       icones.collapse_panel,
       btnX + btnW / 2,
       btnY + btnH / 2,
-      22,
-      22,
+      18,
+      18,
     );
   } else {
     // Vector fallback resembling panel collapse icon
     stroke(60);
-    strokeWeight(1.8);
+    strokeWeight(1.5);
     noFill();
-    rect(btnX, btnY, btnW, btnH, 5);
-    line(btnX + 8, btnY, btnX + 8, btnY + btnH);
+    rect(btnX, btnY, btnW, btnH, 4);
+    line(btnX + 7, btnY, btnX + 7, btnY + btnH);
     beginShape();
-    vertex(btnX + 19, btnY + 8);
-    vertex(btnX + 13, btnY + 14);
-    vertex(btnX + 19, btnY + 20);
+    vertex(btnX + 16, btnY + 7);
+    vertex(btnX + 11, btnY + 12);
+    vertex(btnX + 16, btnY + 17);
     endShape();
   }
 
@@ -891,17 +933,17 @@ function drawCollapseButton() {
     fill(20, 20, 24, 230);
     noStroke();
     if (fontes && fontes.roboto) textFont(fontes.roboto);
-    textSize(11);
+    textSize(10);
     const tipTxt = "Esconder menu";
     const tw = textWidth(tipTxt);
-    const tipW = tw + 14;
-    const tipH = 22;
+    const tipW = tw + 12;
+    const tipH = 20;
     const tipX = constrain(
       btnX + btnW / 2 - tipW / 2,
       5,
       LAYOUT_FILTRO_W - tipW - 5,
     );
-    const tipY = btnY + btnH + 6;
+    const tipY = btnY + btnH + 5;
     rect(tipX, tipY, tipW, tipH, 4);
     fill(255);
     textAlign(CENTER, CENTER);

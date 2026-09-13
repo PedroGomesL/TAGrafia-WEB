@@ -15,13 +15,13 @@ function drawYearBand() {
 
   // Background track (lighter)
   stroke("#8a93e3");
-  strokeWeight(8);
+  strokeWeight(6);
   strokeCap(ROUND);
   line(tx, ty, tx + tw, ty);
 
   // Active track (dark blue)
   stroke(COLORS.blue);
-  strokeWeight(8);
+  strokeWeight(6);
   line(xStart, ty, xEnd, ty);
 
   // Handles hover & interaction
@@ -33,27 +33,27 @@ function drawYearBand() {
 
   // Handles
   stroke("#000000");
-  strokeWeight(2);
+  strokeWeight(1.8);
   fill(hoverStart || draggedYearHandle === "start" ? "#F0F2FF" : "#ffffff");
-  circle(xStart, ty, hoverStart || draggedYearHandle === "start" ? 33 : 30);
+  circle(xStart, ty, hoverStart || draggedYearHandle === "start" ? 28 : 26);
   fill(hoverEnd || draggedYearHandle === "end" ? "#F0F2FF" : "#ffffff");
-  circle(xEnd, ty, hoverEnd || draggedYearHandle === "end" ? 33 : 30);
+  circle(xEnd, ty, hoverEnd || draggedYearHandle === "end" ? 28 : 26);
 
   // Labels
   noStroke();
   fill(typeof themeLineColor === "function" ? themeLineColor() : "#000000");
   textFont(fontes.afacad);
   textStyle(BOLD);
-  textSize(24);
+  textSize(16);
   textAlign(CENTER, BOTTOM);
   if (yearStart === yearEnd) {
-    text(String(yearStart), xStart, ty - 22);
-  } else if (Math.abs(xStart - xEnd) < 55) {
-    text(String(yearStart), xStart - 12, ty - 22);
-    text(String(yearEnd), xEnd + 12, ty - 22);
+    text(String(yearStart), xStart, ty - 16);
+  } else if (Math.abs(xStart - xEnd) < 45) {
+    text(String(yearStart), xStart - 10, ty - 16);
+    text(String(yearEnd), xEnd + 10, ty - 16);
   } else {
-    text(String(yearStart), xStart, ty - 22);
-    text(String(yearEnd), xEnd, ty - 22);
+    text(String(yearStart), xStart, ty - 16);
+    text(String(yearEnd), xEnd, ty - 16);
   }
   textStyle(NORMAL);
 }
@@ -78,14 +78,14 @@ function clickedYearHandle(mx, my) {
   const distEnd = Math.abs(mx - xEnd);
 
   // Se as alças estão sobrepostas ou muito próximas (ex: mesmo ano selecionado)
-  if (Math.abs(xStart - xEnd) < 24) {
-    if (distStart < 24 || distEnd < 24) {
+  if (Math.abs(xStart - xEnd) < 22) {
+    if (distStart < 20 || distEnd < 20) {
       return mx >= (xStart + xEnd) / 2 ? "end" : "start";
     }
     return null;
   }
 
-  if (distStart < 18) return "start";
-  if (distEnd < 18) return "end";
+  if (distStart < 16) return "start";
+  if (distEnd < 16) return "end";
   return null;
 }

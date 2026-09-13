@@ -6,12 +6,12 @@ function drawProductPanel() {
   const w = productPanelW();
   const scale = layoutScale();
 
-  const titleH = 80 * scale;
-  const sidebarW = 74 * scale;
+  const titleH = Math.round((typeof PRODUCT_TITLE_H !== "undefined" ? PRODUCT_TITLE_H : 56) * scale);
+  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 54) * scale);
 
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
-  const imageH = Math.round(300 * scale);
+  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 190) * scale);
 
   noStroke();
   fill("#FFFFFF");
@@ -60,12 +60,12 @@ function drawProductSidebar(x, y, w, h, scale) {
   });
 
   const availableH = height - y;
-  const stepY = Math.min(85 * scale, Math.max(54 * scale, (availableH - 25 * scale) / 4));
-  const topPad = Math.min(25 * scale, Math.max(10 * scale, (availableH - 4 * stepY) / 2));
+  const stepY = Math.min(68 * scale, Math.max(46 * scale, (availableH - 20 * scale) / 4));
+  const topPad = Math.min(18 * scale, Math.max(8 * scale, (availableH - 4 * stepY) / 2));
   let currentY = y + topPad;
   for (const item of items) {
     const active = rightPanelTab === item.id || (item.id === "material" && rightPanelTab === "materiais");
-    const isHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 15 * scale && mouseY <= currentY + (stepY - 15 * scale);
+    const isHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 10 * scale && mouseY <= currentY + (stepY - 10 * scale);
 
     if (isHover && typeof requestCursor === "function") {
       requestCursor(HAND);
@@ -74,34 +74,34 @@ function drawProductSidebar(x, y, w, h, scale) {
     if (active) {
       fill(item.color);
       noStroke();
-      circle(x + w / 2, currentY + 15 * scale, 48 * scale);
+      circle(x + w / 2, currentY + 10 * scale, 36 * scale);
     } else if (isHover) {
       fill(item.color + "44");
       noStroke();
-      circle(x + w / 2, currentY + 15 * scale, 48 * scale);
+      circle(x + w / 2, currentY + 10 * scale, 36 * scale);
     }
 
-    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 15 * scale, 35 * scale, 35 * scale);
+    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 10 * scale, 20 * scale, 20 * scale);
     fill("#000000");
     noStroke();
     textFont(fontes.roboto);
-    textSize(14 * scale);
+    textSize(10 * scale);
     textAlign(CENTER, CENTER);
-    text(item.label, x + w / 2, currentY + 50 * scale);
+    text(item.label, x + w / 2, currentY + 34 * scale);
     currentY += stepY;
   }
 
   // Draw separator before "Salvos" immediately after the technique icon
-  currentY -= 5 * scale;
+  currentY -= 4 * scale;
   stroke("#959fff");
   strokeWeight(1.5 * scale);
-  line(x + 10 * scale, currentY, x + w - 10 * scale, currentY);
+  line(x + 8 * scale, currentY, x + w - 8 * scale, currentY);
 
-  currentY += Math.min(25 * scale, stepY * 0.3);
+  currentY += Math.min(18 * scale, stepY * 0.25);
 
   // Draw "Salvos" button right below the separator
   const salvosActive = rightPanelTab === "salvos";
-  const salvosHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 15 * scale && mouseY <= currentY + 70 * scale;
+  const salvosHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 10 * scale && mouseY <= currentY + 50 * scale;
   if (salvosHover && typeof requestCursor === "function") {
     requestCursor(HAND);
   }
@@ -109,20 +109,20 @@ function drawProductSidebar(x, y, w, h, scale) {
   if (salvosActive) {
     fill("#959fff");
     noStroke();
-    circle(x + w / 2, currentY + 15 * scale, 48 * scale);
+    circle(x + w / 2, currentY + 10 * scale, 36 * scale);
   } else if (salvosHover) {
     fill("#959fff44");
     noStroke();
-    circle(x + w / 2, currentY + 15 * scale, 48 * scale);
+    circle(x + w / 2, currentY + 10 * scale, 36 * scale);
   }
 
-  if (icones.save) drawImageCentered(icones.save, x + w / 2, currentY + 15 * scale, 35 * scale, 35 * scale);
+  if (icones.save) drawImageCentered(icones.save, x + w / 2, currentY + 10 * scale, 20 * scale, 20 * scale);
   fill("#000000");
   noStroke();
   textFont(fontes.roboto);
-  textSize(14 * scale);
+  textSize(10 * scale);
   textAlign(CENTER, CENTER);
-  text("Salvos", x + w / 2, currentY + 50 * scale);
+  text("Salvos", x + w / 2, currentY + 34 * scale);
 }
 
 function drawProductImage(x, y, w, h, scale) {
@@ -154,19 +154,19 @@ function drawProductImage(x, y, w, h, scale) {
   if (selectedProduct) {
     const images = productImages(selectedProduct);
     if (images.length > 1) {
-      const leftBtnHover = dist(mouseX, mouseY, x + 45 * scale, y + h - 64 * scale) <= 20 * scale;
-      const rightBtnHover = dist(mouseX, mouseY, x + w - 45 * scale, y + h - 64 * scale) <= 20 * scale;
+      const leftBtnHover = dist(mouseX, mouseY, x + 24 * scale, y + h - 24 * scale) <= 14 * scale;
+      const rightBtnHover = dist(mouseX, mouseY, x + w - 24 * scale, y + h - 24 * scale) <= 14 * scale;
       if ((leftBtnHover || rightBtnHover) && typeof requestCursor === "function") {
         requestCursor(HAND);
       }
 
       fill(leftBtnHover ? 255 : color(255, 255, 255, 200));
       noStroke();
-      circle(x + 45 * scale, y + h - 64 * scale, 30 * scale);
+      circle(x + 24 * scale, y + h - 24 * scale, 24 * scale);
       fill(rightBtnHover ? 255 : color(255, 255, 255, 200));
-      circle(x + w - 45 * scale, y + h - 64 * scale, 30 * scale);
-      if (icones.left) drawImageCentered(icones.left, x + 45 * scale, y + h - 64 * scale, 24 * scale, 24 * scale);
-      if (icones.right) drawImageCentered(icones.right, x + w - 45 * scale, y + h - 64 * scale, 24 * scale, 24 * scale);
+      circle(x + w - 24 * scale, y + h - 24 * scale, 24 * scale);
+      if (icones.left) drawImageCentered(icones.left, x + 24 * scale, y + h - 24 * scale, 18 * scale, 18 * scale);
+      if (icones.right) drawImageCentered(icones.right, x + w - 24 * scale, y + h - 24 * scale, 18 * scale, 18 * scale);
     }
   }
 }
@@ -189,25 +189,25 @@ function drawProductInfo(x, y, w, h, scale) {
     noStroke();
     fill("#000000");
     textFont(fontes.roboto);
-    textSize(15 * scale);
+    textSize(13 * scale);
     textAlign(LEFT, CENTER);
-    text("Selecione um produto", x + 14 * scale, y + h / 2);
+    text("Selecione um produto", x + 12 * scale, y + h / 2);
     return;
   }
 
-  const titleY = y + 16 * scale;
-  const titleX = x + 24 * scale;
-  const titleW = w - 128 * scale; // Room for enlarged icons
+  const titleY = y + 10 * scale;
+  const titleX = x + 18 * scale;
+  const titleW = w - 84 * scale;
 
   const yearText = selectedProduct.year || selectedProduct.dateRaw ? ` (${selectedProduct.year || selectedProduct.dateRaw})` : "";
   const titleWithYear = `${selectedProduct.name}${yearText}`;
 
-  const titleSize = fitTextSize(titleWithYear, titleW, 16 * scale, 12 * scale);
+  const titleSize = fitTextSize(titleWithYear, titleW, 14 * scale, 10 * scale);
 
-  // Colored strip for origin: spans the product text block
+  // Colored strip for origin
   noStroke();
   fill(selectedProduct.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
-  rect(x + 10 * scale, titleY, 5 * scale, 38 * scale, 2.5 * scale);
+  rect(x + 8 * scale, titleY + 1 * scale, 4 * scale, 30 * scale, 2 * scale);
 
   // Title area (product name + year)
   fill("#000000");
@@ -215,24 +215,25 @@ function drawProductInfo(x, y, w, h, scale) {
   textStyle(BOLD);
   textSize(titleSize);
   textAlign(LEFT, TOP);
-  text(titleWithYear, titleX, titleY, titleW, 30 * scale);
-  text(titleWithYear, titleX + 0.5, titleY, titleW, 30 * scale);
+  text(titleWithYear, titleX, titleY, titleW, 20 * scale);
   textStyle(NORMAL);
 
-  // Author & Origin label (Regular, below product name - accessible textual indicator)
+  // Author & Origin label
   const originText = typeof getOriginLabel === "function" ? getOriginLabel(selectedProduct.origin) : (selectedProduct.origin === "brasileiro" ? "Brasil" : "Internacional");
   const authorName = selectedProduct.author || "Designer desconhecido";
   const designerAndOrigin = `${authorName} • ${originText}`;
-  textSize(14 * scale);
-  text(designerAndOrigin, titleX, titleY + 22 * scale, titleW, 20 * scale);
+  textFont(fontes.roboto);
+  textSize(11 * scale);
+  fill("#444444");
+  text(designerAndOrigin, titleX, titleY + 18 * scale, titleW, 16 * scale);
 
   // Icons on the right
   const iconY = y + h / 2;
-  const iconRadius = 20 * scale;
-  const iconCircleD = 40 * scale;
-  const iconImgSize = 24 * scale;
-  const iconSaveX = x + w - 30 * scale;
-  const iconProdX = x + w - 78 * scale;
+  const iconRadius = 13 * scale;
+  const iconCircleD = 26 * scale;
+  const iconImgSize = 16 * scale;
+  const iconSaveX = x + w - 18 * scale;
+  const iconProdX = x + w - 48 * scale;
 
   // Draw save icon with circle around it
   const isSaved = selectedProduct && savedProductKeys.has(selectedProduct.key);
@@ -242,7 +243,7 @@ function drawProductInfo(x, y, w, h, scale) {
     noFill();
   }
   stroke("#000000");
-  strokeWeight(1.4 * scale);
+  strokeWeight(1.2 * scale);
   circle(iconSaveX, iconY, iconCircleD);
   if (icones.save) {
     drawImageCentered(icones.save, iconSaveX, iconY, iconImgSize, iconImgSize);
@@ -255,7 +256,7 @@ function drawProductInfo(x, y, w, h, scale) {
   if (prodIcon) {
     noFill();
     stroke("#000000");
-    strokeWeight(1.4 * scale);
+    strokeWeight(1.2 * scale);
     circle(iconProdX, iconY, iconCircleD);
     drawImageCentered(prodIcon, iconProdX, iconY, iconImgSize, iconImgSize);
   }
@@ -264,7 +265,7 @@ function drawProductInfo(x, y, w, h, scale) {
   activeProductHeaderTooltip = null;
   const hoverSave = dist(mouseX, mouseY, iconSaveX, iconY) <= iconRadius + 2 * scale;
   const hoverProd = prodIcon && dist(mouseX, mouseY, iconProdX, iconY) <= iconRadius + 2 * scale;
-  const hoverOrigin = insideRect(mouseX, mouseY, x + 7 * scale, titleY, 12 * scale, 38 * scale);
+  const hoverOrigin = insideRect(mouseX, mouseY, x + 6 * scale, titleY, 10 * scale, 34 * scale);
 
   if (hoverSave) {
     activeProductHeaderTooltip = {
@@ -288,9 +289,9 @@ function drawProductInfo(x, y, w, h, scale) {
   } else if (hoverOrigin) {
     activeProductHeaderTooltip = {
       text: `Origem: ${originText}`,
-      targetX: x + 12 * scale,
-      targetY: titleY + 19 * scale,
-      radius: 10 * scale,
+      targetX: x + 10 * scale,
+      targetY: titleY + 16 * scale,
+      radius: 8 * scale,
       panelX: x,
       panelW: w,
     };
@@ -368,43 +369,42 @@ function drawProductDetailsNew(x, y, w, h, scale) {
   translate(0, -detailScroll);
 
   const dim = rightPanelTab === "materiais" ? "material" : rightPanelTab;
-  const marginX = x + 13 * scale;
-  const contentW = w - 26 * scale;
-  let cursorY = y + 14 * scale;
+  const marginX = x + 12 * scale;
+  const contentW = w - 24 * scale;
+  let cursorY = y + 10 * scale;
 
   // ─── Tags section header ───
   fill("#000000");
   noStroke();
   textFont(fontes.roboto);
   textStyle(BOLD);
-  textSize(15 * scale);
+  textSize(13 * scale);
   textAlign(LEFT, CENTER);
-  text("Tags:", marginX, cursorY + 8 * scale);
-  text("Tags:", marginX + 0.5, cursorY + 8 * scale);
+  text("Tags:", marginX, cursorY + 6 * scale);
   textStyle(NORMAL);
-  cursorY += 26 * scale;
+  cursorY += 20 * scale;
 
   // Tag chips
   const tags = selectedProduct.tagsByDimension[dim] || [];
   if (tags.length === 0) {
     fill("#595959");
-    textSize(13 * scale);
+    textSize(11 * scale);
     textAlign(LEFT, CENTER);
-    text("Sem tags nesta categoria", marginX, cursorY + 10 * scale);
-    cursorY += 26 * scale;
+    text("Sem tags nesta categoria", marginX, cursorY + 8 * scale);
+    cursorY += 22 * scale;
   } else {
     let cursorX = marginX;
-    const maxX = x + w - 13 * scale;
-    const chipH = 22 * scale;
-    textSize(13 * scale);
+    const maxX = x + w - 12 * scale;
+    const chipH = 20 * scale;
+    textSize(11 * scale);
 
     const tagBgColor = getDimensionPastelColor(dim);
 
     for (const tag of tags) {
-      const chipW = Math.max(50 * scale, textWidth(tag.label) + 16 * scale);
+      const chipW = Math.max(44 * scale, textWidth(tag.label) + 14 * scale);
       if (cursorX + chipW > maxX) {
         cursorX = marginX;
-        cursorY += chipH + 6 * scale;
+        cursorY += chipH + 5 * scale;
       }
       noStroke();
       fill(tagBgColor);
@@ -412,42 +412,45 @@ function drawProductDetailsNew(x, y, w, h, scale) {
       fill("#000000");
       textAlign(CENTER, CENTER);
       text(tag.label, cursorX + chipW / 2, cursorY + chipH / 2);
-      cursorX += chipW + 6 * scale;
+      cursorX += chipW + 5 * scale;
     }
-    if (tags.length > 0) cursorY += chipH + 10 * scale;
+    if (tags.length > 0) cursorY += chipH + 8 * scale;
   }
 
   // --- Draw horizontal separator between Tags and Detalhes ---
-  cursorY += 5 * scale;
+  cursorY += 4 * scale;
   stroke("#959fff");
   strokeWeight(1.5 * scale);
   line(x, cursorY, x + w, cursorY);
-  cursorY += 15 * scale;
+  cursorY += 12 * scale;
 
   // ─── Detalhes section header ───
   fill("#000000");
   noStroke();
   textFont(fontes.roboto);
   textStyle(BOLD);
-  textSize(15 * scale);
+  textSize(13 * scale);
   textAlign(LEFT, CENTER);
-  text("Detalhes:", marginX, cursorY + 8 * scale);
-  text("Detalhes:", marginX + 0.5, cursorY + 8 * scale);
+  text("Detalhes:", marginX, cursorY + 6 * scale);
   textStyle(NORMAL);
-  cursorY += 26 * scale;
+  cursorY += 20 * scale;
 
   // Body text
   const textValue = getProductDetailsForDimension(selectedProduct, dim);
 
   fill("#1B1212");
   textFont(fontes.roboto);
-  textSize(15 * scale);
-  textLeading(22 * scale);
+  textSize(12 * scale);
+  textLeading(18 * scale);
   textAlign(LEFT, TOP);
   text(textValue, marginX, cursorY, contentW, 2000 * scale);
 
   pop();
   drawingContext.restore();
+
+  if (contentH > visibleH) {
+    drawPanelScroll(x + w - 6 * scale, y, visibleH, detailScroll, contentH - visibleH);
+  }
 }
 
 function getProductDetailsForDimension(product, dimension) {
@@ -468,37 +471,40 @@ function getProductDetailsForDimension(product, dimension) {
 function calculateNewDetailsHeight(w, scale) {
   if (!selectedProduct) return 0;
   const dim = rightPanelTab === "materiais" ? "material" : rightPanelTab;
-  let h = 20 * scale;
-  h += 25 * scale; // "Tags:"
+  let h = 14 * scale;
+  h += 20 * scale; // "Tags:"
   
   const tags = selectedProduct.tagsByDimension[dim] || [];
-  let cursorX = 20 * scale;
-  const maxX = w - 20 * scale;
-  const chipH = 25 * scale;
+  let cursorX = 14 * scale;
+  const maxX = w - 14 * scale;
+  const chipH = 20 * scale;
   
   for (const tag of tags) {
-    // textSize is not strictly needed here as we use an approximation, but we'll approximate textWidth
-    const estW = tag.label.length * 8 * scale;
-    const chipW = Math.max(54 * scale, estW + 18 * scale);
+    const estW = tag.label.length * 7 * scale;
+    const chipW = Math.max(44 * scale, estW + 14 * scale);
     if (cursorX + chipW > maxX) {
-      cursorX = 20 * scale;
-      h += chipH + 6 * scale;
+      cursorX = 14 * scale;
+      h += chipH + 5 * scale;
     }
-    cursorX += chipW + 6 * scale;
+    cursorX += chipW + 5 * scale;
   }
-  if (tags.length > 0) h += chipH + 10 * scale;
+  if (tags.length === 0) {
+    h += 22 * scale;
+  } else {
+    h += chipH + 8 * scale;
+  }
   
-  h += 25 * scale; // Separator & spacing
-  h += 25 * scale; // "Detalhes:"
+  h += 18 * scale; // Separator & spacing
+  h += 20 * scale; // "Detalhes:"
   
   const textValue = getProductDetailsForDimension(selectedProduct, dim);
   if (textValue) {
-    const contentW = w - 26 * scale;
-    const charsPerLine = Math.max(20, Math.floor(contentW / (8 * scale)));
+    const contentW = w - 24 * scale;
+    const charsPerLine = Math.max(20, Math.floor(contentW / (7 * scale)));
     const estimatedLines = Math.ceil(textValue.length / charsPerLine) + (textValue.split('\n').length - 1);
-    h += estimatedLines * (22 * scale);
+    h += estimatedLines * (18 * scale);
   }
-  h += 40 * scale; // Bottom padding
+  h += 30 * scale; // Bottom padding
   
   return h;
 }
@@ -513,10 +519,12 @@ function drawPanelScroll(x, y, h, value, maxValue) {
 }
 
 function drawSavedProducts(x, y, w, scale) {
-  const searchH = 26 * scale;
-  const searchX = x + 22 * scale;
-  const searchY = y + 18 * scale;
-  const searchW = Math.min(240 * scale, w - 150 * scale);
+  const searchH = 24 * scale;
+  const searchX = x + 12 * scale;
+  const searchY = y + 12 * scale;
+  const buttonW = 54 * scale;
+  const searchW = Math.max(80 * scale, w - buttonW - 32 * scale);
+  const buttonX = searchX + searchW + 8 * scale;
   
   const isSearchHover = insideRect(mouseX, mouseY, searchX, searchY, searchW, searchH);
   if (isSearchHover && typeof requestCursor === "function") {
@@ -526,29 +534,27 @@ function drawSavedProducts(x, y, w, scale) {
   stroke("#D9D9D9");
   strokeWeight(1);
   fill(isSearchHover && !savedSearchActive ? (lightMode ? "#F7F7FA" : "#CCCCCC") : (lightMode ? "#FFFFFF" : "#D9D9D9"));
-  rect(searchX, searchY, searchW, searchH, 5);
+  rect(searchX, searchY, searchW, searchH, 4);
 
   fill(savedSearch.length ? "#000000" : "#595959");
   noStroke();
   textFont(fontes.roboto);
-  textSize(12 * scale);
+  textSize(11 * scale);
   textAlign(LEFT, CENTER);
   text(
     savedSearch.length ? savedSearch : "Digite o nome, tipo ou ano",
-    searchX + 12 * scale,
+    searchX + 10 * scale,
     searchY + searchH / 2,
   );
 
   // Blinking cursor if search active
   if (savedSearchActive && frameCount % 60 < 30) {
-    const cx = searchX + 12 * scale + textWidth(savedSearch);
+    const cx = searchX + 10 * scale + textWidth(savedSearch);
     stroke("#000000");
     strokeWeight(1);
-    line(cx + 2, searchY + 5 * scale, cx + 2, searchY + searchH - 5 * scale);
+    line(cx + 2, searchY + 4 * scale, cx + 2, searchY + searchH - 4 * scale);
   }
 
-  const buttonX = x + w - 88 * scale;
-  const buttonW = 66 * scale;
   const isSortHover = insideRect(mouseX, mouseY, buttonX, searchY, buttonW, searchH);
   if (isSortHover && typeof requestCursor === "function") {
     requestCursor(HAND);
@@ -557,24 +563,24 @@ function drawSavedProducts(x, y, w, scale) {
   stroke("#D9D9D9");
   strokeWeight(1);
   fill(isSortHover ? (lightMode ? "#EFEFF4" : "#C4C4C4") : (lightMode ? "#FFFFFF" : "#D9D9D9"));
-  rect(buttonX, searchY, buttonW, searchH, 5);
+  rect(buttonX, searchY, buttonW, searchH, 4);
 
   fill("#000000");
   noStroke();
   textFont(fontes.roboto);
-  textSize(12 * scale);
+  textSize(11 * scale);
   textAlign(CENTER, CENTER);
   text(savedSortLabel(), buttonX + buttonW / 2, searchY + searchH / 2);
 
   const items = savedProductsFiltered();
-  const gridY = y + 58 * scale;
-  const gapX = 14 * scale;
-  const gridX = x + 16 * scale;
-  const cardW = Math.floor((w - 32 * scale - gapX) / 2);
-  const imgBoxH = Math.round(cardW * 0.95);
-  const pillH = Math.round(26 * scale);
-  const cardH = imgBoxH + 8 * scale + pillH;
-  const gapY = 22 * scale;
+  const gridY = y + 46 * scale;
+  const gapX = 8 * scale;
+  const gridX = x + 12 * scale;
+  const cardW = Math.floor((w - 24 * scale - gapX) / 2);
+  const imgBoxH = Math.round(cardW * 0.9);
+  const pillH = Math.round(22 * scale);
+  const cardH = imgBoxH + 6 * scale + pillH;
+  const gapY = 14 * scale;
   const rows = Math.ceil(items.length / 2);
   const totalH = rows * cardH + Math.max(0, rows - 1) * gapY;
   savedScroll = constrain(
@@ -592,14 +598,14 @@ function drawSavedProducts(x, y, w, scale) {
   if (!items.length) {
     fill("#595959");
     textFont(fontes.roboto);
-    textSize(13 * scale);
+    textSize(12 * scale);
     textAlign(CENTER, CENTER);
     text(
       savedSearch.length
         ? "Nenhuma obra encontrada."
         : "Nenhuma obra salva ainda.\nClique no ícone de salvar para adicionar.",
       x + w / 2,
-      gridY + 60 * scale,
+      gridY + 40 * scale,
     );
   }
 
@@ -615,9 +621,9 @@ function drawSavedProducts(x, y, w, scale) {
   drawingContext.restore();
 
   drawPanelScroll(
-    x + w - 6,
-    gridY + 4,
-    height - gridY - 8,
+    x + w - 4,
+    gridY + 2,
+    height - gridY - 4,
     savedScroll,
     Math.max(0, totalH - (height - gridY)),
   );
@@ -631,28 +637,28 @@ function drawSavedCard(product, x, y, w, h, scale) {
 
   const colorOrigin =
     product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta;
-  const imgBoxH = Math.round(w * 0.95);
-  const pillH = Math.round(26 * scale);
-  const strokeW = (isCardHover ? 2.5 : 2) * scale;
+  const imgBoxH = Math.round(w * 0.9);
+  const pillH = Math.round(22 * scale);
+  const strokeW = (isCardHover ? 2.2 : 1.6) * scale;
 
   // White card background
   noStroke();
   fill("#FFFFFF");
-  rect(x, y, w, imgBoxH, 8 * scale);
+  rect(x, y, w, imgBoxH, 6 * scale);
 
   // Product image (occupies interior)
   const img = getProductImage(product, 0);
   if (img) {
     drawImageContain(
       img,
-      x + 6 * scale,
-      y + 6 * scale,
-      w - 12 * scale,
-      imgBoxH - 12 * scale,
+      x + 4 * scale,
+      y + 4 * scale,
+      w - 8 * scale,
+      imgBoxH - 8 * scale,
     );
   }
 
-  // Stroke with origin color and 90% opacity (or slightly more contrast on hover)
+  // Stroke with origin color and 90% opacity
   noFill();
   stroke(colorAlpha(colorOrigin, isCardHover ? 255 : 230));
   strokeWeight(strokeW);
@@ -661,22 +667,22 @@ function drawSavedCard(product, x, y, w, h, scale) {
     y + strokeW / 2,
     w - strokeW,
     imgBoxH - strokeW,
-    8 * scale,
+    6 * scale,
   );
   noStroke();
 
   // Origin pill badge for colorblind accessibility
-  const badgeW = 26 * scale;
-  const badgeH = 15 * scale;
-  const badgeX = x + w - badgeW - 7 * scale;
-  const badgeY = y + 7 * scale;
+  const badgeW = 22 * scale;
+  const badgeH = 13 * scale;
+  const badgeX = x + w - badgeW - 5 * scale;
+  const badgeY = y + 5 * scale;
   noStroke();
   fill(product.origin === "brasileiro" ? COLORS.yellow : COLORS.magenta);
   rect(badgeX, badgeY, badgeW, badgeH, 3 * scale);
   fill(product.origin === "brasileiro" ? "#000000" : "#FFFFFF");
   textFont(fontes.roboto);
   textStyle(BOLD);
-  textSize(9 * scale);
+  textSize(8 * scale);
   textAlign(CENTER, CENTER);
   text(
     product.origin === "brasileiro" ? "BR" : "INT",
@@ -686,14 +692,14 @@ function drawSavedCard(product, x, y, w, h, scale) {
   textStyle(NORMAL);
 
   // Pill for product name
-  const pillY = y + imgBoxH + 8 * scale;
+  const pillY = y + imgBoxH + 6 * scale;
   fill(isCardHover ? (lightMode ? "#E8E8EE" : "#333333") : (lightMode ? "#F0F0F0" : "#222222"));
   rect(x, pillY, w, pillH, pillH / 2);
 
   fill(lightMode ? "#000000" : "#FFFFFF");
   textFont(fontes.roboto);
   textStyle(BOLD);
-  textSize(fitTextSize(product.name, w - 14 * scale, 12 * scale, 8 * scale));
+  textSize(fitTextSize(product.name, w - 10 * scale, 11 * scale, 7.5 * scale));
   textAlign(CENTER, CENTER);
   text(product.name, x + w / 2, pillY + pillH / 2);
   textStyle(NORMAL);
@@ -773,35 +779,35 @@ function productPanelMousePressed(mx, my) {
   const w = productPanelW();
   const scale = layoutScale();
 
-  const titleH = 80 * scale;
-  const sidebarW = 74 * scale;
+  const titleH = Math.round((typeof PRODUCT_TITLE_H !== "undefined" ? PRODUCT_TITLE_H : 56) * scale);
+  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 54) * scale);
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
-  const imageH = Math.round(300 * scale);
+  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 190) * scale);
 
   if (mx < x || mx > x + w || my < 0 || my > height) return false;
 
   // Previous/Next Image buttons
-  if (dist(mx, my, x + 45 * scale, imageH - 64 * scale) <= 30 * scale) {
+  if (dist(mx, my, x + 24 * scale, imageH - 24 * scale) <= 18 * scale) {
     changeProductImage(-1);
     return true;
   }
-  if (dist(mx, my, x + w - 45 * scale, imageH - 64 * scale) <= 30 * scale) {
+  if (dist(mx, my, x + w - 24 * scale, imageH - 24 * scale) <= 18 * scale) {
     changeProductImage(1);
     return true;
   }
 
   // Save Icon Button Click (in title bar)
   const saveIconY = imageH + titleH / 2;
-  const saveIconX = x + w - 30 * scale;
-  if (dist(mx, my, saveIconX, saveIconY) <= 22 * scale) {
+  const saveIconX = x + w - 18 * scale;
+  if (dist(mx, my, saveIconX, saveIconY) <= 15 * scale) {
     toggleSavedProduct();
     return true;
   }
 
   // Production Icon Click (prevent unselecting or leaking clicks)
-  const prodIconX = x + w - 78 * scale;
-  if (dist(mx, my, prodIconX, saveIconY) <= 22 * scale) {
+  const prodIconX = x + w - 48 * scale;
+  if (dist(mx, my, prodIconX, saveIconY) <= 15 * scale) {
     return true;
   }
 
@@ -809,13 +815,13 @@ function productPanelMousePressed(mx, my) {
   if (mx >= x && mx <= x + sidebarW && my > imageH + titleH) {
     let clickedY = my - imageH - titleH;
     const availableH = height - (imageH + titleH);
-    const stepY = Math.min(85 * scale, Math.max(54 * scale, (availableH - 25 * scale) / 4));
-    const topPad = Math.min(25 * scale, Math.max(10 * scale, (availableH - 4 * stepY) / 2));
+    const stepY = Math.min(68 * scale, Math.max(46 * scale, (availableH - 20 * scale) / 4));
+    const topPad = Math.min(18 * scale, Math.max(8 * scale, (availableH - 4 * stepY) / 2));
     let currentY = topPad;
     
     const tabs = typeof DETAIL_TABS !== "undefined" ? DETAIL_TABS : ["material", "estetico", "tecnicas"];
     for (let i = 0; i < tabs.length; i++) {
-      if (clickedY >= currentY - 15 * scale && clickedY <= currentY + (stepY - 15 * scale)) {
+      if (clickedY >= currentY - 10 * scale && clickedY <= currentY + (stepY - 10 * scale)) {
         rightPanelTab = tabs[i];
         savedSearchActive = false;
         return true;
@@ -823,10 +829,10 @@ function productPanelMousePressed(mx, my) {
       currentY += stepY;
     }
     
-    currentY -= 5 * scale;
-    currentY += Math.min(25 * scale, stepY * 0.3);
+    currentY -= 4 * scale;
+    currentY += Math.min(18 * scale, stepY * 0.25);
     
-    if (clickedY >= currentY - 15 * scale && clickedY <= currentY + 70 * scale) {
+    if (clickedY >= currentY - 10 * scale && clickedY <= currentY + 50 * scale) {
       rightPanelTab = "salvos";
       savedSearchActive = false;
       return true;
@@ -841,31 +847,31 @@ function productPanelMousePressed(mx, my) {
 }
 
 function savedProductsMousePressed(mx, my, x, contentY, w, scale) {
-  const searchH = 26 * scale;
-  const searchY = contentY + 18 * scale;
-  const searchX = x + 22 * scale;
-  const searchW = Math.min(240 * scale, w - 150 * scale);
+  const searchH = 24 * scale;
+  const searchX = x + 12 * scale;
+  const searchY = contentY + 12 * scale;
+  const buttonW = 54 * scale;
+  const searchW = Math.max(80 * scale, w - buttonW - 32 * scale);
   if (insideRect(mx, my, searchX, searchY, searchW, searchH)) {
     savedSearchActive = true;
     return true;
   }
   savedSearchActive = false;
-  const sortX = x + w - 88 * scale;
-  const sortW = 66 * scale;
-  if (insideRect(mx, my, sortX, searchY, sortW, searchH)) {
+  const buttonX = searchX + searchW + 8 * scale;
+  if (insideRect(mx, my, buttonX, searchY, buttonW, searchH)) {
     savedSortMode = (savedSortMode + 1) % 3;
     savedScroll = 0;
     return true;
   }
   const items = savedProductsFiltered();
-  const gridY = contentY + 58 * scale;
-  const gapX = 14 * scale;
-  const gridX = x + 16 * scale;
-  const cardW = Math.floor((w - 32 * scale - gapX) / 2);
-  const imgBoxH = Math.round(cardW * 0.95);
-  const pillH = Math.round(26 * scale);
-  const cardH = imgBoxH + 8 * scale + pillH;
-  const gapY = 22 * scale;
+  const gridY = contentY + 46 * scale;
+  const gapX = 8 * scale;
+  const gridX = x + 12 * scale;
+  const cardW = Math.floor((w - 24 * scale - gapX) / 2);
+  const imgBoxH = Math.round(cardW * 0.9);
+  const pillH = Math.round(22 * scale);
+  const cardH = imgBoxH + 6 * scale + pillH;
+  const gapY = 14 * scale;
   const localY = my - gridY + savedScroll;
   for (let i = 0; i < items.length; i++) {
     const col = i % 2;
@@ -885,8 +891,9 @@ function productPanelWheel(event) {
   const x = productPanelX();
   const w = productPanelW();
   const scale = layoutScale();
-  const imageH = Math.round(300 * scale);
-  const titleH = Math.round(80 * scale);
+  const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 190) * scale);
+  const titleH = Math.round((typeof PRODUCT_TITLE_H !== "undefined" ? PRODUCT_TITLE_H : 56) * scale);
+  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 54) * scale);
   const contentY = imageH + titleH;
   
   if (mouseX < x || mouseX > x + w || mouseY < contentY) return false;
@@ -895,7 +902,7 @@ function productPanelWheel(event) {
     savedScroll = Math.max(0, savedScroll + event.delta * 0.45);
   } else {
     const visibleH = height - contentY;
-    const contentH = calculateNewDetailsHeight(w - 74 * scale, scale);
+    const contentH = calculateNewDetailsHeight(w - sidebarW, scale);
     const maxScroll = Math.max(0, contentH - visibleH);
     detailScroll = constrain(detailScroll + event.delta * 0.45, 0, maxScroll);
   }

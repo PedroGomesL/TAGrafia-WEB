@@ -95,9 +95,22 @@ assert(NAV_CONFIG.length === 4, "NAV_CONFIG contém 4 itens de navegação");
 for (const nav of NAV_CONFIG) {
   assert(nav.id && nav.label && typeof nav.y === "number", `Item de navegação '${nav.id}' é válido`);
   if (["filtros", "exportar", "sobre"].includes(nav.id)) {
-    assert(nav.iconSize === 30, `Item de navegação '${nav.id}' possui tamanho reduzido iconSize === 30 (obtido: ${nav.iconSize})`);
+    assert(nav.iconSize === 24, `Item de navegação '${nav.id}' possui tamanho reduzido iconSize === 24 (obtido: ${nav.iconSize})`);
   }
 }
+
+assert(LAYOUT_NAV_W === 70, `LAYOUT_NAV_W está configurado como 70 (obtido: ${LAYOUT_NAV_W})`);
+assert(LAYOUT_FILTRO_W === 210, `LAYOUT_FILTRO_W está configurado como 210 (obtido: ${LAYOUT_FILTRO_W})`);
+assert(LAYOUT_PAINEL_PRODUTO_W === 295, `LAYOUT_PAINEL_PRODUTO_W está configurado como 295 (obtido: ${LAYOUT_PAINEL_PRODUTO_W})`);
+assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 240, `LAYOUT_PAINEL_PRODUTO_W_MIN está configurado como 240 (obtido: ${LAYOUT_PAINEL_PRODUTO_W_MIN})`);
+assert(PRODUCT_IMAGE_H === 190, `PRODUCT_IMAGE_H está configurado como 190 (obtido: ${PRODUCT_IMAGE_H})`);
+assert(PRODUCT_TITLE_H === 56, `PRODUCT_TITLE_H está configurado como 56 (obtido: ${PRODUCT_TITLE_H})`);
+assert(PRODUCT_SIDEBAR_W === 54, `PRODUCT_SIDEBAR_W está configurado como 54 (obtido: ${PRODUCT_SIDEBAR_W})`);
+
+assert(DIMENSIONS.tipo_obra.gridX === 36 && DIMENSIONS.estetico.gridX === 36, "Cards da coluna esquerda do filtro possuem gridX === 36");
+assert(DIMENSIONS.material.gridX === 128 && DIMENSIONS.tecnicas.gridX === 128, "Cards da coluna direita do filtro possuem gridX === 128");
+assert(105 - (36 + 46) === 128 - 105, "Distâncias dos cards ao eixo central (105px) são perfeitamente simétricas (23px)");
+assert(36 === (LAYOUT_FILTRO_W - (128 + 46)), "Margens laterais dos cards de filtro são perfeitamente simétricas (36px)");
 
 assert(Array.isArray(DETAIL_TABS), "DETAIL_TABS é um array");
 assert(DETAIL_TABS.length === 3, "DETAIL_TABS contém 3 dimensões para o painel de detalhes");
@@ -283,6 +296,18 @@ assert(typeof drawProductHeaderTooltip === "function", "drawProductHeaderTooltip
 // Teste de drawCollapseButton
 assert(typeof drawCollapseButton === "function", "drawCollapseButton está definida");
 
+// Teste de calculateNewDetailsHeight
+assert(typeof calculateNewDetailsHeight === "function", "calculateNewDetailsHeight está definida");
+selectedProduct = testProd;
+rightPanelTab = "material";
+const initialTags = selectedProduct.tagsByDimension.material;
+const hWithTags = calculateNewDetailsHeight(200, 1.0);
+assert(hWithTags > 0, "calculateNewDetailsHeight com tags retorna altura positiva");
+selectedProduct.tagsByDimension.material = [];
+const hWithoutTags = calculateNewDetailsHeight(200, 1.0);
+assert(hWithoutTags > 0, "calculateNewDetailsHeight sem tags contabiliza a mensagem de tags vazias");
+selectedProduct.tagsByDimension.material = initialTags;
+
 console.log("\n=== 10. Validando getCircularVisualProducts e countProductsWithTagInCurrentType (data_manager.js) ===");
 vm.runInThisContext(dmContent);
 assert(typeof getCircularVisualProducts === "function", "getCircularVisualProducts está definida");
@@ -359,7 +384,7 @@ global.height = 650;
 const scaleNotebook = filterPanelScale();
 assert(scaleNotebook === 1.0, `Notebook 1366x650 mantém filterPanelScale === 1.0 (obtido: ${scaleNotebook})`);
 const prodWNotebook = productPanelW();
-assert(prodWNotebook === LAYOUT_PAINEL_PRODUTO_W, `productPanelW em notebook 1366x650 mantém 405px (obtido: ${prodWNotebook})`);
+assert(prodWNotebook === LAYOUT_PAINEL_PRODUTO_W, `productPanelW em notebook 1366x650 mantém ${LAYOUT_PAINEL_PRODUTO_W}px (obtido: ${prodWNotebook})`);
 assert(layoutScale() === 1.0, "layoutScale em notebook 1366x650 é 1.0");
 const visWNotebook = visualW();
 assert(filterPanelW() + visWNotebook + prodWNotebook === 1366, "Layout 1366x650 preenche exatamente a largura da tela");
@@ -369,14 +394,14 @@ global.width = 1536;
 global.height = 700;
 const scaleLaptopDpi = filterPanelScale();
 assert(scaleLaptopDpi === 1.0, `Notebook FHD 125% (1536x700) mantém filterPanelScale === 1.0 (obtido: ${scaleLaptopDpi})`);
-assert(productPanelW() === LAYOUT_PAINEL_PRODUTO_W, "Painel direito mantém 405px em notebook 125% sem encolher elementos");
+assert(productPanelW() === LAYOUT_PAINEL_PRODUTO_W, `Painel direito mantém ${LAYOUT_PAINEL_PRODUTO_W}px em notebook 125% sem encolher elementos`);
 assert(layoutScale() === 1.0, "layoutScale permanece 1.0 em notebook 125% garantindo fontes e imagens em tamanho original");
 
 // 3. Resolução Full HD sem escala (1920 x 1080)
 global.width = 1920;
 global.height = 1080;
 assert(filterPanelScale() === 1.0, "Full HD 1920x1080 mantém filterPanelScale === 1.0");
-assert(productPanelW() === LAYOUT_PAINEL_PRODUTO_W, "Full HD 1920x1080 mantém productPanelW === 405");
+assert(productPanelW() === LAYOUT_PAINEL_PRODUTO_W, `Full HD 1920x1080 mantém productPanelW === ${LAYOUT_PAINEL_PRODUTO_W}`);
 assert(layoutScale() === 1.0, "Full HD 1920x1080 mantém layoutScale === 1.0");
 
 // 4. Ultrawide 21:9 (2560 x 1080 e 3440 x 1440)
@@ -497,9 +522,9 @@ assert(themeLineColor() === "#111111", "themeLineColor() retorna #111111 no modo
 // 5. Restauração de variáveis de desktop para garantir estabilidade
 global.width = 1920;
 global.height = 1080;
-assert(filterPanelW() === 350, "filterPanelW em Full HD volta a 350px");
-assert(productPanelW() === 405, "productPanelW em Full HD volta a 405px");
-assert(visualW() === 1920 - 350 - 405, "visualW em Full HD volta a 1165px");
+assert(filterPanelW() === LAYOUT_NAV_W + LAYOUT_FILTRO_W, `filterPanelW em Full HD volta a ${LAYOUT_NAV_W + LAYOUT_FILTRO_W}px (obtido: ${filterPanelW()})`);
+assert(productPanelW() === LAYOUT_PAINEL_PRODUTO_W, `productPanelW em Full HD volta a ${LAYOUT_PAINEL_PRODUTO_W}px (obtido: ${productPanelW()})`);
+assert(visualW() === 1920 - (LAYOUT_NAV_W + LAYOUT_FILTRO_W) - LAYOUT_PAINEL_PRODUTO_W, `visualW em Full HD volta a ${1920 - (LAYOUT_NAV_W + LAYOUT_FILTRO_W) - LAYOUT_PAINEL_PRODUTO_W}px (obtido: ${visualW()})`);
 
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
