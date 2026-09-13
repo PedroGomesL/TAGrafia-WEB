@@ -1096,6 +1096,7 @@ function handleA11yActivate() {
       draggedYearHandle = null;
       hoveredCircularTag = null;
       focusedCircularTagKey = "";
+      if (typeof ensureSelectedVisible === "function") ensureSelectedVisible();
       const v = VIEWS_CONFIG.find((item) => item.id === activeView);
       announceToScreenReader(`Visualização alterada para: ${v?.label || activeView}.`);
     } else {

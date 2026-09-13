@@ -35,7 +35,7 @@ function drawCircularView(visible) {
     }
   }
 
-  if (!selectedProduct && productsVisual.length)
+  if ((!selectedProduct || !productsVisual.some((item) => item.product.key === selectedProduct.key)) && productsVisual.length)
     selectProduct(productsVisual[0].product);
 
   // Pre-calculate max radius to determine scale factor

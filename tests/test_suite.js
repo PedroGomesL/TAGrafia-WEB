@@ -1540,6 +1540,11 @@ if (circularProds.length > 0) {
   }
   assert(allStepsContained, "Navegação por setas na visão circular restringe-se estritamente às obras visíveis do círculo");
 
+  // Valida sincronização de seleção na visão circular caso selectedProduct não pertença ao círculo
+  selectedProduct = { key: "non_existent_product", name: "Inexistente" };
+  ensureSelectedVisible();
+  assert(productsShownInCircular().some(p => p.key === selectedProduct.key), "ensureSelectedVisible() recupera seleção válida dentro do círculo quando produto anterior não pertence à visão");
+
   // Restaura tag para próximos testes
   if (testTagKey) {
     selectedTagKeys.add(testTagKey);

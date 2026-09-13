@@ -637,6 +637,7 @@ function filterMousePressed(mxRaw, myRaw) {
           draggedYearHandle = null;
           hoveredCircularTag = null;
           focusedCircularTagKey = "";
+          if (typeof ensureSelectedVisible === "function") ensureSelectedVisible();
         } else {
           if (isExtended && leftPanelTab === item.id) {
             leftPanelExtendedOpen = false;
