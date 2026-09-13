@@ -67,7 +67,7 @@ function drawNavSidebar() {
   for (const item of NAV_CONFIG) {
     const active = isExtended && leftPanelTab === item.id;
     const icon = item.iconKey ? icones[item.iconKey] : dynamicViewIcon;
-    const hover = mx >= 0 && mx <= LAYOUT_NAV_W && my >= item.y - 24 && my <= item.y + 28;
+    const hover = mx >= 0 && mx <= LAYOUT_NAV_W && my >= item.y - 25 && my <= item.y + 31;
 
     if (hover && typeof requestCursor === "function") {
       requestCursor(HAND);
@@ -77,23 +77,23 @@ function drawNavSidebar() {
     if (active) {
       noStroke();
       fill("#959fff");
-      rect(LAYOUT_NAV_W / 2 - 25, item.y - 24, 50, 52, 6);
+      rect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 56, 6);
     } else if (hover) {
       noStroke();
       fill(0, 0, 0, 15);
-      rect(LAYOUT_NAV_W / 2 - 25, item.y - 24, 50, 52, 6);
+      rect(LAYOUT_NAV_W / 2 - 25, item.y - 25, 50, 56, 6);
     }
 
     // Icon
-    const iconSz = item.iconSize || 24;
+    const iconSz = item.iconSize || 28;
     if (icon) {
-      drawImageCentered(icon, LAYOUT_NAV_W / 2, item.y - 8, iconSz, iconSz);
+      drawImageCentered(icon, LAYOUT_NAV_W / 2, item.y - 9, iconSz, iconSz);
     } else {
       // Fallback if missing
       noFill();
       stroke(active ? 255 : 0);
       strokeWeight(1.8);
-      circle(LAYOUT_NAV_W / 2, item.y - 8, iconSz * 0.75);
+      circle(LAYOUT_NAV_W / 2, item.y - 9, iconSz * 0.75);
     }
 
     // Text
@@ -115,12 +115,15 @@ function drawNavSidebar() {
 }
 
 function drawFilterCards() {
+  const midX = LAYOUT_FILTRO_W / 2;
+  const midY = 140;
+
   push();
   // Draw the blue cross
   stroke("#959fff");
   strokeWeight(1.5);
-  line(105, 68, 105, 204); // Vertical
-  line(30, 148, 180, 148); // Horizontal
+  line(midX, 48, midX, 232); // Vertical
+  line(0, midY, LAYOUT_FILTRO_W, midY); // Horizontal
   pop();
 
   const scl = filterPanelScale();
@@ -151,7 +154,7 @@ function drawFilterCards() {
 
     // Draw icon
     const icon = icones[dim.iconKey];
-    if (icon) drawImageCentered(icon, cx + 23, cy + 20, 30, 30);
+    if (icon) drawImageCentered(icon, cx + 23, cy + 21, 35, 35);
 
     // Draw text
     fill("#000000");
@@ -515,7 +518,7 @@ function filterMousePressed(mxRaw, myRaw) {
 
   if (mx < LAYOUT_NAV_W) {
     for (const item of NAV_CONFIG) {
-      if (my >= item.y - 24 && my <= item.y + 28) {
+      if (my >= item.y - 25 && my <= item.y + 31) {
         if (item.id === "trocar") {
           activeView = (activeView + 1) % VIEWS_CONFIG.length;
           if (typeof mapState !== "undefined") mapState.dragging = false;

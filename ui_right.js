@@ -7,7 +7,7 @@ function drawProductPanel() {
   const scale = layoutScale();
 
   const titleH = Math.round((typeof PRODUCT_TITLE_H !== "undefined" ? PRODUCT_TITLE_H : 56) * scale);
-  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 54) * scale);
+  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 70) * scale);
 
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
@@ -23,19 +23,30 @@ function drawProductPanel() {
   // 2. Title Below Image
   drawProductInfo(x, imageH, w, titleH, scale);
 
-  if (!selectedProduct) return;
+  if (selectedProduct) {
+    // 3. Left Sidebar
+    drawProductSidebar(x, imageH + titleH, sidebarW, height - imageH - titleH, scale);
 
-  // 3. Left Sidebar
-  drawProductSidebar(x, imageH + titleH, sidebarW, height - imageH - titleH, scale);
+    // 4. Details / Content
+    if (rightPanelTab === "salvos") {
+      drawSavedProducts(mainX, imageH + titleH, mainW, scale);
+    } else {
+      drawProductDetailsNew(mainX, imageH + titleH, mainW, height - imageH - titleH, scale);
+    }
 
-  // 4. Details / Content
-  if (rightPanelTab === "salvos") {
-    drawSavedProducts(mainX, imageH + titleH, mainW, scale);
-  } else {
-    drawProductDetailsNew(mainX, imageH + titleH, mainW, height - imageH - titleH, scale);
+    // 5. Crisp vertical separator to the right of the sidebar (drawn over backgrounds to guarantee exact 1.5px stroke without clipping)
+    stroke("#959fff");
+    strokeWeight(1.5 * scale);
+    line(mainX, imageH + titleH, mainX, height);
   }
 
-  // 5. Tooltip on top of all panel layers
+  // Crisp horizontal separators (drawn over backgrounds to guarantee exact 1.5px stroke without clipping)
+  stroke("#959fff");
+  strokeWeight(1.5 * scale);
+  line(x, imageH, x + w, imageH);
+  line(x, imageH + titleH, x + w, imageH + titleH);
+
+  // 6. Tooltip on top of all panel layers
   drawProductHeaderTooltip(scale);
 }
 
@@ -43,10 +54,6 @@ function drawProductSidebar(x, y, w, h, scale) {
   fill("#FFFFFF");
   noStroke();
   rect(x, y, w, h);
-  
-  stroke("#959fff");
-  strokeWeight(1.5 * scale);
-  line(x + w, y, x + w, y + h);
 
   const detailTabs = typeof DETAIL_TABS !== "undefined" ? DETAIL_TABS : ["material", "estetico", "tecnicas"];
   const items = detailTabs.map((id) => {
@@ -60,12 +67,14 @@ function drawProductSidebar(x, y, w, h, scale) {
   });
 
   const availableH = height - y;
-  const stepY = Math.min(68 * scale, Math.max(46 * scale, (availableH - 20 * scale) / 4));
-  const topPad = Math.min(18 * scale, Math.max(8 * scale, (availableH - 4 * stepY) / 2));
+  const stepY = Math.min(78 * scale, Math.max(50 * scale, (availableH - 24 * scale) / 4.2));
+  const topPad = Math.min(20 * scale, Math.max(8 * scale, (availableH - 4 * stepY) / 2));
+  const circleD = 42 * scale;
+  const iconSz = 26 * scale;
   let currentY = y + topPad;
   for (const item of items) {
     const active = rightPanelTab === item.id || (item.id === "material" && rightPanelTab === "materiais");
-    const isHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 10 * scale && mouseY <= currentY + (stepY - 10 * scale);
+    const isHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 6 * scale && mouseY <= currentY + (stepY - 8 * scale);
 
     if (isHover && typeof requestCursor === "function") {
       requestCursor(HAND);
@@ -74,34 +83,36 @@ function drawProductSidebar(x, y, w, h, scale) {
     if (active) {
       fill(item.color);
       noStroke();
-      circle(x + w / 2, currentY + 10 * scale, 36 * scale);
+      circle(x + w / 2, currentY + 12 * scale, circleD);
     } else if (isHover) {
       fill(item.color + "44");
       noStroke();
-      circle(x + w / 2, currentY + 10 * scale, 36 * scale);
+      circle(x + w / 2, currentY + 12 * scale, circleD);
     }
 
-    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 10 * scale, 20 * scale, 20 * scale);
+    if (item.icon) drawImageCentered(item.icon, x + w / 2, currentY + 12 * scale, iconSz, iconSz);
     fill("#000000");
     noStroke();
     textFont(fontes.roboto);
-    textSize(10 * scale);
+    textSize(11 * scale);
     textAlign(CENTER, CENTER);
-    text(item.label, x + w / 2, currentY + 34 * scale);
+    text(item.label, x + w / 2, currentY + 38 * scale);
     currentY += stepY;
   }
 
-  // Draw separator before "Salvos" immediately after the technique icon
-  currentY -= 4 * scale;
+  // Draw separator before "Salvos" exactly centered between Técnica and Salvos
+  const salvosY = currentY + 8 * scale;
+  const tecBottom = currentY - stepY + 44 * scale;
+  const salvosTop = salvosY + 12 * scale - circleD / 2;
+  const sepY = Math.round((tecBottom + salvosTop) / 2);
+
   stroke("#959fff");
   strokeWeight(1.5 * scale);
-  line(x + 8 * scale, currentY, x + w - 8 * scale, currentY);
+  line(x + 12 * scale, sepY, x + w - 12 * scale, sepY);
 
-  currentY += Math.min(18 * scale, stepY * 0.25);
-
-  // Draw "Salvos" button right below the separator
+  // Draw "Salvos" button below the separator
   const salvosActive = rightPanelTab === "salvos";
-  const salvosHover = mouseX >= x && mouseX <= x + w && mouseY >= currentY - 10 * scale && mouseY <= currentY + 50 * scale;
+  const salvosHover = mouseX >= x && mouseX <= x + w && mouseY >= salvosY - 6 * scale && mouseY <= salvosY + 56 * scale;
   if (salvosHover && typeof requestCursor === "function") {
     requestCursor(HAND);
   }
@@ -109,20 +120,20 @@ function drawProductSidebar(x, y, w, h, scale) {
   if (salvosActive) {
     fill("#959fff");
     noStroke();
-    circle(x + w / 2, currentY + 10 * scale, 36 * scale);
+    circle(x + w / 2, salvosY + 12 * scale, circleD);
   } else if (salvosHover) {
     fill("#959fff44");
     noStroke();
-    circle(x + w / 2, currentY + 10 * scale, 36 * scale);
+    circle(x + w / 2, salvosY + 12 * scale, circleD);
   }
 
-  if (icones.save) drawImageCentered(icones.save, x + w / 2, currentY + 10 * scale, 20 * scale, 20 * scale);
+  if (icones.save) drawImageCentered(icones.save, x + w / 2, salvosY + 12 * scale, iconSz, iconSz);
   fill("#000000");
   noStroke();
   textFont(fontes.roboto);
-  textSize(10 * scale);
+  textSize(11 * scale);
   textAlign(CENTER, CENTER);
-  text("Salvos", x + w / 2, currentY + 34 * scale);
+  text("Salvos", x + w / 2, salvosY + 38 * scale);
 }
 
 function drawProductImage(x, y, w, h, scale) {
@@ -154,19 +165,19 @@ function drawProductImage(x, y, w, h, scale) {
   if (selectedProduct) {
     const images = productImages(selectedProduct);
     if (images.length > 1) {
-      const leftBtnHover = dist(mouseX, mouseY, x + 24 * scale, y + h - 24 * scale) <= 14 * scale;
-      const rightBtnHover = dist(mouseX, mouseY, x + w - 24 * scale, y + h - 24 * scale) <= 14 * scale;
+      const leftBtnHover = dist(mouseX, mouseY, x + 28 * scale, y + h - 28 * scale) <= 18 * scale;
+      const rightBtnHover = dist(mouseX, mouseY, x + w - 28 * scale, y + h - 28 * scale) <= 18 * scale;
       if ((leftBtnHover || rightBtnHover) && typeof requestCursor === "function") {
         requestCursor(HAND);
       }
 
       fill(leftBtnHover ? 255 : color(255, 255, 255, 200));
       noStroke();
-      circle(x + 24 * scale, y + h - 24 * scale, 24 * scale);
+      circle(x + 28 * scale, y + h - 28 * scale, 30 * scale);
       fill(rightBtnHover ? 255 : color(255, 255, 255, 200));
-      circle(x + w - 24 * scale, y + h - 24 * scale, 24 * scale);
-      if (icones.left) drawImageCentered(icones.left, x + 24 * scale, y + h - 24 * scale, 18 * scale, 18 * scale);
-      if (icones.right) drawImageCentered(icones.right, x + w - 24 * scale, y + h - 24 * scale, 18 * scale, 18 * scale);
+      circle(x + w - 28 * scale, y + h - 28 * scale, 30 * scale);
+      if (icones.left) drawImageCentered(icones.left, x + 28 * scale, y + h - 28 * scale, 22 * scale, 22 * scale);
+      if (icones.right) drawImageCentered(icones.right, x + w - 28 * scale, y + h - 28 * scale, 22 * scale, 22 * scale);
     }
   }
 }
@@ -175,14 +186,6 @@ function drawProductInfo(x, y, w, h, scale) {
   noStroke();
   fill("#FFFFFF");
   rect(x, y, w, h);
-
-  // Top separator between image and title bar
-  stroke("#959fff");
-  strokeWeight(1.5 * scale);
-  line(x, y, x + w, y);
-
-  // Bottom separator for the title bar
-  line(x, y + h, x + w, y + h);
 
   if (!selectedProduct) {
     activeProductHeaderTooltip = null;
@@ -197,7 +200,7 @@ function drawProductInfo(x, y, w, h, scale) {
 
   const titleY = y + 10 * scale;
   const titleX = x + 18 * scale;
-  const titleW = w - 84 * scale;
+  const titleW = w - 96 * scale;
 
   const yearText = selectedProduct.year || selectedProduct.dateRaw ? ` (${selectedProduct.year || selectedProduct.dateRaw})` : "";
   const titleWithYear = `${selectedProduct.name}${yearText}`;
@@ -229,11 +232,11 @@ function drawProductInfo(x, y, w, h, scale) {
 
   // Icons on the right
   const iconY = y + h / 2;
-  const iconRadius = 13 * scale;
-  const iconCircleD = 26 * scale;
-  const iconImgSize = 16 * scale;
-  const iconSaveX = x + w - 18 * scale;
-  const iconProdX = x + w - 48 * scale;
+  const iconRadius = 15 * scale;
+  const iconCircleD = 30 * scale;
+  const iconImgSize = 20 * scale;
+  const iconSaveX = x + w - 24 * scale;
+  const iconProdX = x + w - 64 * scale;
 
   // Draw save icon with circle around it
   const isSaved = selectedProduct && savedProductKeys.has(selectedProduct.key);
@@ -780,7 +783,7 @@ function productPanelMousePressed(mx, my) {
   const scale = layoutScale();
 
   const titleH = Math.round((typeof PRODUCT_TITLE_H !== "undefined" ? PRODUCT_TITLE_H : 56) * scale);
-  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 54) * scale);
+  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 70) * scale);
   const mainX = x + sidebarW;
   const mainW = w - sidebarW;
   const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 190) * scale);
@@ -788,26 +791,26 @@ function productPanelMousePressed(mx, my) {
   if (mx < x || mx > x + w || my < 0 || my > height) return false;
 
   // Previous/Next Image buttons
-  if (dist(mx, my, x + 24 * scale, imageH - 24 * scale) <= 18 * scale) {
+  if (dist(mx, my, x + 28 * scale, imageH - 28 * scale) <= 22 * scale) {
     changeProductImage(-1);
     return true;
   }
-  if (dist(mx, my, x + w - 24 * scale, imageH - 24 * scale) <= 18 * scale) {
+  if (dist(mx, my, x + w - 28 * scale, imageH - 28 * scale) <= 22 * scale) {
     changeProductImage(1);
     return true;
   }
 
   // Save Icon Button Click (in title bar)
   const saveIconY = imageH + titleH / 2;
-  const saveIconX = x + w - 18 * scale;
-  if (dist(mx, my, saveIconX, saveIconY) <= 15 * scale) {
+  const saveIconX = x + w - 24 * scale;
+  if (dist(mx, my, saveIconX, saveIconY) <= 18 * scale) {
     toggleSavedProduct();
     return true;
   }
 
   // Production Icon Click (prevent unselecting or leaking clicks)
-  const prodIconX = x + w - 48 * scale;
-  if (dist(mx, my, prodIconX, saveIconY) <= 15 * scale) {
+  const prodIconX = x + w - 64 * scale;
+  if (dist(mx, my, prodIconX, saveIconY) <= 18 * scale) {
     return true;
   }
 
@@ -815,13 +818,13 @@ function productPanelMousePressed(mx, my) {
   if (mx >= x && mx <= x + sidebarW && my > imageH + titleH) {
     let clickedY = my - imageH - titleH;
     const availableH = height - (imageH + titleH);
-    const stepY = Math.min(68 * scale, Math.max(46 * scale, (availableH - 20 * scale) / 4));
-    const topPad = Math.min(18 * scale, Math.max(8 * scale, (availableH - 4 * stepY) / 2));
+    const stepY = Math.min(78 * scale, Math.max(50 * scale, (availableH - 24 * scale) / 4.2));
+    const topPad = Math.min(20 * scale, Math.max(8 * scale, (availableH - 4 * stepY) / 2));
     let currentY = topPad;
     
     const tabs = typeof DETAIL_TABS !== "undefined" ? DETAIL_TABS : ["material", "estetico", "tecnicas"];
     for (let i = 0; i < tabs.length; i++) {
-      if (clickedY >= currentY - 10 * scale && clickedY <= currentY + (stepY - 10 * scale)) {
+      if (clickedY >= currentY - 6 * scale && clickedY <= currentY + (stepY - 8 * scale)) {
         rightPanelTab = tabs[i];
         savedSearchActive = false;
         return true;
@@ -829,10 +832,8 @@ function productPanelMousePressed(mx, my) {
       currentY += stepY;
     }
     
-    currentY -= 4 * scale;
-    currentY += Math.min(18 * scale, stepY * 0.25);
-    
-    if (clickedY >= currentY - 10 * scale && clickedY <= currentY + 50 * scale) {
+    const salvosY = currentY + 8 * scale;
+    if (clickedY >= salvosY - 6 * scale && clickedY <= salvosY + 56 * scale) {
       rightPanelTab = "salvos";
       savedSearchActive = false;
       return true;
@@ -893,7 +894,7 @@ function productPanelWheel(event) {
   const scale = layoutScale();
   const imageH = Math.round((typeof PRODUCT_IMAGE_H !== "undefined" ? PRODUCT_IMAGE_H : 190) * scale);
   const titleH = Math.round((typeof PRODUCT_TITLE_H !== "undefined" ? PRODUCT_TITLE_H : 56) * scale);
-  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 54) * scale);
+  const sidebarW = Math.round((typeof PRODUCT_SIDEBAR_W !== "undefined" ? PRODUCT_SIDEBAR_W : 70) * scale);
   const contentY = imageH + titleH;
   
   if (mouseX < x || mouseX > x + w || mouseY < contentY) return false;

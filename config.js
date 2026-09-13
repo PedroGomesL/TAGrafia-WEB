@@ -9,14 +9,14 @@ const DATA_PATHS = {
 const LAYOUT_NAV_W = 70;
 const LAYOUT_FILTRO_W = 210;
 const LAYOUT_VISUAL_W_BASE = 1180;
-const LAYOUT_PAINEL_PRODUTO_W = 295;
+const LAYOUT_PAINEL_PRODUTO_W = 405;
 const LAYOUT_VISUAL_W_MIN = 320;
 
-const LAYOUT_PAINEL_PRODUTO_W_MIN = 240;
+const LAYOUT_PAINEL_PRODUTO_W_MIN = 300;
 
 const PRODUCT_IMAGE_H = 190;
 const PRODUCT_TITLE_H = 56;
-const PRODUCT_SIDEBAR_W = 54;
+const PRODUCT_SIDEBAR_W = 70;
 
 // Breakpoints responsivos para mobile, tablet e desktop
 const BREAKPOINTS = {
@@ -135,10 +135,10 @@ const VIEWS_CONFIG = [
 ];
 
 const NAV_CONFIG = [
-  { id: "filtros", label: "Filtros", y: 88, iconKey: "filtros", iconSize: 24 },
-  { id: "trocar", label: "Trocar\nVisualização", y: 164, iconKey: null, iconSize: 26 },
-  { id: "exportar", label: "Exportar", y: 240, iconKey: "export", iconSize: 24 },
-  { id: "sobre", label: "Sobre", y: 316, iconKey: "sobre", iconSize: 24 },
+  { id: "filtros", label: "Filtros", y: 88, iconKey: "filtros", iconSize: 28 },
+  { id: "trocar", label: "Trocar\nVisualização", y: 164, iconKey: null, iconSize: 30 },
+  { id: "exportar", label: "Exportar", y: 240, iconKey: "export", iconSize: 28 },
+  { id: "sobre", label: "Sobre", y: 316, iconKey: "sobre", iconSize: 28 },
 ];
 
 const DETAIL_TABS = ["material", "estetico", "tecnicas"];

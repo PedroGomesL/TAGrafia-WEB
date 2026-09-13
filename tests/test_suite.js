@@ -95,17 +95,17 @@ assert(NAV_CONFIG.length === 4, "NAV_CONFIG contém 4 itens de navegação");
 for (const nav of NAV_CONFIG) {
   assert(nav.id && nav.label && typeof nav.y === "number", `Item de navegação '${nav.id}' é válido`);
   if (["filtros", "exportar", "sobre"].includes(nav.id)) {
-    assert(nav.iconSize === 24, `Item de navegação '${nav.id}' possui tamanho reduzido iconSize === 24 (obtido: ${nav.iconSize})`);
+    assert(nav.iconSize === 28, `Item de navegação '${nav.id}' possui tamanho iconSize === 28 (obtido: ${nav.iconSize})`);
   }
 }
 
 assert(LAYOUT_NAV_W === 70, `LAYOUT_NAV_W está configurado como 70 (obtido: ${LAYOUT_NAV_W})`);
 assert(LAYOUT_FILTRO_W === 210, `LAYOUT_FILTRO_W está configurado como 210 (obtido: ${LAYOUT_FILTRO_W})`);
-assert(LAYOUT_PAINEL_PRODUTO_W === 295, `LAYOUT_PAINEL_PRODUTO_W está configurado como 295 (obtido: ${LAYOUT_PAINEL_PRODUTO_W})`);
-assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 240, `LAYOUT_PAINEL_PRODUTO_W_MIN está configurado como 240 (obtido: ${LAYOUT_PAINEL_PRODUTO_W_MIN})`);
+assert(LAYOUT_PAINEL_PRODUTO_W === 405, `LAYOUT_PAINEL_PRODUTO_W está configurado como 405 (obtido: ${LAYOUT_PAINEL_PRODUTO_W})`);
+assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 300, `LAYOUT_PAINEL_PRODUTO_W_MIN está configurado como 300 (obtido: ${LAYOUT_PAINEL_PRODUTO_W_MIN})`);
 assert(PRODUCT_IMAGE_H === 190, `PRODUCT_IMAGE_H está configurado como 190 (obtido: ${PRODUCT_IMAGE_H})`);
 assert(PRODUCT_TITLE_H === 56, `PRODUCT_TITLE_H está configurado como 56 (obtido: ${PRODUCT_TITLE_H})`);
-assert(PRODUCT_SIDEBAR_W === 54, `PRODUCT_SIDEBAR_W está configurado como 54 (obtido: ${PRODUCT_SIDEBAR_W})`);
+assert(PRODUCT_SIDEBAR_W === 70, `PRODUCT_SIDEBAR_W está configurado como 70 (obtido: ${PRODUCT_SIDEBAR_W})`);
 
 assert(DIMENSIONS.tipo_obra.gridX === 36 && DIMENSIONS.estetico.gridX === 36, "Cards da coluna esquerda do filtro possuem gridX === 36");
 assert(DIMENSIONS.material.gridX === 128 && DIMENSIONS.tecnicas.gridX === 128, "Cards da coluna direita do filtro possuem gridX === 128");
@@ -525,6 +525,101 @@ global.height = 1080;
 assert(filterPanelW() === LAYOUT_NAV_W + LAYOUT_FILTRO_W, `filterPanelW em Full HD volta a ${LAYOUT_NAV_W + LAYOUT_FILTRO_W}px (obtido: ${filterPanelW()})`);
 assert(productPanelW() === LAYOUT_PAINEL_PRODUTO_W, `productPanelW em Full HD volta a ${LAYOUT_PAINEL_PRODUTO_W}px (obtido: ${productPanelW()})`);
 assert(visualW() === 1920 - (LAYOUT_NAV_W + LAYOUT_FILTRO_W) - LAYOUT_PAINEL_PRODUTO_W, `visualW em Full HD volta a ${1920 - (LAYOUT_NAV_W + LAYOUT_FILTRO_W) - LAYOUT_PAINEL_PRODUTO_W}px (obtido: ${visualW()})`);
+
+console.log("\n=== 16. Validando Alinhamento das Linhas, Proporções do Painel Direito e Dimensões dos Ícones ===");
+// 1. Geometria da Cruz de Filtros no Painel Esquerdo (com verificação da execução real de drawFilterCards)
+let filterCardLines = [];
+const origLine = global.line;
+const origStroke = global.stroke;
+const origStrokeWeight = global.strokeWeight;
+const origPush = global.push;
+const origPop = global.pop;
+const origRect = global.rect;
+const origCircle = global.circle;
+const origDrawImageCentered = global.drawImageCentered;
+
+global.CENTER = "center";
+global.TOP = "top";
+global.LEFT = "left";
+global.BOTTOM = "bottom";
+global.HAND = "pointer";
+global.TEXT = "text";
+global.ROUND = "round";
+global.mouseX = 0;
+global.mouseY = 0;
+global.push = () => {};
+global.pop = () => {};
+global.stroke = () => {};
+global.strokeWeight = () => {};
+global.rect = () => {};
+global.circle = () => {};
+global.drawImageCentered = () => {};
+global.line = (x1, y1, x2, y2) => {
+  filterCardLines.push({ x1, y1, x2, y2 });
+};
+
+drawFilterCards();
+
+const vertLine = filterCardLines.find(l => l.x1 === 105 && l.x2 === 105);
+assert(vertLine !== undefined, "drawFilterCards() traça a linha vertical na posição x = 105 (LAYOUT_FILTRO_W / 2)");
+assert(vertLine && vertLine.y1 === 48 && vertLine.y2 === 232, "drawFilterCards() traça a linha vertical de y = 48 a y = 232 (92px simétricos)");
+
+const horizLine = filterCardLines.find(l => l.y1 === 140 && l.y2 === 140);
+assert(horizLine !== undefined, "drawFilterCards() traça a linha horizontal na posição y = 140 (centralizada)");
+assert(horizLine && horizLine.x1 === 0 && horizLine.x2 === LAYOUT_FILTRO_W, "drawFilterCards() traça a linha horizontal de x = 0 a x = 210 (borda a borda)");
+
+const crossMidX = LAYOUT_FILTRO_W / 2;
+const crossMidY = 140;
+const crossTopY = 48;
+const crossBottomY = 232;
+assert(crossMidX === 105, "Eixo vertical da cruz de filtros está no centro exato do painel (105px)");
+assert(crossMidY - crossTopY === crossBottomY - crossMidY, "Braços superior e inferior da cruz vertical são perfeitamente simétricos (92px cada)");
+assert(crossMidX - 0 === LAYOUT_FILTRO_W - crossMidX, "Braços esquerdo e direito da cruz horizontal são perfeitamente simétricos (105px cada)");
+assert(crossMidY > 58 + 46 + 14 && crossMidY < 158, "Linha horizontal da cruz passa exatamente entre o texto superior (~122px) e o card inferior (158px)");
+assert(140 - 122 === 158 - 140, "Margens da linha horizontal em relação ao texto superior e box inferior são idênticas (18px)");
+assert(DIMENSIONS.tipo_obra.gridX + 46 < crossMidX, "Card Tipo não sobrepõe a linha vertical");
+assert(crossMidX < DIMENSIONS.material.gridX, "Card Material não sobrepõe a linha vertical");
+
+// 2. Geometria da Linha Separadora do Painel Direito (execução real de drawProductSidebar)
+let sidebarLines = [];
+global.line = (x1, y1, x2, y2) => {
+  sidebarLines.push({ x1, y1, x2, y2 });
+};
+global.height = 1080;
+drawProductSidebar(1515, 246, 70, 834, 1.0);
+
+const sepLine = sidebarLines.find(l => l.x1 === 1515 + 12 && l.x2 === 1515 + 70 - 12);
+assert(sepLine !== undefined, "drawProductSidebar() traça linha separadora com margens laterais de 12px na sidebar de 70px");
+assert(sepLine && sepLine.y1 === sepLine.y2, "Separador do Salvos na sidebar é perfeitamente horizontal");
+
+// Restaura mocks
+global.line = origLine;
+global.stroke = origStroke;
+global.strokeWeight = origStrokeWeight;
+global.push = origPush;
+global.pop = origPop;
+global.rect = origRect;
+global.circle = origCircle;
+global.drawImageCentered = origDrawImageCentered;
+
+// 3. Dimensões e Proporções do Painel Direito Restaurado
+assert(LAYOUT_PAINEL_PRODUTO_W === 405, "Painel direito restaurado para 405px generosos");
+assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 300, "Largura mínima do painel direito é 300px");
+assert(PRODUCT_SIDEBAR_W === 70, "Sidebar de abas do produto configurada com 70px");
+const contentAreaW = LAYOUT_PAINEL_PRODUTO_W - PRODUCT_SIDEBAR_W;
+assert(contentAreaW === 335, "Área de conteúdo de detalhes possui 335px livres para tags e textos longos");
+
+// 4. Dimensões Aumentadas dos Ícones e Altura dos Botões de Navegação
+for (const nav of NAV_CONFIG) {
+  if (nav.id === "trocar") {
+    assert(nav.iconSize === 30, `Ícone de 'trocar' aumentado para 30px (obtido: ${nav.iconSize})`);
+  } else {
+    assert(nav.iconSize === 28, `Ícone de '${nav.id}' aumentado para 28px (obtido: ${nav.iconSize})`);
+  }
+}
+const sidebarCircleD = 42;
+const sidebarMargin = (PRODUCT_SIDEBAR_W - sidebarCircleD) / 2;
+assert(sidebarMargin === 14, "Círculos das abas do produto possuem margens laterais confortáveis de 14px na sidebar de 70px");
 
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
