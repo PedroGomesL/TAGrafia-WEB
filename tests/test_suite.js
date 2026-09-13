@@ -1640,9 +1640,17 @@ const svgsToCheck = [
   "theme_toggle_white.svg",
   "theme_toggle_dark.svg",
   "material_white.svg",
+  "material.svg",
   "tecnicas_white.svg",
+  "tecnicas.svg",
   "estetico_white.svg",
+  "estetico.svg",
   "tipo_obra_white.svg",
+  "tipo_obra.svg",
+  "visao_mapa_white.svg",
+  "visao_mapa.svg",
+  "salvar_produto_white.svg",
+  "salvar_produto.svg",
 ];
 for (const svgFile of svgsToCheck) {
   const content = fs.readFileSync(path.join(ROOT_DIR, "data/Icones", svgFile), "utf8");
@@ -1650,6 +1658,7 @@ for (const svgFile of svgsToCheck) {
   const hMatch = content.match(/height="([^"]+)"/);
   assert(wMatch && parseFloat(wMatch[1]) >= 200, `SVG ${svgFile} possui largura de alta resolução (>= 200px: ${wMatch ? wMatch[1] : 'null'})`);
   assert(hMatch && parseFloat(hMatch[1]) >= 150, `SVG ${svgFile} possui altura de alta resolução (>= 150px: ${hMatch ? hMatch[1] : 'null'})`);
+  assert(!content.includes("<image"), `SVG ${svgFile} é puramente vetorial e não contém tags raster <image>`);
 }
 
 // Restaura estado padrão

@@ -55,10 +55,14 @@ function getOptimalCanvasDimensions() {
 }
 
 function setup() {
+  pixelDensity(Math.min(2, typeof displayDensity === "function" ? displayDensity() : (typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1)));
   const dims = getOptimalCanvasDimensions();
   const canvas = createCanvas(dims.w, dims.h);
   canvas.parent("canvasMount");
-  pixelDensity(Math.min(2, displayDensity()));
+  if (typeof drawingContext !== "undefined" && drawingContext) {
+    drawingContext.imageSmoothingEnabled = true;
+    drawingContext.imageSmoothingQuality = "high";
+  }
   textFont(fontes.robotoCondensed);
   frameRate(30);
 
@@ -274,7 +278,11 @@ function touchEnded() {
 function windowResized() {
   const dims = getOptimalCanvasDimensions();
   resizeCanvas(dims.w, dims.h);
-  pixelDensity(Math.min(2, displayDensity()));
+  pixelDensity(Math.min(2, typeof displayDensity === "function" ? displayDensity() : (typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1)));
+  if (typeof drawingContext !== "undefined" && drawingContext) {
+    drawingContext.imageSmoothingEnabled = true;
+    drawingContext.imageSmoothingQuality = "high";
+  }
   if (typeof limitMapPan === "function") {
     limitMapPan();
   }
@@ -1475,18 +1483,26 @@ function hitAreaAt(mx, my) {
 
 function drawImageCentered(img, cx, cy, w, h) {
   if (!img || !img.width || !img.height) return;
+  if (typeof drawingContext !== "undefined" && drawingContext && !drawingContext.imageSmoothingEnabled) {
+    drawingContext.imageSmoothingEnabled = true;
+    drawingContext.imageSmoothingQuality = "high";
+  }
   const scale = Math.min(w / img.width, h / img.height);
-  const iw = img.width * scale;
-  const ih = img.height * scale;
-  image(img, cx - iw / 2, cy - ih / 2, iw, ih);
+  const iw = Math.round(img.width * scale);
+  const ih = Math.round(img.height * scale);
+  image(img, Math.round(cx - iw / 2), Math.round(cy - ih / 2), iw, ih);
 }
 
 function drawImageContain(img, x, y, w, h) {
   if (!img || !img.width || !img.height) return;
+  if (typeof drawingContext !== "undefined" && drawingContext && !drawingContext.imageSmoothingEnabled) {
+    drawingContext.imageSmoothingEnabled = true;
+    drawingContext.imageSmoothingQuality = "high";
+  }
   const scale = Math.min(w / img.width, h / img.height);
-  const iw = img.width * scale;
-  const ih = img.height * scale;
-  image(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
+  const iw = Math.round(img.width * scale);
+  const ih = Math.round(img.height * scale);
+  image(img, Math.round(x + (w - iw) / 2), Math.round(y + (h - ih) / 2), iw, ih);
 }
 
 function colorAlpha(hexOrColor, alpha) {

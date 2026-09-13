@@ -73,13 +73,11 @@ function drawThemeToggleButton() {
 
   noStroke();
   fill(lightMode ? 0 : 255);
-  textFont(fontes.afacad);
-  textStyle(BOLD);
-  textSize(11.5);
+  textFont(fontes.roboto);
+  textSize(10.5);
   textLeading(12);
   textAlign(CENTER, TOP);
   text("Tema", LAYOUT_NAV_W / 2, bounds.iconY + 16);
-  textStyle(NORMAL);
 
   if (typeof isFocusedElement === "function" && isFocusedElement("theme_toggle")) {
     drawFocusRingRect(bounds.x, bounds.y, bounds.w, bounds.h, 6);
@@ -157,13 +155,11 @@ function drawNavSidebar() {
     // Text (black text when active on pastel #959fff for WCAG 9:1 contrast)
     noStroke();
     fill(active ? "#000000" : (lightMode ? 0 : 255));
-    textFont(fontes.afacad);
-    textStyle(BOLD);
-    textSize(11.5);
+    textFont(fontes.roboto);
+    textSize(10.5);
     textLeading(12);
     textAlign(CENTER, TOP);
     text(item.label, LAYOUT_NAV_W / 2, item.y + 7);
-    textStyle(NORMAL);
 
     // Focus visible WCAG
     if (typeof isFocusedElement === "function" && isFocusedElement("nav", item.id)) {
@@ -240,12 +236,10 @@ function drawFilterCards() {
     // Draw text
     fill(lightMode ? "#000000" : "#FFFFFF");
     noStroke();
-    textFont(fontes.afacad);
-    textStyle(BOLD);
-    textSize(12);
+    textFont(fontes.roboto);
+    textSize(11);
     textAlign(CENTER, TOP);
     text(dim.label, cx + 23, cy + 50);
-    textStyle(NORMAL);
 
     // Focus visible WCAG
     if (typeof isFocusedElement === "function" && isFocusedElement("dimension", dimKey)) {
@@ -554,21 +548,19 @@ function drawFilterTag(tag, y, rowH) {
   }
 
   noStroke();
-  textFont(fontes.afacad);
-  textStyle(BOLD);
+  textFont(fontes.roboto);
   const badgeText =
     tag.dimension === "tipo_obra"
       ? ""
       : String(countProductsWithTagInCurrentType(tag));
-  textSize(11.5);
+  textSize(11);
   const badgeW = badgeText ? Math.max(20, textWidth(badgeText) + 10) : 0;
   const badgeX = LAYOUT_FILTRO_W - badgeW - 12;
 
   // Tag label
-  textSize(fitTextSize(tag.label, badgeX - FILTER_BAR_X - 5, 12.5, 9.5));
+  textSize(fitTextSize(tag.label, badgeX - FILTER_BAR_X - 5, 12, 9));
   textAlign(LEFT, CENTER);
   text(tag.label, FILTER_BAR_X, y + rowH / 2);
-  textStyle(NORMAL);
 
   // Badge pill
   if (badgeText) {
