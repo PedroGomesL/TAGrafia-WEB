@@ -560,11 +560,11 @@ global.line = (x1, y1, x2, y2) => {
 
 drawFilterCards();
 
-const topVertLine = filterCardLines.find(l => l.x1 === 105 && l.x2 === 105 && l.y1 === 50 && l.y2 === 124);
-assert(topVertLine !== undefined, "drawFilterCards() traça divisor vertical superior na posição x = 105 (y = 50..124)");
+const topVertLine = filterCardLines.find(l => l.x1 === 105 && l.x2 === 105 && l.y1 === 64 && l.y2 === 114);
+assert(topVertLine !== undefined, "drawFilterCards() traça divisor vertical superior na posição x = 105 (y = 64..114)");
 
-const botVertLine = filterCardLines.find(l => l.x1 === 105 && l.x2 === 105 && l.y1 === 150 && l.y2 === 224);
-assert(botVertLine !== undefined, "drawFilterCards() traça divisor vertical inferior na posição x = 105 (y = 150..224)");
+const botVertLine = filterCardLines.find(l => l.x1 === 105 && l.x2 === 105 && l.y1 === 164 && l.y2 === 214);
+assert(botVertLine !== undefined, "drawFilterCards() traça divisor vertical inferior na posição x = 105 (y = 164..214)");
 
 const tipoBar = filterCardLines.find(l => l.y1 === 134 && l.y2 === 134 && l.x1 <= 36 && l.x2 >= 82);
 assert(tipoBar !== undefined, "drawFilterCards() traça barra horizontal sob o card Tipo (y = 134)");
@@ -577,7 +577,11 @@ assert(matBar && (matBar.x1 + matBar.x2) / 2 === 151, "Barra sob Material está 
 const botBar = filterCardLines.find(l => l.y1 === 246 && l.y2 === 246);
 assert(botBar !== undefined, "drawFilterCards() traça barra horizontal longa sob Estético e Técnica (y = 246)");
 assert(botBar && (botBar.x1 + botBar.x2) / 2 === 105, "Barra inferior longa está centralizada no painel de filtros (x = 105)");
-assert(124 - 50 === 224 - 150, "Divisores verticais superior e inferior possuem comprimento idêntico (74px)");
+
+const vertLen = topVertLine.y2 - topVertLine.y1;
+const horizLen = tipoBar.x2 - tipoBar.x1;
+assert(vertLen === 50 && horizLen === 50, `Barras verticais e horizontais possuem exatamente o mesmo comprimento de 50px (vert: ${vertLen}px, horiz: ${horizLen}px)`);
+assert(114 - 64 === 214 - 164, "Divisores verticais superior e inferior possuem comprimento idêntico (50px)");
 
 // 2. Geometria da Linha Separadora e Espaçamento dos Ícones do Painel Direito
 let sidebarLines = [];

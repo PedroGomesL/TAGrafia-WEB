@@ -121,17 +121,17 @@ function drawFilterCards() {
   stroke("#959fff");
   strokeWeight(1.5);
 
-  // 1. Divisor vertical superior entre Tipo e Material
-  line(midX, 50, midX, 124);
+  // 1. Divisor vertical superior entre Tipo e Material (50px, igual à barra horizontal)
+  line(midX, 64, midX, 114);
 
-  // 2. Barras horizontais sob os rótulos de Tipo e Material
+  // 2. Barras horizontais sob os rótulos de Tipo e Material (50px cada)
   const tipoX = DIMENSIONS.tipo_obra.gridX;
   const matX = DIMENSIONS.material.gridX;
   line(tipoX - 2, 134, tipoX + 48, 134);
   line(matX - 2, 134, matX + 48, 134);
 
-  // 3. Divisor vertical inferior entre Estético e Técnica
-  line(midX, 150, midX, 224);
+  // 3. Divisor vertical inferior entre Estético e Técnica (50px, igual à barra horizontal)
+  line(midX, 164, midX, 214);
 
   // 4. Barra horizontal longa sob Estético e Técnica
   line(28, 246, LAYOUT_FILTRO_W - 28, 246);
