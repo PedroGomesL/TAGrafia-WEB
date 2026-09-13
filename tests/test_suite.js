@@ -877,6 +877,26 @@ for (let i = 0; i < dessauPoints.length; i++) {
 }
 assert(maxDrift === 0, "Posições das obras no mapa são 100% estáveis e determinísticas entre renderizações");
 
+// 5. Mapa: valida que em zoom intermediário obras da mesma cidade não fragmentam em sub-clusters artificiais
+mapState.zoom = 4.0;
+const clustersZoom4 = makeMapClusters(mapPoints, mapBox);
+const dessauClustersZoom4 = clustersZoom4.filter((c) => c.points.some((p) => p.location.name.includes("Dessau")));
+assert(dessauClustersZoom4.length === 1 && dessauClustersZoom4[0].points.length === 24, "Em zoom intermediário (4.0), obras em Dessau formam 1 cluster unificado com 24 obras sem fragmentação artificial");
+
+// 6. Bolhas: valida que diferentes escolas possuem orientações angulares orgânicas variadas
+const testG2_alt = {
+  name: "Outra Escola 2",
+  x: 500,
+  y: 500,
+  r: 60,
+  products: [products[0], products[1]],
+};
+drawnDots.length = 0;
+drawProductsInBubble(testG2_alt);
+const angle1 = Math.atan2(d2_1.y - d2_0.y, d2_1.x - d2_0.x);
+const angle2 = Math.atan2(drawnDots[1].y - drawnDots[0].y, drawnDots[1].x - drawnDots[0].x);
+assert(Math.abs(angle1 - angle2) > 0.1, "Diferentes escolas com 2 obras possuem orientações angulares distintas e orgânicas");
+
 console.log("\n==========================================");
 console.log(`Resultado dos Testes: ${passed} passaram, ${failed} falharam.`);
 if (failed > 0) {

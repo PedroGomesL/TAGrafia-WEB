@@ -492,6 +492,7 @@ function computeBubbleDots(group) {
   }
 
   const seed = Math.abs(hashString(group.name));
+  const baseAngle = seededRandom(seed, 0, 101) * TWO_PI;
   const minSpacing = dotR * 2 + 2.5;
   const maxSpreadR = Math.min(
     group.r - dotR - 3.5,
@@ -502,7 +503,7 @@ function computeBubbleDots(group) {
     const pSeed = Math.abs(hashString(p.key || p.name || String(i)));
     const u = seededRandom(seed ^ pSeed, i, 3);
     const v = seededRandom(seed ^ pSeed, i, 7);
-    const angle = i * GOLDEN_ANGLE + (u - 0.5) * 1.4;
+    const angle = baseAngle + i * GOLDEN_ANGLE + (u - 0.5) * 1.4;
     const dist = Math.sqrt(0.15 + 0.85 * ((i + v * 0.8) / total)) * maxSpreadR;
     return {
       x: centerX + Math.cos(angle) * dist,
@@ -520,9 +521,16 @@ function computeBubbleDots(group) {
     }
     if (d.y - dotR < minDotTopY) {
       d.y = minDotTopY + dotR;
-      const d2 = Math.hypot(d.x - group.x, d.y - group.y);
-      if (d2 > maxDist) {
-        d.x = group.x + ((d.x - group.x) / d2) * maxDist;
+      const dy = d.y - group.y;
+      const maxAllowedXDistSq = maxDist * maxDist - dy * dy;
+      if (maxAllowedXDistSq > 0) {
+        const maxAllowedX = Math.sqrt(maxAllowedXDistSq);
+        const curX = d.x - group.x;
+        if (Math.abs(curX) > maxAllowedX) {
+          d.x = group.x + Math.sign(curX) * maxAllowedX;
+        }
+      } else {
+        d.x = group.x;
       }
     }
   }
@@ -573,6 +581,33 @@ function computeBubbleDots(group) {
     }
     for (let i = 0; i < total; i++) {
       applyConstraints(dots[i]);
+    }
+  }
+
+  // Previne alinhamento acidental em grupos pequenos (2 e 3 obras)
+  if (total === 2) {
+    if (Math.abs(dots[0].y - dots[1].y) < 2.5) {
+      dots[0].y -= 1.8;
+      dots[1].y += 1.8;
+      applyConstraints(dots[0]);
+      applyConstraints(dots[1]);
+    }
+    if (Math.abs(dots[0].x - dots[1].x) < 2.5) {
+      dots[0].x -= 1.8;
+      dots[1].x += 1.8;
+      applyConstraints(dots[0]);
+      applyConstraints(dots[1]);
+    }
+  } else if (total === 3) {
+    for (let i = 0; i < 3; i++) {
+      for (let j = i + 1; j < 3; j++) {
+        if (Math.abs(dots[i].y - dots[j].y) < 1.5) {
+          dots[i].y -= 1.2;
+          dots[j].y += 1.2;
+          applyConstraints(dots[i]);
+          applyConstraints(dots[j]);
+        }
+      }
     }
   }
 
@@ -785,12 +820,22 @@ function project(lon, lat, box) {
 const _mapLocationOffsetsCache = new Map();
 
 function getOrganicLocationOffsets(locPoints, locKey) {
-  const cacheKey = `${locKey}|${locPoints.map((p) => p.product.key).join(",")}`;
+  const sorted = [...locPoints].sort((a, b) =>
+    (a.product.key || "").localeCompare(b.product.key || ""),
+  );
+  const cacheKey = `${locKey}|${sorted.map((p) => p.product.key).join(",")}`;
   if (_mapLocationOffsetsCache.has(cacheKey)) {
-    return _mapLocationOffsetsCache.get(cacheKey);
+    const cached = _mapLocationOffsetsCache.get(cacheKey);
+    const mapByKey = new Map();
+    for (let i = 0; i < sorted.length; i++) {
+      mapByKey.set(sorted[i].product.key, cached[i]);
+    }
+    return locPoints.map(
+      (pt) => mapByKey.get(pt.product.key) || { dx: 0, dy: 0 },
+    );
   }
 
-  const n = locPoints.length;
+  const n = sorted.length;
   if (n === 0) return [];
   if (n === 1) {
     const res = [{ dx: 0, dy: 0 }];
@@ -802,19 +847,21 @@ function getOrganicLocationOffsets(locPoints, locKey) {
   const maxR = Math.max(dotSep * 0.95, Math.sqrt(n) * dotSep * 0.68);
 
   let groupSeed = 0;
-  for (const pt of locPoints) {
+  for (const pt of sorted) {
     groupSeed =
       (groupSeed + Math.abs(hashString(pt.product.key || pt.product.name))) >>>
       0;
   }
 
-  const pts = locPoints.map((pt, i) => {
+  const baseAngle = seededRandom(groupSeed, 0, 101) * TWO_PI;
+
+  const pts = sorted.map((pt, i) => {
     const pSeed = Math.abs(
       hashString(pt.product.key || pt.product.name || String(i)),
     );
     const u = seededRandom(groupSeed ^ pSeed, i, 11);
     const v = seededRandom(groupSeed ^ pSeed, i, 17);
-    const angle = i * GOLDEN_ANGLE + (u - 0.5) * 1.5;
+    const angle = baseAngle + i * GOLDEN_ANGLE + (u - 0.5) * 1.5;
     const r = Math.sqrt(0.08 + 0.92 * ((i + v * 0.8) / n)) * maxR;
     return {
       dx: Math.cos(angle) * r,
@@ -867,7 +914,11 @@ function getOrganicLocationOffsets(locPoints, locKey) {
   }
 
   _mapLocationOffsetsCache.set(cacheKey, pts);
-  return pts;
+  const mapByKey = new Map();
+  for (let i = 0; i < sorted.length; i++) {
+    mapByKey.set(sorted[i].product.key, pts[i]);
+  }
+  return locPoints.map((pt) => mapByKey.get(pt.product.key) || { dx: 0, dy: 0 });
 }
 
 function distributeMapLocationPoints(locPoints, locKey, basePos, zoom) {
@@ -889,6 +940,7 @@ function makeMapClusters(points, box) {
   }
 
   const expanded = [];
+  const locGroups = [];
   for (const [key, locPoints] of byLocation.entries()) {
     const basePos = project(
       locPoints[0].location.lon,
@@ -904,6 +956,7 @@ function makeMapClusters(points, box) {
     for (const p of distributed) {
       expanded.push(p);
     }
+    locGroups.push({ key, basePos, points: distributed });
   }
 
   const threshold =
@@ -920,16 +973,19 @@ function makeMapClusters(points, box) {
       y: point.y,
       points: [point],
     }));
+
   const clusters = [];
-  for (const point of expanded) {
+  for (const loc of locGroups) {
     let cluster = clusters.find(
-      (item) => dist(point.x, point.y, item.x, item.y) <= threshold,
+      (item) => dist(loc.basePos.x, loc.basePos.y, item.x, item.y) <= threshold,
     );
     if (!cluster) {
-      cluster = { x: point.x, y: point.y, points: [] };
+      cluster = { x: loc.basePos.x, y: loc.basePos.y, points: [] };
       clusters.push(cluster);
     }
-    cluster.points.push(point);
+    for (const pt of loc.points) {
+      cluster.points.push(pt);
+    }
     cluster.x =
       cluster.points.reduce((sum, item) => sum + item.x, 0) /
       cluster.points.length;
