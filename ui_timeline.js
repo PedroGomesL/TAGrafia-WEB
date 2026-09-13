@@ -54,12 +54,6 @@ function drawYearBand() {
   fill(hoverEnd || draggedYearHandle === "end" ? "#F0F2FF" : "#ffffff");
   circle(xEnd, ty, hoverEnd || draggedYearHandle === "end" ? 28 : 26);
 
-  // Ponto indicador interno nas alças
-  noStroke();
-  fill(COLORS.blue);
-  circle(xStart, ty, 6);
-  circle(xEnd, ty, 6);
-
   // Labels dos anos selecionados (com afastamento suave quando os anos estão próximos)
   noStroke();
   fill(typeof themeLineColor === "function" ? themeLineColor() : "#000000");
