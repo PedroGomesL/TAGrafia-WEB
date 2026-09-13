@@ -101,8 +101,8 @@ for (const nav of NAV_CONFIG) {
 
 assert(LAYOUT_NAV_W === 70, `LAYOUT_NAV_W está configurado como 70 (obtido: ${LAYOUT_NAV_W})`);
 assert(LAYOUT_FILTRO_W === 210, `LAYOUT_FILTRO_W está configurado como 210 (obtido: ${LAYOUT_FILTRO_W})`);
-assert(LAYOUT_PAINEL_PRODUTO_W === 405, `LAYOUT_PAINEL_PRODUTO_W está configurado como 405 (obtido: ${LAYOUT_PAINEL_PRODUTO_W})`);
-assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 300, `LAYOUT_PAINEL_PRODUTO_W_MIN está configurado como 300 (obtido: ${LAYOUT_PAINEL_PRODUTO_W_MIN})`);
+assert(LAYOUT_PAINEL_PRODUTO_W === 360, `LAYOUT_PAINEL_PRODUTO_W está configurado como 360 (obtido: ${LAYOUT_PAINEL_PRODUTO_W})`);
+assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 280, `LAYOUT_PAINEL_PRODUTO_W_MIN está configurado como 280 (obtido: ${LAYOUT_PAINEL_PRODUTO_W_MIN})`);
 assert(PRODUCT_IMAGE_H === 190, `PRODUCT_IMAGE_H está configurado como 190 (obtido: ${PRODUCT_IMAGE_H})`);
 assert(PRODUCT_TITLE_H === 56, `PRODUCT_TITLE_H está configurado como 56 (obtido: ${PRODUCT_TITLE_H})`);
 assert(PRODUCT_SIDEBAR_W === 70, `PRODUCT_SIDEBAR_W está configurado como 70 (obtido: ${PRODUCT_SIDEBAR_W})`);
@@ -602,12 +602,12 @@ global.rect = origRect;
 global.circle = origCircle;
 global.drawImageCentered = origDrawImageCentered;
 
-// 3. Dimensões e Proporções do Painel Direito Restaurado
-assert(LAYOUT_PAINEL_PRODUTO_W === 405, "Painel direito restaurado para 405px generosos");
-assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 300, "Largura mínima do painel direito é 300px");
+// 3. Dimensões e Proporções do Painel Direito Ajustado
+assert(LAYOUT_PAINEL_PRODUTO_W === 360, "Painel direito ajustado para 360px");
+assert(LAYOUT_PAINEL_PRODUTO_W_MIN === 280, "Largura mínima do painel direito é 280px");
 assert(PRODUCT_SIDEBAR_W === 70, "Sidebar de abas do produto configurada com 70px");
 const contentAreaW = LAYOUT_PAINEL_PRODUTO_W - PRODUCT_SIDEBAR_W;
-assert(contentAreaW === 335, "Área de conteúdo de detalhes possui 335px livres para tags e textos longos");
+assert(contentAreaW === 290, "Área de conteúdo de detalhes possui 290px livres (reduzida em 45px)");
 
 // 4. Dimensões Aumentadas dos Ícones e Altura dos Botões de Navegação
 for (const nav of NAV_CONFIG) {
