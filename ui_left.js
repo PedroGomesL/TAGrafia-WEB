@@ -116,14 +116,25 @@ function drawNavSidebar() {
 
 function drawFilterCards() {
   const midX = LAYOUT_FILTRO_W / 2;
-  const midY = 140;
 
   push();
-  // Draw the blue cross
   stroke("#959fff");
   strokeWeight(1.5);
-  line(midX, 48, midX, 232); // Vertical
-  line(0, midY, LAYOUT_FILTRO_W, midY); // Horizontal
+
+  // 1. Divisor vertical superior entre Tipo e Material
+  line(midX, 50, midX, 124);
+
+  // 2. Barras horizontais sob os rótulos de Tipo e Material
+  const tipoX = DIMENSIONS.tipo_obra.gridX;
+  const matX = DIMENSIONS.material.gridX;
+  line(tipoX - 2, 134, tipoX + 48, 134);
+  line(matX - 2, 134, matX + 48, 134);
+
+  // 3. Divisor vertical inferior entre Estético e Técnica
+  line(midX, 150, midX, 224);
+
+  // 4. Barra horizontal longa sob Estético e Técnica
+  line(28, 246, LAYOUT_FILTRO_W - 28, 246);
   pop();
 
   const scl = filterPanelScale();

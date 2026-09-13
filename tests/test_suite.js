@@ -560,25 +560,24 @@ global.line = (x1, y1, x2, y2) => {
 
 drawFilterCards();
 
-const vertLine = filterCardLines.find(l => l.x1 === 105 && l.x2 === 105);
-assert(vertLine !== undefined, "drawFilterCards() traça a linha vertical na posição x = 105 (LAYOUT_FILTRO_W / 2)");
-assert(vertLine && vertLine.y1 === 48 && vertLine.y2 === 232, "drawFilterCards() traça a linha vertical de y = 48 a y = 232 (92px simétricos)");
+const topVertLine = filterCardLines.find(l => l.x1 === 105 && l.x2 === 105 && l.y1 === 50 && l.y2 === 124);
+assert(topVertLine !== undefined, "drawFilterCards() traça divisor vertical superior na posição x = 105 (y = 50..124)");
 
-const horizLine = filterCardLines.find(l => l.y1 === 140 && l.y2 === 140);
-assert(horizLine !== undefined, "drawFilterCards() traça a linha horizontal na posição y = 140 (centralizada)");
-assert(horizLine && horizLine.x1 === 0 && horizLine.x2 === LAYOUT_FILTRO_W, "drawFilterCards() traça a linha horizontal de x = 0 a x = 210 (borda a borda)");
+const botVertLine = filterCardLines.find(l => l.x1 === 105 && l.x2 === 105 && l.y1 === 150 && l.y2 === 224);
+assert(botVertLine !== undefined, "drawFilterCards() traça divisor vertical inferior na posição x = 105 (y = 150..224)");
 
-const crossMidX = LAYOUT_FILTRO_W / 2;
-const crossMidY = 140;
-const crossTopY = 48;
-const crossBottomY = 232;
-assert(crossMidX === 105, "Eixo vertical da cruz de filtros está no centro exato do painel (105px)");
-assert(crossMidY - crossTopY === crossBottomY - crossMidY, "Braços superior e inferior da cruz vertical são perfeitamente simétricos (92px cada)");
-assert(crossMidX - 0 === LAYOUT_FILTRO_W - crossMidX, "Braços esquerdo e direito da cruz horizontal são perfeitamente simétricos (105px cada)");
-assert(crossMidY > 58 + 46 + 14 && crossMidY < 158, "Linha horizontal da cruz passa exatamente entre o texto superior (~122px) e o card inferior (158px)");
-assert(140 - 122 === 158 - 140, "Margens da linha horizontal em relação ao texto superior e box inferior são idênticas (18px)");
-assert(DIMENSIONS.tipo_obra.gridX + 46 < crossMidX, "Card Tipo não sobrepõe a linha vertical");
-assert(crossMidX < DIMENSIONS.material.gridX, "Card Material não sobrepõe a linha vertical");
+const tipoBar = filterCardLines.find(l => l.y1 === 134 && l.y2 === 134 && l.x1 <= 36 && l.x2 >= 82);
+assert(tipoBar !== undefined, "drawFilterCards() traça barra horizontal sob o card Tipo (y = 134)");
+assert(tipoBar && (tipoBar.x1 + tipoBar.x2) / 2 === 59, "Barra sob Tipo está perfeitamente centralizada com o card Tipo (cx = 59)");
+
+const matBar = filterCardLines.find(l => l.y1 === 134 && l.y2 === 134 && l.x1 <= 128 && l.x2 >= 174);
+assert(matBar !== undefined, "drawFilterCards() traça barra horizontal sob o card Material (y = 134)");
+assert(matBar && (matBar.x1 + matBar.x2) / 2 === 151, "Barra sob Material está perfeitamente centralizada com o card Material (cx = 151)");
+
+const botBar = filterCardLines.find(l => l.y1 === 246 && l.y2 === 246);
+assert(botBar !== undefined, "drawFilterCards() traça barra horizontal longa sob Estético e Técnica (y = 246)");
+assert(botBar && (botBar.x1 + botBar.x2) / 2 === 105, "Barra inferior longa está centralizada no painel de filtros (x = 105)");
+assert(124 - 50 === 224 - 150, "Divisores verticais superior e inferior possuem comprimento idêntico (74px)");
 
 // 2. Geometria da Linha Separadora e Espaçamento dos Ícones do Painel Direito
 let sidebarLines = [];
