@@ -153,6 +153,10 @@ function draw() {
     draggedYearHandle = null;
     if (typeof mapState !== "undefined") mapState.dragging = false;
   }
+  if (typeof drawingContext !== "undefined" && drawingContext) {
+    drawingContext.imageSmoothingEnabled = true;
+    drawingContext.imageSmoothingQuality = "high";
+  }
   currentFrameCursor = typeof ARROW !== "undefined" ? ARROW : "default";
   hitAreas = [];
   hoveredCircularTag = null;
@@ -276,9 +280,9 @@ function touchEnded() {
 }
 
 function windowResized() {
+  pixelDensity(Math.min(2, typeof displayDensity === "function" ? displayDensity() : (typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1)));
   const dims = getOptimalCanvasDimensions();
   resizeCanvas(dims.w, dims.h);
-  pixelDensity(Math.min(2, typeof displayDensity === "function" ? displayDensity() : (typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1)));
   if (typeof drawingContext !== "undefined" && drawingContext) {
     drawingContext.imageSmoothingEnabled = true;
     drawingContext.imageSmoothingQuality = "high";
@@ -1483,7 +1487,7 @@ function hitAreaAt(mx, my) {
 
 function drawImageCentered(img, cx, cy, w, h) {
   if (!img || !img.width || !img.height) return;
-  if (typeof drawingContext !== "undefined" && drawingContext && !drawingContext.imageSmoothingEnabled) {
+  if (typeof drawingContext !== "undefined" && drawingContext) {
     drawingContext.imageSmoothingEnabled = true;
     drawingContext.imageSmoothingQuality = "high";
   }
@@ -1495,7 +1499,7 @@ function drawImageCentered(img, cx, cy, w, h) {
 
 function drawImageContain(img, x, y, w, h) {
   if (!img || !img.width || !img.height) return;
-  if (typeof drawingContext !== "undefined" && drawingContext && !drawingContext.imageSmoothingEnabled) {
+  if (typeof drawingContext !== "undefined" && drawingContext) {
     drawingContext.imageSmoothingEnabled = true;
     drawingContext.imageSmoothingQuality = "high";
   }

@@ -22,10 +22,14 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 canvas {
   display: block;
+  image-rendering: auto;
 }
 
 /* Utilitário para acessibilidade (leitores de tela) */

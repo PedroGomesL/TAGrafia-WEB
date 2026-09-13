@@ -1651,6 +1651,18 @@ const svgsToCheck = [
   "visao_mapa.svg",
   "salvar_produto_white.svg",
   "salvar_produto.svg",
+  "visao_timeline_white.svg",
+  "visao_timeline.svg",
+  "visao_circular_white.svg",
+  "visao_circular.svg",
+  "visao_bolhas_white.svg",
+  "visao_bolhas.svg",
+  "collapse_panel_white.svg",
+  "collapse_panel.svg",
+  "produto_artesanal_white.svg",
+  "produto_artesanal.svg",
+  "produto_industrial_white.svg",
+  "produto_industrial.svg",
 ];
 for (const svgFile of svgsToCheck) {
   const content = fs.readFileSync(path.join(ROOT_DIR, "data/Icones", svgFile), "utf8");

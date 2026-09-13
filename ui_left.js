@@ -156,10 +156,10 @@ function drawNavSidebar() {
     noStroke();
     fill(active ? "#000000" : (lightMode ? 0 : 255));
     textFont(fontes.roboto);
-    textSize(10.5);
-    textLeading(12);
+    textSize(item.id === "trocar" ? 9.5 : 10.5);
+    textLeading(item.id === "trocar" ? 11 : 12);
     textAlign(CENTER, TOP);
-    text(item.label, LAYOUT_NAV_W / 2, item.y + 7);
+    text(item.label, LAYOUT_NAV_W / 2, item.y + (item.id === "trocar" ? 6 : 7));
 
     // Focus visible WCAG
     if (typeof isFocusedElement === "function" && isFocusedElement("nav", item.id)) {

@@ -1,8 +1,8 @@
-<svg width="256" height="160" viewBox="0 0 64 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-<line x1="6.1543" y1="36.4238" x2="59.2312" y2="36.4238" stroke="black"/>
-<circle cx="32.3074" cy="13.0769" r="12.0769" stroke="black" stroke-width="2"/>
-<path d="M31.5391 3.8457V13.8457H40.7698" stroke="black" stroke-width="2" stroke-linecap="round"/>
-<circle cx="3.84615" cy="36.1547" r="3.34615" fill="white" stroke="black"/>
-<circle cx="32.3071" cy="36.1547" r="3.34615" fill="white" stroke="black"/>
-<circle cx="60.0005" cy="36.1547" r="3.34615" fill="white" stroke="black"/>
+<svg width="256" height="220" viewBox="0 0 64 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+<line x1="6.1543" y1="51.4219" x2="59.2312" y2="51.4219" stroke="black"/>
+<circle cx="33.3848" cy="20.3848" r="19.3848" stroke="black" stroke-width="2"/>
+<path d="M32.1875 5.99609V21.5844H46.5767" stroke="black" stroke-width="2" stroke-linecap="round"/>
+<circle cx="3.84615" cy="51.1547" r="3.34615" fill="black" stroke="black"/>
+<circle cx="32.3071" cy="51.1547" r="3.34615" fill="black" stroke="black"/>
+<circle cx="60.0005" cy="51.1547" r="3.34615" fill="black" stroke="black"/>
 </svg>
