@@ -118,8 +118,8 @@ function drawFilterCards() {
   // Draw the blue cross
   stroke("#959fff");
   strokeWeight(1.5);
-  line(107, 50, 107, 169); // Vertical
-  line(47, 110, 166, 110); // Horizontal
+  line(107, 88, 107, 207); // Vertical
+  line(47, 148, 166, 148); // Horizontal
   pop();
 
   const scl = filterPanelScale();
@@ -607,14 +607,15 @@ function filterMousePressed(mxRaw, myRaw) {
   } else if (leftPanelTab === "exportar") {
     // Export tab interaction
     for (let i = 0; i < VIEWS_CONFIG.length; i++) {
-      const vy = 90 + i * 40;
-      if (my >= vy - 10 && my <= vy + 28 && mx >= 20 && mx <= 160) {
+      const vy = 118 + i * 38;
+      if (my >= vy - 6 && my <= vy + 26 && mx >= 20 && mx <= 160) {
         exportViewsSelection[i] = !exportViewsSelection[i];
         return true;
       }
     }
 
-    if (my >= 310 && my <= 336 && mx >= 24 && mx <= 168) {
+    const dy = 325;
+    if (my >= dy && my <= dy + 26 && mx >= 24 && mx <= 168) {
       exportFormatDropdownOpen = !exportFormatDropdownOpen;
       return true;
     }
@@ -625,7 +626,7 @@ function filterMousePressed(mxRaw, myRaw) {
 
     if (exportFormatDropdownOpen && exportDropdownAnim > 0.3) {
       for (let i = 0; i < formats.length; i++) {
-        const oy = 310 + 26 + i * 26;
+        const oy = dy + 26 + i * 26;
         if (my >= oy && my <= oy + 26 && mx >= 24 && mx <= 168) {
           exportFormatSelected = formats[i];
           exportFormatDropdownOpen = false;
@@ -635,7 +636,7 @@ function filterMousePressed(mxRaw, myRaw) {
     }
 
     // Export button click
-    const btnY = Math.round(310 + 46 + (totalMenuH + 10) * exportDropdownAnim);
+    const btnY = Math.round(dy + 46 + (totalMenuH + 10) * exportDropdownAnim);
     if (mx >= 24 && mx <= 168 && my >= btnY && my <= btnY + 30) {
       if (exportFormatSelected === "JPG") {
         saveCanvas("tagrafia-visualizacao", "jpg");
@@ -667,11 +668,11 @@ function drawExportTab() {
   textFont(fontes.roboto);
   textSize(15);
   textAlign(LEFT, TOP);
-  text("Selecione as visualizações\npara exportar", 24, 30);
+  text("Selecione as visualizações\npara exportar", 24, 58);
 
   const views = VIEWS_CONFIG.map((v, i) => ({
     label: v.label,
-    y: 90 + i * 40,
+    y: 118 + i * 38,
     selected: Boolean(exportViewsSelection[i]),
   }));
 
@@ -708,11 +709,11 @@ function drawExportTab() {
 
   stroke(220);
   strokeWeight(1);
-  line(24, 260, LAYOUT_FILTRO_W - 24, 260);
+  line(24, 275, LAYOUT_FILTRO_W - 24, 275);
 
   fill(0);
   noStroke();
-  text("Exportar em:", 24, 280);
+  text("Exportar em:", 24, 295);
 
   // Smooth dropdown animation
   const targetAnim = exportFormatDropdownOpen ? 1 : 0;
@@ -721,7 +722,7 @@ function drawExportTab() {
     exportDropdownAnim = targetAnim;
   }
 
-  const dy = 310;
+  const dy = 325;
   const isTriggerHover = mx >= 24 && mx <= 168 && my >= dy && my <= dy + 26;
   if (isTriggerHover && typeof requestCursor === "function") {
     requestCursor(HAND);

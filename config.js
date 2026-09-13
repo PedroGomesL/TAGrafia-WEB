@@ -15,7 +15,7 @@ const LAYOUT_VISUAL_W_MIN = 320;
 const LAYOUT_PAINEL_PRODUTO_W_MIN = 300;
 
 // Filter panel layout
-const FILTER_HEADER_H = 20;
+const FILTER_HEADER_H = 58;
 const FILTER_CARD_H = 100;
 const FILTER_BODY_Y = FILTER_HEADER_H + FILTER_CARD_H * 2 + 10;
 const FILTER_CAT_OFFSET = 18;
@@ -95,7 +95,7 @@ const DIMENSIONS = {
     color: "#3E4AD3",
     pastelColor: "#959fff",
     gridX: 126,
-    gridY: 20,
+    gridY: 58,
   },
   tecnicas: {
     id: "tecnicas",
@@ -104,7 +104,7 @@ const DIMENSIONS = {
     color: "#4AD33E",
     pastelColor: "#a7ff95",
     gridX: 126,
-    gridY: 120,
+    gridY: 158,
   },
   estetico: {
     id: "estetico",
@@ -113,7 +113,7 @@ const DIMENSIONS = {
     color: "#D33E4A",
     pastelColor: "#ff9597",
     gridX: 28,
-    gridY: 120,
+    gridY: 158,
   },
   tipo_obra: {
     id: "tipo_obra",
@@ -122,7 +122,7 @@ const DIMENSIONS = {
     color: "#FFCB00",
     pastelColor: "#ffef95",
     gridX: 28,
-    gridY: 20,
+    gridY: 58,
   },
 };
 

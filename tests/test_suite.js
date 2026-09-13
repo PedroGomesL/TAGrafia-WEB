@@ -83,6 +83,9 @@ for (const dim of DIMENSION_ORDER) {
     `Dimensão '${dim}' possui color e pastelColor definidos`,
   );
 }
+assert(FILTER_HEADER_H === 58, `FILTER_HEADER_H está alinhado com o respiro de 58px do Sobre (obtido: ${FILTER_HEADER_H})`);
+assert(DIMENSIONS.tipo_obra.gridY === 58 && DIMENSIONS.material.gridY === 58, "Cards superiores de filtros iniciam em y = 58");
+assert(DIMENSIONS.estetico.gridY === 158 && DIMENSIONS.tecnicas.gridY === 158, "Cards inferiores de filtros iniciam em y = 158");
 
 assert(Array.isArray(VIEWS_CONFIG), "VIEWS_CONFIG está definido");
 assert(VIEWS_CONFIG.length === 4, "VIEWS_CONFIG contém as 4 visualizações");
