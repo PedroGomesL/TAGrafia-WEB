@@ -163,14 +163,14 @@ const ONBOARDING_STEPS = [
     zone: "modal",
     subtitle: "Sistema Interativo de Visualização de Obras de Design",
     description:
-      "O TAGrafia é uma ferramenta de pesquisa e exploração visual que conecta obras de design brasileiras e internacionais por meio de dimensões, técnicas, materiais e escolas estéticas.",
+      "O TAGrafia é uma ferramenta de pesquisa e exploração visual que conecta obras de design brasileiras e internacionais por meio de características em comum nas seguintes dimensões: técnicas de construção, materiais e estético.",
   },
   {
     id: "menu_esquerdo",
     title: "1. Menu Esquerdo: Filtros e Navegação",
     zone: "left",
     description:
-      "Aqui você filtra as obras navegando pelas 4 dimensões (Tipo de Obra, Material, Estético e Técnicas), pesquisa tags específicas, comuta visualizações e alterna entre o tema claro e escuro.",
+      "Aqui você navega pelas dimensões e escolhe as tags desejadas. Ao selecionar uma tag, o sistema realiza uma busca automática por outras obras que compartilham essa mesma característica, além de permitir alternar visualizações e temas.",
   },
   {
     id: "centro_visual",
@@ -184,7 +184,7 @@ const ONBOARDING_STEPS = [
     title: "3. Menu Direito: Detalhes da Obra",
     zone: "right",
     description:
-      "Ao selecionar qualquer obra, visualize aqui sua galeria de imagens, ficha técnica, autores e as abas detalhadas de cada dimensão. Você também pode favoritar obras para consultá-las depois na aba Salvos.",
+      "Ao selecionar qualquer obra, visualize aqui sua galeria de imagens, ficha técnica, autores e as abas detalhadas de cada dimensão — produtos internacionais possuem a descrição na aba técnica. Você também pode favoritar obras para consultá-las depois na aba Salvos.",
   },
 ];
 

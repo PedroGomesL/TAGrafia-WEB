@@ -1678,12 +1678,16 @@ console.log("\n=== 24. Validando Sistema de Onboarding e Tutorial Passo a Passo 
 assert(STORAGE_KEYS.onboardingCompleted === "tagrafia-onboarding-completed", "STORAGE_KEYS.onboardingCompleted está definido");
 assert(Array.isArray(ONBOARDING_STEPS) && ONBOARDING_STEPS.length === 4, "ONBOARDING_STEPS contém 4 passos estruturados");
 assert(ONBOARDING_STEPS[0].id === "welcome", "Passo 0 é a tela de boas-vindas");
+assert(ONBOARDING_STEPS[0].description.includes("características em comum nas seguintes dimensões: técnicas de construção, materiais e estético"), "Passo 0 inclui texto sobre dimensões e características em comum");
 assert(ONBOARDING_STEPS[1].zone === "left", "Passo 1 destaca o menu esquerdo");
+assert(ONBOARDING_STEPS[1].description.includes("busca automática por outras obras que compartilham essa mesma característica"), "Passo 1 inclui explicação clara sobre busca automática por tags");
 assert(ONBOARDING_STEPS[2].zone === "center", "Passo 2 destaca a área central");
 assert(ONBOARDING_STEPS[3].zone === "right", "Passo 3 destaca o menu direito");
+assert(ONBOARDING_STEPS[3].description.includes("produtos internacionais possuem a descrição na aba técnica"), "Passo 3 informa sobre a descrição de produtos internacionais na aba técnica");
 
 // Teste de ciclo de vida do onboarding
 const uiOnboardingContent = fs.readFileSync(path.join(ROOT_DIR, "ui_onboarding.js"), "utf8");
+assert(uiOnboardingContent.includes("PROJETO DE DESIGN - TAGRAFIA"), "ui_onboarding.js contém o badge 'PROJETO DE DESIGN - TAGRAFIA'");
 vm.runInThisContext(uiOnboardingContent);
 
 assert(typeof drawOnboarding === "function", "drawOnboarding está definida");

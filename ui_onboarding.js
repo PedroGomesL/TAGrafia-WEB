@@ -74,7 +74,7 @@ function getOnboardingGuidedMetrics(step, stepIndex, totalSteps) {
   }
 
   const cardW = Math.min(390, width - 40);
-  const cardH = 215;
+  const cardH = 225;
   let cardX = 0;
   let cardY = Math.max(20, (height - cardH) / 2);
 
@@ -142,7 +142,7 @@ function drawOnboardingWelcomeModal(step) {
   textStyle(BOLD);
   textSize(13);
   textAlign(CENTER, TOP);
-  text("PROJETO TAGRAFIA • PCC DE DESIGN", width / 2, m.modalY + 28);
+  text("PROJETO DE DESIGN - TAGRAFIA", width / 2, m.modalY + 28);
 
   // Título principal
   fill(lightMode ? "#000000" : "#FFFFFF");
@@ -292,7 +292,7 @@ function drawOnboardingGuidedStep(step, stepIndex, totalSteps) {
   textSize(12.5);
   textLeading(18);
   textAlign(LEFT, TOP);
-  text(step.description, m.cardX + 20, m.cardY + 74, m.cardW - 40, 75);
+  text(step.description, m.cardX + 20, m.cardY + 74, m.cardW - 40, 95);
 
   // Botão Pular (esquerda)
   const isSkipHover = insideRect(mouseX, mouseY, m.skipX, m.bY, m.skipW, m.bH);
