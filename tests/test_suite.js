@@ -1740,6 +1740,62 @@ assert(onboardingState.active === true && onboardingState.step === 1, "startOnbo
 const handledEsc = onboardingKeyPressed(global.ESCAPE);
 assert(handledEsc === true && onboardingState.active === false, "Tecla Escape fecha o onboarding");
 
+// Navegação por clique do mouse (onboardingMousePressed)
+assert(typeof getOnboardingModalMetrics === "function", "getOnboardingModalMetrics está definida");
+assert(typeof getOnboardingGuidedMetrics === "function", "getOnboardingGuidedMetrics está definida");
+
+// Teste de clique no Passo 0: Iniciar Tutorial
+startOnboarding(true);
+assert(onboardingState.active === true && onboardingState.step === 0, "Tutorial ativo no passo 0");
+const modalM = getOnboardingModalMetrics();
+const clickStartHandled = onboardingMousePressed(modalM.startX + modalM.startW / 2, modalM.btnY + modalM.btnH / 2);
+assert(clickStartHandled === true, "onboardingMousePressed absorve e trata clique no botão 'Iniciar Tutorial'");
+assert(onboardingState.step === 1, "Clique em 'Iniciar Tutorial' avança para o passo 1");
+
+// Teste de clique no Passo 1: Próximo -> Passo 2
+const step1 = ONBOARDING_STEPS[1];
+const g1 = getOnboardingGuidedMetrics(step1, 1, ONBOARDING_STEPS.length);
+const clickNext1Handled = onboardingMousePressed(g1.nextX + g1.nextW / 2, g1.bY + g1.bH / 2);
+assert(clickNext1Handled === true, "onboardingMousePressed trata clique no botão 'Próximo →' no passo 1 sem lançar ReferenceError");
+assert(onboardingState.step === 2, "Clique em 'Próximo →' no passo 1 avança para o passo 2");
+
+// Teste de clique no Passo 2: Anterior -> Passo 1
+const step2 = ONBOARDING_STEPS[2];
+const g2 = getOnboardingGuidedMetrics(step2, 2, ONBOARDING_STEPS.length);
+assert(g2.hasPrev === true, "Passo 2 possui botão Anterior ativo");
+const clickPrev2Handled = onboardingMousePressed(g2.prevX + g2.prevW / 2, g2.bY + g2.bH / 2);
+assert(clickPrev2Handled === true, "onboardingMousePressed trata clique no botão 'Anterior' no passo 2");
+assert(onboardingState.step === 1, "Clique em 'Anterior' retorna para o passo 1");
+
+// Avança novamente para o Passo 2 e Passo 3 via clique
+onboardingMousePressed(g1.nextX + g1.nextW / 2, g1.bY + g1.bH / 2);
+assert(onboardingState.step === 2, "Retorna para o passo 2 via clique");
+onboardingMousePressed(g2.nextX + g2.nextW / 2, g2.bY + g2.bH / 2);
+assert(onboardingState.step === 3, "Avança para o passo 3 via clique em 'Próximo →'");
+
+// Teste de clique no Passo 3: Concluir -> Finaliza o onboarding
+const step3 = ONBOARDING_STEPS[3];
+const g3 = getOnboardingGuidedMetrics(step3, 3, ONBOARDING_STEPS.length);
+assert(g3.isLast === true, "Passo 3 é o último passo");
+const clickConcludeHandled = onboardingMousePressed(g3.nextX + g3.nextW / 2, g3.bY + g3.bH / 2);
+assert(clickConcludeHandled === true, "onboardingMousePressed trata clique em 'Concluir ✓'");
+assert(onboardingState.active === false, "Clique em 'Concluir ✓' finaliza o onboarding");
+assert(onboardingState.completed === true, "onboardingState.completed marcado como true");
+
+// Teste de clique no botão 'Pular' durante passo guiado
+startOnboarding(false); // inicia no passo 1
+assert(onboardingState.active === true && onboardingState.step === 1, "Tutorial ativo no passo 1");
+const clickSkipHandled = onboardingMousePressed(g1.skipX + g1.skipW / 2, g1.bY + g1.bH / 2);
+assert(clickSkipHandled === true, "onboardingMousePressed trata clique no botão 'Pular'");
+assert(onboardingState.active === false, "Clique em 'Pular' encerra o tutorial imediatamente");
+
+// Teste de clique no botão 'Explorar Direto' no modal de boas-vindas
+startOnboarding(true);
+assert(onboardingState.active === true && onboardingState.step === 0, "Tutorial ativo no passo 0");
+const clickExploreHandled = onboardingMousePressed(modalM.skipX + modalM.skipW / 2, modalM.btnY + modalM.btnH / 2);
+assert(clickExploreHandled === true, "onboardingMousePressed trata clique no botão 'Explorar Direto'");
+assert(onboardingState.active === false, "Clique em 'Explorar Direto' encerra o onboarding");
+
 // Restaura estado padrão
 lightMode = true;
 leftPanelExtendedOpen = true;
