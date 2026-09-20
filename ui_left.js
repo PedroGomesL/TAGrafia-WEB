@@ -789,6 +789,16 @@ function filterMousePressed(mxRaw, myRaw) {
       exportFormatDropdownOpen = false; // click outside closes it
       return true;
     }
+  } else if (leftPanelTab === "sobre") {
+    const tourBtnY = 468;
+    const tourBtnW = LAYOUT_FILTRO_W - FILTER_BAR_X * 2;
+    const tourBtnH = 32;
+    if (mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + tourBtnW && my >= tourBtnY - sobreScroll && my <= tourBtnY - sobreScroll + tourBtnH) {
+      if (typeof startOnboarding === "function") {
+        startOnboarding(true);
+      }
+      return true;
+    }
   }
 
   return true;
@@ -994,8 +1004,11 @@ function drawSobreTab() {
     "Outro passo igualmente importante foi a produção das visualizações, integrando-as aos dados para representar correlações e semelhanças entre obras de design.\n\n" +
     "Disponibilizarei um link com o detalhamento da metodologia, a qual pode ser aplicada a qualquer outro projeto.";
 
-  const contentH = 460;
+  const contentH = 510;
   sobreScroll = constrain(sobreScroll, 0, Math.max(0, contentH - availableH));
+
+  const mx = mouseX / scl - LAYOUT_NAV_W;
+  const my = mouseY / scl;
 
   drawingContext.save();
   try {
@@ -1005,7 +1018,25 @@ function drawSobreTab() {
 
     push();
     translate(0, -sobreScroll);
-    text(txt, FILTER_BAR_X, 58, LAYOUT_FILTRO_W - FILTER_BAR_X * 2, contentH + 100);
+    text(txt, FILTER_BAR_X, 58, LAYOUT_FILTRO_W - FILTER_BAR_X * 2, 450);
+
+    // Botão interativo para reabrir o Tutorial
+    const tourBtnY = 468;
+    const tourBtnW = LAYOUT_FILTRO_W - FILTER_BAR_X * 2;
+    const tourBtnH = 32;
+    const isTourHover = mx >= FILTER_BAR_X && mx <= FILTER_BAR_X + tourBtnW && my >= tourBtnY - sobreScroll && my <= tourBtnY - sobreScroll + tourBtnH;
+    if (isTourHover && typeof requestCursor === "function") {
+      requestCursor(HAND);
+    }
+    fill(isTourHover ? (lightMode ? "#2554FF" : "#959fff") : (lightMode ? (typeof COLORS !== "undefined" && COLORS.blue ? COLORS.blue : "#3E4AD3") : "#3E4AD3"));
+    rect(FILTER_BAR_X, tourBtnY, tourBtnW, tourBtnH, 6);
+    fill("#FFFFFF");
+    textFont(fontes.afacad);
+    textStyle(BOLD);
+    textSize(12.5);
+    textAlign(CENTER, CENTER);
+    text("Ver Tutorial do Sistema ℹ", FILTER_BAR_X + tourBtnW / 2, tourBtnY + tourBtnH / 2);
+    textStyle(NORMAL);
     pop();
   } finally {
     drawingContext.restore();

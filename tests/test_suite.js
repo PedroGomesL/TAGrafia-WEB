@@ -27,6 +27,7 @@ const jsFiles = [
   "ui_right.js",
   "ui_center.js",
   "ui_timeline.js",
+  "ui_onboarding.js",
 ];
 
 for (const file of jsFiles) {
@@ -1672,6 +1673,72 @@ for (const svgFile of svgsToCheck) {
   assert(hMatch && parseFloat(hMatch[1]) >= 150, `SVG ${svgFile} possui altura de alta resolução (>= 150px: ${hMatch ? hMatch[1] : 'null'})`);
   assert(!content.includes("<image"), `SVG ${svgFile} é puramente vetorial e não contém tags raster <image>`);
 }
+
+console.log("\n=== 24. Validando Sistema de Onboarding e Tutorial Passo a Passo ===");
+assert(STORAGE_KEYS.onboardingCompleted === "tagrafia-onboarding-completed", "STORAGE_KEYS.onboardingCompleted está definido");
+assert(Array.isArray(ONBOARDING_STEPS) && ONBOARDING_STEPS.length === 4, "ONBOARDING_STEPS contém 4 passos estruturados");
+assert(ONBOARDING_STEPS[0].id === "welcome", "Passo 0 é a tela de boas-vindas");
+assert(ONBOARDING_STEPS[1].zone === "left", "Passo 1 destaca o menu esquerdo");
+assert(ONBOARDING_STEPS[2].zone === "center", "Passo 2 destaca a área central");
+assert(ONBOARDING_STEPS[3].zone === "right", "Passo 3 destaca o menu direito");
+
+// Teste de ciclo de vida do onboarding
+const uiOnboardingContent = fs.readFileSync(path.join(ROOT_DIR, "ui_onboarding.js"), "utf8");
+vm.runInThisContext(uiOnboardingContent);
+
+assert(typeof drawOnboarding === "function", "drawOnboarding está definida");
+assert(typeof onboardingMousePressed === "function", "onboardingMousePressed está definida");
+assert(typeof onboardingKeyPressed === "function", "onboardingKeyPressed está definida");
+
+// Simulação de primeiro acesso (sem flag no localStorage)
+global.localStorage = {
+  store: {},
+  getItem(k) { return this.store[k] || null; },
+  setItem(k, v) { this.store[k] = String(v); },
+  removeItem(k) { delete this.store[k]; }
+};
+
+initOnboarding();
+assert(onboardingState.active === true, "No primeiro acesso, onboardingState.active é inicializado como true");
+assert(onboardingState.step === 0, "No primeiro acesso, inicia no passo 0 (Boas-vindas)");
+
+// Avanço de passos
+nextOnboardingStep();
+assert(onboardingState.step === 1, "nextOnboardingStep avança para passo 1 (Menu Esquerdo)");
+nextOnboardingStep();
+assert(onboardingState.step === 2, "nextOnboardingStep avança para passo 2 (Área Central)");
+prevOnboardingStep();
+assert(onboardingState.step === 1, "prevOnboardingStep retrocede para passo 1");
+nextOnboardingStep();
+nextOnboardingStep();
+assert(onboardingState.step === 3, "nextOnboardingStep atinge passo 3 (Menu Direito)");
+
+// Conclusão
+nextOnboardingStep();
+assert(onboardingState.active === false, "Avançar do último passo desativa o onboarding");
+assert(onboardingState.completed === true, "onboardingState.completed é marcado como true");
+assert(localStorage.getItem(STORAGE_KEYS.onboardingCompleted) === "true", "Conclusão é persistida no localStorage");
+
+// Novo acesso subsequente não deve reabrir automaticamente
+initOnboarding();
+assert(onboardingState.active === false, "Acessos subsequentes respeitam localStorage e não abrem automaticamente");
+
+// Reabertura manual (ex: clique na aba Sobre)
+startOnboarding(true);
+assert(onboardingState.active === true && onboardingState.step === 0, "startOnboarding reabre o tutorial a partir do início");
+skipOnboarding();
+assert(onboardingState.active === false, "skipOnboarding fecha o tutorial imediatamente");
+
+// Navegação por teclado no onboarding
+global.ESCAPE = 27;
+global.ENTER = 13;
+global.RIGHT_ARROW = 39;
+global.LEFT_ARROW = 37;
+
+startOnboarding(false);
+assert(onboardingState.active === true && onboardingState.step === 1, "startOnboarding(false) abre diretamente no passo 1");
+const handledEsc = onboardingKeyPressed(global.ESCAPE);
+assert(handledEsc === true && onboardingState.active === false, "Tecla Escape fecha o onboarding");
 
 // Restaura estado padrão
 lightMode = true;

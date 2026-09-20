@@ -97,6 +97,10 @@ function setup() {
       }
     } catch (e) {}
   }
+
+  if (typeof initOnboarding === "function") {
+    initOnboarding();
+  }
 }
 
 function requestCursor(type) {
@@ -178,6 +182,10 @@ function draw() {
   }
 
   drawClickRipples();
+
+  if (typeof drawOnboarding === "function") {
+    drawOnboarding();
+  }
 
   if (typeof cursor === "function") {
     cursor(currentFrameCursor);
@@ -399,6 +407,13 @@ function mousePressed() {
     return;
   }
   triggerClickRipple(mouseX, mouseY);
+
+  if (typeof onboardingState !== "undefined" && onboardingState.active) {
+    if (typeof onboardingMousePressed === "function") {
+      onboardingMousePressed(mouseX, mouseY);
+    }
+    return false;
+  }
 
   if (typeof isMobileMode === "function" && isMobileMode()) {
     const activeScreen =
@@ -1335,6 +1350,17 @@ function handleKeyboardEvent(event) {
         ? keyIsDown(SHIFT)
         : false,
   );
+
+  // Se o tutorial estiver ativo, delegar eventos de teclado ao onboarding
+  if (typeof onboardingState !== "undefined" && onboardingState.active) {
+    if (typeof onboardingKeyPressed === "function") {
+      const handled = onboardingKeyPressed(code);
+      if (handled) {
+        if (event && typeof event.preventDefault === "function") event.preventDefault();
+        return false;
+      }
+    }
+  }
 
   // 1. Se em digitação de busca
   if (tagSearchActive || savedSearchActive) {

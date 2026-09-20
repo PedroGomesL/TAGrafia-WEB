@@ -153,7 +153,40 @@ const FONTS_CONFIG = {
 
 const STORAGE_KEYS = {
   savedProducts: "tagrafia-saved-products",
+  onboardingCompleted: "tagrafia-onboarding-completed",
 };
+
+const ONBOARDING_STEPS = [
+  {
+    id: "welcome",
+    title: "Bem-vindo ao TAGrafia",
+    zone: "modal",
+    subtitle: "Sistema Interativo de Visualização de Obras de Design",
+    description:
+      "O TAGrafia é uma ferramenta de pesquisa e exploração visual que conecta obras de design brasileiras e internacionais por meio de dimensões, técnicas, materiais e escolas estéticas.",
+  },
+  {
+    id: "menu_esquerdo",
+    title: "1. Menu Esquerdo: Filtros e Navegação",
+    zone: "left",
+    description:
+      "Aqui você filtra as obras navegando pelas 4 dimensões (Tipo de Obra, Material, Estético e Técnicas), pesquisa tags específicas, comuta visualizações e alterna entre o tema claro e escuro.",
+  },
+  {
+    id: "centro_visual",
+    title: "2. Área Central: Visualizações e Linha do Tempo",
+    zone: "center",
+    description:
+      "Explore as conexões entre as obras nos formatos Circular, Bolhas, Linha do Tempo e Mapa-Mundi. Utilize a barra inferior da linha do tempo para restringir o período cronológico desejado.",
+  },
+  {
+    id: "menu_direito",
+    title: "3. Menu Direito: Detalhes da Obra",
+    zone: "right",
+    description:
+      "Ao selecionar qualquer obra, visualize aqui sua galeria de imagens, ficha técnica, autores e as abas detalhadas de cada dimensão. Você também pode favoritar obras para consultá-las depois na aba Salvos.",
+  },
+];
 
 const ICONS_CONFIG = {
   filtros: "data/Icones/filtros.svg",

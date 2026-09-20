@@ -189,4 +189,85 @@ function drawFocusRingCircle(cx, cy, r) {
   pop();
 }
 
+// Controle do Onboarding / Tutorial de Primeiro Acesso
+let onboardingState = {
+  active: false,
+  step: 0,
+  completed: false,
+};
+
+function initOnboarding() {
+  if (typeof localStorage !== "undefined") {
+    try {
+      const isDone = localStorage.getItem(STORAGE_KEYS.onboardingCompleted);
+      if (isDone === "true") {
+        onboardingState.completed = true;
+        onboardingState.active = false;
+        return;
+      }
+    } catch (e) {}
+  }
+  // Primeiro acesso: ativa o tutorial de introdução
+  onboardingState.active = true;
+  onboardingState.step = 0;
+  onboardingState.completed = false;
+}
+
+function startOnboarding(fromBeginning = true) {
+  onboardingState.active = true;
+  onboardingState.step = fromBeginning ? 0 : 1;
+  if (typeof announceToScreenReader === "function") {
+    announceToScreenReader("Tutorial de introdução aberto");
+  }
+  if (typeof redraw === "function") {
+    redraw();
+  }
+}
+
+function nextOnboardingStep() {
+  if (!onboardingState.active) return;
+  const maxStep = typeof ONBOARDING_STEPS !== "undefined" ? ONBOARDING_STEPS.length - 1 : 3;
+  if (onboardingState.step < maxStep) {
+    onboardingState.step++;
+    if (typeof announceToScreenReader === "function") {
+      const current = ONBOARDING_STEPS[onboardingState.step];
+      announceToScreenReader(`${current.title}: ${current.description}`);
+    }
+  } else {
+    completeOnboarding();
+  }
+  if (typeof redraw === "function") redraw();
+}
+
+function prevOnboardingStep() {
+  if (!onboardingState.active) return;
+  if (onboardingState.step > 0) {
+    onboardingState.step--;
+    if (typeof announceToScreenReader === "function") {
+      const current = ONBOARDING_STEPS[onboardingState.step];
+      announceToScreenReader(`${current.title}: ${current.description}`);
+    }
+  }
+  if (typeof redraw === "function") redraw();
+}
+
+function skipOnboarding() {
+  completeOnboarding();
+}
+
+function completeOnboarding() {
+  onboardingState.active = false;
+  onboardingState.completed = true;
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEYS.onboardingCompleted, "true");
+    } catch (e) {}
+  }
+  if (typeof announceToScreenReader === "function") {
+    announceToScreenReader("Tutorial concluído. Você agora pode explorar a visualização livremente.");
+  }
+  if (typeof redraw === "function") redraw();
+}
+
+
 
