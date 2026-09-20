@@ -284,6 +284,12 @@ function touchMoved() {
 }
 
 function touchEnded() {
+  if (typeof onboardingState !== "undefined" && onboardingState.active) {
+    if (typeof onboardingMousePressed === "function") {
+      onboardingMousePressed(mouseX, mouseY);
+    }
+    return false;
+  }
   return mouseReleased();
 }
 
@@ -401,12 +407,6 @@ function themePanelBackground() {
 
 function mousePressed() {
   keyboardFocusActive = false; // cliques com mouse suprimem foco visível até próxima navegação por teclado
-  if (typeof touches !== "undefined" && touches.length > 0) {
-    // Evento de toque em andamento, prosseguir
-  } else if (typeof mouseButton !== "undefined" && mouseButton !== LEFT) {
-    return;
-  }
-  triggerClickRipple(mouseX, mouseY);
 
   if (typeof onboardingState !== "undefined" && onboardingState.active) {
     if (typeof onboardingMousePressed === "function") {
@@ -414,6 +414,13 @@ function mousePressed() {
     }
     return false;
   }
+
+  if (typeof touches !== "undefined" && touches.length > 0) {
+    // Evento de toque em andamento, prosseguir
+  } else if (typeof mouseButton !== "undefined" && mouseButton !== LEFT) {
+    return;
+  }
+  triggerClickRipple(mouseX, mouseY);
 
   if (typeof isMobileMode === "function" && isMobileMode()) {
     const activeScreen =
@@ -474,6 +481,21 @@ function mouseDragged() {
 function mouseReleased() {
   draggedYearHandle = null;
   mapState.dragging = false;
+  if (typeof onboardingState !== "undefined" && onboardingState.active) {
+    if (typeof onboardingMouseReleased === "function") {
+      onboardingMouseReleased(mouseX, mouseY);
+    }
+    return false;
+  }
+}
+
+function mouseClicked() {
+  if (typeof onboardingState !== "undefined" && onboardingState.active) {
+    if (typeof onboardingMouseClicked === "function") {
+      onboardingMouseClicked(mouseX, mouseY);
+    }
+    return false;
+  }
 }
 
 function mouseWheel(event) {

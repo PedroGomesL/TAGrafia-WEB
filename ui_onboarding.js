@@ -47,7 +47,7 @@ function getOnboardingModalMetrics() {
  */
 function getOnboardingGuidedMetrics(step, stepIndex, totalSteps) {
   const scl = typeof filterPanelScale === "function" ? filterPanelScale() : 1;
-  const leftW = (typeof LAYOUT_NAV_W !== "undefined" ? (LAYOUT_NAV_W + (typeof leftPanelExtendedOpen !== "undefined" && leftPanelExtendedOpen ? LAYOUT_FILTRO_W : 0)) : 100) * scl;
+  const leftW = typeof filterPanelW === "function" ? filterPanelW() : ((typeof LAYOUT_NAV_W !== "undefined" ? LAYOUT_NAV_W : 100) + (typeof leftPanelExtendedOpen !== "undefined" && leftPanelExtendedOpen ? (typeof LAYOUT_FILTRO_W !== "undefined" ? LAYOUT_FILTRO_W : 180) : 0)) * scl;
   const rightX = typeof productPanelX === "function" ? productPanelX() : width - 400;
   const rightW = typeof productPanelW === "function" ? productPanelW() : 400;
 
@@ -73,34 +73,34 @@ function getOnboardingGuidedMetrics(step, stepIndex, totalSteps) {
     spotH = height;
   }
 
-  const cardW = Math.min(380, width - 40);
-  const cardH = 210;
+  const cardW = Math.min(390, width - 40);
+  const cardH = 215;
   let cardX = 0;
-  let cardY = (height - cardH) / 2;
+  let cardY = Math.max(20, (height - cardH) / 2);
 
   if (step.zone === "left") {
-    cardX = Math.min(width - cardW - 20, spotX + spotW + 24);
+    cardX = Math.min(width - cardW - 20, Math.max(20, spotX + spotW + 24));
   } else if (step.zone === "right") {
-    cardX = Math.max(20, spotX - cardW - 24);
+    cardX = Math.min(width - cardW - 20, Math.max(20, spotX - cardW - 24));
   } else {
-    cardX = (width - cardW) / 2;
+    cardX = Math.max(20, (width - cardW) / 2);
     cardY = 50;
   }
 
-  const bY = cardY + cardH - 42;
-  const bH = 30;
+  const bY = cardY + cardH - 44;
+  const bH = 32;
 
   // Botão Pular (esquerda)
   const skipX = cardX + 20;
   const skipW = 55;
 
   // Botão Próximo / Concluir (direita)
-  const nextW = 82;
+  const nextW = 90;
   const nextX = cardX + cardW - 20 - nextW;
 
   // Botão Anterior (ao lado de Próximo se houver)
-  const prevW = 68;
-  const prevX = nextX - 8 - prevW;
+  const prevW = 75;
+  const prevX = nextX - 10 - prevW;
 
   return {
     spotX, spotY, spotW, spotH,
@@ -346,33 +346,57 @@ function drawOnboardingGuidedStep(step, stepIndex, totalSteps) {
   text(m.isLast ? "Concluir ✓" : "Próximo →", m.nextX + m.nextW / 2, m.bY + m.bH / 2);
 }
 
+let _lastOnboardingActionTime = 0;
+let _lastOnboardingActionX = -1;
+let _lastOnboardingActionY = -1;
+
 /**
- * Trata cliques do mouse no overlay e cards do onboarding
+ * Trata cliques e toques no overlay e cards do onboarding (mousedown, mouseup, click, touch)
  */
-function onboardingMousePressed(mx, my) {
+function handleOnboardingAction(mx, my) {
   if (typeof onboardingState === "undefined" || !onboardingState.active) return false;
+
+  const now = Date.now();
+  // Debounce apenas eventos duplicados (ex: mousedown seguido imediatamente de mouseup/click no mesmo local)
+  if (
+    now - _lastOnboardingActionTime < 120 &&
+    Math.abs(mx - _lastOnboardingActionX) < 6 &&
+    Math.abs(my - _lastOnboardingActionY) < 6
+  ) {
+    return true;
+  }
 
   const currentStepIndex = onboardingState.step;
   const steps = typeof ONBOARDING_STEPS !== "undefined" ? ONBOARDING_STEPS : [];
   const currentStep = steps[currentStepIndex] || steps[0];
+  const pad = 8; // Área de tolerância extra para clique
 
   if (currentStep.zone === "modal" || currentStepIndex === 0) {
     const m = getOnboardingModalMetrics();
 
     // Botão Explorar Direto / Pular
-    if (insideRect(mx, my, m.skipX - 4, m.btnY - 4, m.skipW + 8, m.btnH + 8)) {
+    if (insideRect(mx, my, m.skipX - pad, m.btnY - pad, m.skipW + pad * 2, m.btnH + pad * 2)) {
+      _lastOnboardingActionTime = now;
+      _lastOnboardingActionX = mx;
+      _lastOnboardingActionY = my;
       skipOnboarding();
       return true;
     }
 
     // Botão Iniciar Tutorial
-    if (insideRect(mx, my, m.startX - 4, m.btnY - 4, m.startW + 8, m.btnH + 8)) {
+    if (insideRect(mx, my, m.startX - pad, m.btnY - pad, m.startW + pad * 2, m.btnH + pad * 2)) {
+      _lastOnboardingActionTime = now;
+      _lastOnboardingActionX = mx;
+      _lastOnboardingActionY = my;
       nextOnboardingStep();
       return true;
     }
 
     // Clique fora do modal também fecha com segurança
     if (!insideRect(mx, my, m.modalX, m.modalY, m.modalW, m.modalH)) {
+      _lastOnboardingActionTime = now;
+      _lastOnboardingActionX = mx;
+      _lastOnboardingActionY = my;
       skipOnboarding();
       return true;
     }
@@ -383,27 +407,48 @@ function onboardingMousePressed(mx, my) {
   const m = getOnboardingGuidedMetrics(currentStep, currentStepIndex, steps.length);
 
   // Botão Pular (esquerda)
-  if (insideRect(mx, my, m.skipX - 6, m.bY - 4, m.skipW + 12, m.bH + 8)) {
+  if (insideRect(mx, my, m.skipX - pad, m.bY - pad, m.skipW + pad * 2, m.bH + pad * 2)) {
+    _lastOnboardingActionTime = now;
+    _lastOnboardingActionX = mx;
+    _lastOnboardingActionY = my;
     skipOnboarding();
     return true;
   }
 
   // Botão Anterior
   if (m.hasPrev) {
-    if (insideRect(mx, my, m.prevX - 4, m.bY - 4, m.prevW + 8, m.bH + 8)) {
+    if (insideRect(mx, my, m.prevX - pad, m.bY - pad, m.prevW + pad * 2, m.bH + pad * 2)) {
+      _lastOnboardingActionTime = now;
+      _lastOnboardingActionX = mx;
+      _lastOnboardingActionY = my;
       prevOnboardingStep();
       return true;
     }
   }
 
   // Botão Próximo / Concluir
-  if (insideRect(mx, my, m.nextX - 4, m.bY - 4, m.nextW + 8, m.bH + 8)) {
+  if (insideRect(mx, my, m.nextX - pad, m.bY - pad, m.nextW + pad * 2, m.bH + pad * 2)) {
+    _lastOnboardingActionTime = now;
+    _lastOnboardingActionX = mx;
+    _lastOnboardingActionY = my;
     nextOnboardingStep();
     return true;
   }
 
   // Absorve todos os cliques enquanto o onboarding estiver ativo
   return true;
+}
+
+function onboardingMousePressed(mx, my) {
+  return handleOnboardingAction(mx, my);
+}
+
+function onboardingMouseReleased(mx, my) {
+  return handleOnboardingAction(mx, my);
+}
+
+function onboardingMouseClicked(mx, my) {
+  return handleOnboardingAction(mx, my);
 }
 
 /**
